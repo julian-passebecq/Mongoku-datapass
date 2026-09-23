@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { page } from "$app/state";\n\timport { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 	import type { Project, SavedMongoQuery, WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
