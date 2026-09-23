@@ -255,17 +255,52 @@ export const reportCatalog: ReportDefinition[] = [
 		readOnly: true,
 		presentation: "dashboard",
 		refreshPolicy: { mode: "ttl", ttlSeconds: 120 },
-		steps: [{
-			id: "entities",
-			sourceId: "DATAPROJECTS_GLOBAL",
-			authority: "DATAPASSCONTROL",
-			collection: "entities",
-			operation: "find",
-			filter: {},
-			sort: { updated_at: -1 },
-			limit: 250,
-			label: "Projects"
-		}],
+		steps: [
+			{
+				id: "entities",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "entities",
+				operation: "find",
+				filter: {},
+				sort: { updated_at: -1 },
+				limit: 250,
+				label: "Projects"
+			},
+			{
+				id: "work",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "work_items",
+				operation: "find",
+				filter: { status: { $nin: ["done", "DONE", "closed", "CLOSED"] } },
+				sort: { priority: 1, observed_at: -1 },
+				limit: 200,
+				label: "Portfolio work"
+			},
+			{
+				id: "audits",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "audit_runs",
+				operation: "find",
+				filter: {},
+				sort: { observed_at: -1, created_at: -1 },
+				limit: 100,
+				label: "Recent audits"
+			},
+			{
+				id: "repositories",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "repositories",
+				operation: "find",
+				filter: {},
+				sort: { last_reviewed: -1 },
+				limit: 300,
+				label: "Canonical repositories"
+			}
+		],
 		tags: ["global", "projects"]
 	},
 	{
