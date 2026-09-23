@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { foilEdges, foilNodes } from "$lib/datapass/controlPlane";
-
-	const nodeById = new Map(foilNodes.map((node) => [node.id, node]));
-	const flowRows = foilEdges.map((edge) => ({ ...edge, fromNode: nodeById.get(edge.from), toNode: nodeById.get(edge.to) }));
+	let { data } = $props();
+	const foilNodes = $derived(data.controlWorkspace.systemNodes);
+	const foilEdges = $derived(data.controlWorkspace.systemEdges);
+	const nodeById = $derived(new Map(foilNodes.map((node) => [node.id, node])));
+	const flowRows = $derived(foilEdges.map((edge) => ({ ...edge, fromNode: nodeById.get(edge.from), toNode: nodeById.get(edge.to) })));
 </script>
 
 <section class="space-y-6">
