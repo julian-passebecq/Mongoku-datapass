@@ -190,13 +190,13 @@ export const controlChangeOperationSchema = z.object({
 }).superRefine((operation, context) => {
 	if (operation.kind === "upsert" && !operation.value) {
 		context.addIssue({
-			code: z.ZodIssueCode.custom,
+			code: "custom",
 			message: "Upsert operations require value"
 		});
 	}
 	if (operation.kind === "delete" && operation.value) {
 		context.addIssue({
-			code: z.ZodIssueCode.custom,
+			code: "custom",
 			message: "Delete operations must not include value"
 		});
 	}
