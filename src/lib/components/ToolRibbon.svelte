@@ -28,10 +28,13 @@
 		{ label: "Questions", href: "/foil/questions" },
 		{ label: "Maintenance", href: "/foil/calendar" },
 		{ label: "Apps", href: "/foil/report/FOIL_APPS_IMPACTED" },
+		{ label: "P0 blockers", href: "/foil/report/FOIL_P0_BLOCKERS" },
+		{ label: "Contradictions", href: "/foil/report/FOIL_CONTRADICTIONS" },
 		{ label: "Architecture", href: "/foil/architecture" },
 		{ label: "Documents", href: "/foil/documents" },
 		{ label: "Resources", href: "/foil/resources" },
-		{ label: "Audit status", href: "/foil/report/FOIL_INSTRUCTION_DRIFT" }
+		{ label: "Audit status", href: "/foil/report/FOIL_MAINTENANCE_DUE" },
+		{ label: "Instruction drift", href: "/foil/report/FOIL_INSTRUCTION_DRIFT" }
 	];
 
 	const tools = $derived(foilMode ? foilTools : globalTools);
