@@ -29,6 +29,7 @@
 		{ href: "/foil", label: "FOIL" },
 		{ href: "/topology", label: "Systems" },
 		{ href: "/instructions", label: "Instructions" },
+		{ href: "/ai-json", label: "AI JSON" },
 		{ href: "/servers", label: "Mongo Explorer" }
 	];
 </script>
@@ -84,7 +85,7 @@
 	<OriginWarning serverOrigin={data.serverOrigin} readOnly={data.readOnly} />
 
 	<div class="flex min-h-[calc(100vh-57px)]">
-		<ProjectRail />
+		<ProjectRail projects={data.controlWorkspace.projects} />
 
 		<main class="min-w-0 flex-1 px-4 py-6 sm:px-6 md:py-10 lg:px-8">
 			<div class="mx-auto max-w-[96rem]">
