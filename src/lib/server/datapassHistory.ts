@@ -99,7 +99,7 @@ async function ensureIdentity(workspace: WorkspaceExport): Promise<WorkspaceIden
 	if (current && typeof current.revision === "number" && typeof current.fingerprint === "string") {
 		return {
 			revision: current.revision,
-			fingerprint: current.fingerprint,
+			fingerprint,
 			updatedAt: String(current.updatedAt ?? new Date().toISOString())
 		};
 	}
@@ -537,44 +537,60 @@ export async function rejectControlChangeSet(id: string) {
 }
 
 export async function listControlChangeSets(limit = 100) {
-	const db = await getControlDb();
-	return db
-		.collection("control_changesets")
-		.find({})
-		.sort({ createdAt: -1 })
-		.limit(Math.min(Math.max(limit, 1), 100))
-		.project({ _id: 0 })
-		.toArray();
+	try {
+		const db = await getControlDb();
+		return await db
+			.collection("control_changesets")
+			.find({})
+			.sort({ createdAt: -1 })
+			.limit(Math.min(Math.max(limit, 1), 100))
+			.project({ _id: 0 })
+			.toArray();
+	} catch {
+		return [];
+	}
 }
 
 export async function listControlActivity(limit = 100) {
-	const db = await getControlDb();
-	return db
-		.collection("control_activity")
-		.find({})
-		.sort({ createdAt: -1 })
-		.limit(Math.min(Math.max(limit, 1), 100))
-		.project({ _id: 0 })
-		.toArray();
+	try {
+		const db = await getControlDb();
+		return await db
+			.collection("control_activity")
+			.find({})
+			.sort({ createdAt: -1 })
+			.limit(Math.min(Math.max(limit, 1), 100))
+			.project({ _id: 0 })
+			.toArray();
+	} catch {
+		return [];
+	}
 }
 
 export async function listControlRevisions(limit = 100) {
-	const db = await getControlDb();
-	return db
-		.collection("control_revisions")
-		.find({})
-		.sort({ revision: -1 })
-		.limit(Math.min(Math.max(limit, 1), 100))
-		.project({ _id: 0, workspace: 0 })
-		.toArray();
+	try {
+		const db = await getControlDb();
+		return await db
+			.collection("control_revisions")
+			.find({})
+			.sort({ revision: -1 })
+			.limit(Math.min(Math.max(limit, 1), 100))
+			.project({ _id: 0, workspace: 0 })
+			.toArray();
+	} catch {
+		return [];
+	}
 }
 
 export async function getControlRevision(revision: number) {
-	const db = await getControlDb();
-	const row = await db
-		.collection("control_revisions")
-		.findOne({ revision }, { projection: { _id: 0 } });
-	return row ?? null;
+	try {
+		const db = await getControlDb();
+		const row = await db
+			.collection("control_revisions")
+			.findOne({ revision }, { projection: { _id: 0 } });
+		return row ?? null;
+	} catch {
+		return null;
+	}
 }
 
 export async function restoreControlRevision(revision: number, expected: WorkspaceIdentity) {
