@@ -107,6 +107,24 @@ export type ReportSourceTrace = {
 	message?: string;
 };
 
+export type ReportSectionState =
+	| "OK"
+	| "EMPTY"
+	| "TRUNCATED"
+	| "SOURCE_UNBOUND"
+	| "REGISTERED_UNBOUND"
+	| "REGISTRY_UNAVAILABLE"
+	| "SOURCE_ERROR";
+
+export type ReportSectionMeta = {
+	state: ReportSectionState;
+	requestedLimit?: number;
+	effectiveLimit?: number;
+	returnedRows: number;
+	responseBytes: number;
+	truncated: boolean;
+};
+
 export type ReportSection = {
 	id: string;
 	label: string;
@@ -114,6 +132,7 @@ export type ReportSection = {
 	sourceId: string;
 	rows: Record<string, unknown>[];
 	trace: ReportSourceTrace;
+	meta?: ReportSectionMeta;
 };
 
 export type ReportResult = {
