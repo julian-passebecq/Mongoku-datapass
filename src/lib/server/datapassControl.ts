@@ -176,7 +176,9 @@ function substituteParameters(value: unknown, parameters: Record<string, unknown
 
 function assertReadOnlyQuery(value: unknown): void {
 	if (Array.isArray(value)) {
-		for (const item of value) assertReadOnlyQuery(item);
+		for (const item of value) {
+			assertReadOnlyQuery(item);
+		}
 		return;
 	}
 
