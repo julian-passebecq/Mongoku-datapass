@@ -180,8 +180,8 @@
 				</p>
 			</div>
 			<div class="flex gap-3 text-xs">
-				<a href="/ai-review" class="no-underline hover:underline">AI Review</a>
-				<a href="/api/datapass/capabilities" target="_blank" rel="noreferrer" class="no-underline hover:underline"
+				<a href={resolve("/ai-review")} class="no-underline hover:underline">AI Review</a>
+				<a href={resolve("/api/datapass/capabilities")} target="_blank" rel="noreferrer" class="no-underline hover:underline"
 					>Capabilities</a
 				>
 				<a href={endpoint} target="_blank" rel="noreferrer" class="no-underline hover:underline">Raw API</a>
