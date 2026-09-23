@@ -6,6 +6,7 @@
 	let selectedProject = $state(page.url.searchParams.get("project") || graphProjects[0]?.id || "foil");
 
 	const selectedNodes = $derived(agentNodes.filter((node) => node.projectId === selectedProject));
+	const selectedProjectRecord = $derived(projects.find((project) => project.id === selectedProject));
 
 	const depthOf = (nodeId: string): number => {
 		const node = selectedNodes.find((candidate) => candidate.id === nodeId);
@@ -39,6 +40,27 @@
 			{/each}
 		</select>
 	</div>
+
+	{#if selectedProjectRecord}
+		<div class="grid gap-4 md:grid-cols-3">
+			<div class="rounded-xl border border-[var(--border-color)] p-4">
+				<p class="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">GitHub</p>
+				{#if selectedProjectRecord.githubRepo}
+					<a href={"https://github.com/" + selectedProjectRecord.githubRepo} target="_blank" rel="noreferrer" class="mt-2 block text-sm font-medium no-underline hover:underline">{selectedProjectRecord.githubRepo}</a>
+				{:else}
+					<p class="mt-2 text-sm text-[var(--text-muted)]">No repo linked</p>
+				{/if}
+			</div>
+			<div class="rounded-xl border border-[var(--border-color)] p-4">
+				<p class="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Mongo context</p>
+				<p class="mt-2 text-sm font-medium">{selectedProjectRecord.mongoContextKey || "Not linked"}</p>
+			</div>
+			<div class="rounded-xl border border-[var(--border-color)] p-4">
+				<p class="text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Namespaces</p>
+				<p class="mt-2 text-xs leading-5 text-[var(--text-muted)]">{selectedProjectRecord.mongoNamespaces?.join(" · ") || "None"}</p>
+			</div>
+		</div>
+	{/if}
 
 	{#if selectedNodes.length === 0}
 		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-8 text-sm text-[var(--text-muted)]">
