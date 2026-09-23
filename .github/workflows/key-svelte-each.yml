@@ -1,0 +1,107 @@
+name: Key Svelte each blocks
+
+on:
+  push:
+    branches:
+      - datapass/control-plane-v1
+
+permissions:
+  contents: write
+
+jobs:
+  key-each:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: datapass/control-plane-v1
+          fetch-depth: 0
+      - name: Enable corepack
+        run: corepack enable
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+      - name: Install frozen dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Add keys to unkeyed Svelte each blocks
+        run: |
+          cat > /tmp/key-each.mjs <<'EOF'
+          import fs from "node:fs";
+          import path from "node:path";
+          import { parse } from "svelte/compiler";
+
+          function files(root) {
+            return fs.readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+              const full = path.join(root, entry.name);
+              if (entry.isDirectory()) return files(full);
+              return entry.isFile() && full.endsWith(".svelte") ? [full] : [];
+            });
+          }
+
+          for (const file of files("src")) {
+            let source = fs.readFileSync(file, "utf8");
+            const ast = parse(source, { filename: file, modern: true });
+            const patches = [];
+            let serial = 0;
+            const seen = new Set();
+
+            function visit(value) {
+              if (!value || typeof value !== "object") return;
+              if (seen.has(value)) return;
+              seen.add(value);
+
+              if (value.type === "EachBlock" && !value.key) {
+                const indexName =
+                  typeof value.index === "string" && value.index.length > 0
+                    ? value.index
+                    : "__eachIndex" + serial++;
+                const contextEnd = value.context?.end ?? value.expression?.end ?? value.start;
+                const close = source.indexOf("}", contextEnd);
+                if (close < 0 || close >= value.end) {
+                  throw new Error("Could not locate each opener close in " + file);
+                }
+                const insert =
+                  typeof value.index === "string" && value.index.length > 0
+                    ? " (" + indexName + ")"
+                    : ", " + indexName + " (" + indexName + ")";
+                patches.push({ pos: close, text: insert });
+              }
+
+              if (Array.isArray(value)) {
+                for (const item of value) visit(item);
+                return;
+              }
+              for (const [key, nested] of Object.entries(value)) {
+                if (key === "parent") continue;
+                visit(nested);
+              }
+            }
+
+            visit(ast);
+            if (patches.length === 0) continue;
+            patches.sort((a, b) => b.pos - a.pos);
+            for (const patch of patches) {
+              source = source.slice(0, patch.pos) + patch.text + source.slice(patch.pos);
+            }
+            fs.writeFileSync(file, source);
+            console.log(file + ": keyed " + patches.length + " each block(s)");
+          }
+          EOF
+          node /tmp/key-each.mjs
+      - name: Validate and format syntax
+        run: pnpm format
+      - name: Commit keyed each blocks
+        run: |
+          if git diff --quiet; then
+            echo "No unkeyed each blocks found"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "style(svelte): key each blocks"
+          git push origin HEAD:datapass/control-plane-v1
