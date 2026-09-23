@@ -291,6 +291,14 @@ async function executeStep(
 	}
 }
 
+export async function executeSourceQuery(
+	step: ReportQueryStep,
+	parameters: Record<string, unknown> = {},
+	reportId = "AD_HOC"
+): Promise<ReportSection> {
+	return executeStep(reportId, step, parameters);
+}
+
 export async function executeReport(
 	reportId: string,
 	parameters: Record<string, unknown> = {}
