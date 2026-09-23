@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from "$app/navigation";
+	import { goto, invalidateAll } from "$app/navigation";\n\timport { resolve } from "$app/paths";\n\timport { SvelteURLSearchParams } from "svelte/reactivity";
 
 	let { data } = $props();
 
@@ -9,14 +9,14 @@
 	let busy = $state(false);
 
 	function compare() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (left) {
 			params.set("left", left);
 		}
 		if (right) {
 			params.set("right", right);
 		}
-		goto("/history?" + params.toString());
+		goto(resolve("/history?" + params.toString()));
 	}
 
 	async function restore(revision: number) {
