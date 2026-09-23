@@ -109,17 +109,27 @@ async function ensureIdentity(workspace: WorkspaceExport): Promise<WorkspaceIden
 		fingerprint,
 		updatedAt: new Date().toISOString()
 	};
-	await db.collection("control_meta").updateOne(
-		{ id: META_ID },
-		{ $set: { id: META_ID, ...identity } },
-		{ upsert: true }
-	);
+	if (controlWritesEnabled()) {
+		await db.collection("control_meta").updateOne(
+			{ id: META_ID },
+			{ $set: { id: META_ID, ...identity } },
+			{ upsert: true }
+		);
+	}
 	return identity;
 }
 
 export async function getWorkspaceIdentity(): Promise<WorkspaceIdentity> {
 	const workspace = await loadControlWorkspace();
-	return ensureIdentity(workspace);
+	try {
+		return await ensureIdentity(workspace);
+	} catch {
+		return {
+			revision: 0,
+			fingerprint: fingerprintWorkspace(workspace),
+			updatedAt: workspace.metadata.exportedAt
+		};
+	}
 }
 
 function collectionFor(workspace: WorkspaceExport, resourceType: ControlResourceType): unknown[] {
@@ -252,7 +262,7 @@ function selectOperations(changeSet: ControlChangeSetInput, selectedIds?: string
 export async function previewControlChangeSet(input: unknown, selectedIds?: string[]) {
 	const changeSet = controlChangeSetSchema.parse(input);
 	const workspace = await loadControlWorkspace();
-	const identity = await ensureIdentity(workspace);
+	const identity = await getWorkspaceIdentity();
 
 	if (
 		changeSet.baseRevision !== identity.revision ||
