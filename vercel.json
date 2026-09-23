@@ -1,0 +1,13 @@
+{
+	"$schema": "https://openapi.vercel.sh/vercel.json",
+	"framework": "sveltekit",
+	"installCommand": "pnpm install --no-frozen-lockfile",
+	"buildCommand": "pnpm build:app",
+	"env": {
+		"MONGOKU_READ_ONLY_MODE": "true",
+		"DATAPASS_CONTROL_DISABLED": "true",
+		"DATAPASS_CONTROL_WRITE_ENABLED": "false",
+		"MONGOKU_DISABLE_DEFAULT_HOSTS": "true",
+		"MONGOKU_DATABASE_FILE": "/tmp/.mongoku.db"
+	}
+}
