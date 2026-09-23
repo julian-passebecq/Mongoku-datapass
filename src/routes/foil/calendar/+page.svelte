@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { ReportResult } from "$lib/datapass/reporting";\n\timport { SvelteMap } from "svelte/reactivity";
+	import type { ReportResult } from "$lib/datapass/reporting";
+	import { SvelteMap } from "svelte/reactivity";
 
 	let { data } = $props();
 	const report = $derived(data.report as ReportResult);
