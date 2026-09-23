@@ -167,12 +167,10 @@ The repository is Vercel-ready through `@sveltejs/adapter-vercel`. `svelte.confi
 The committed `vercel.json` uses:
 
 - framework: SvelteKit
-- install: `pnpm install --no-frozen-lockfile`
+- install: `pnpm install --frozen-lockfile`
 - build: `pnpm build:app`
 - Node.js 22 Vercel runtime
 - seed-only/read-only control mode by default
-
-The non-frozen Vercel install is temporary because the current branch adds `@sveltejs/adapter-vercel` in `package.json` while the upstream lockfile has not yet been regenerated on a normal development machine.
 
 #### Safe public preview
 
