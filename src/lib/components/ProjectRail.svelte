@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
-	import { projects } from "$lib/datapass/controlPlane";
+	import type { Project } from "$lib/datapass/controlPlane";
 
+	let { projects } = $props<{ projects: Project[] }>();
 	let collapsed = $state(false);
-	const roots = projects.filter((project) => !project.parentProjectId);
 
+	const roots = $derived(projects.filter((project) => !project.parentProjectId));
 	const childrenOf = (projectId: string) => projects.filter((project) => project.parentProjectId === projectId);
 </script>
 
@@ -36,6 +37,7 @@
 			<a href={resolve("/projects")} class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]" title="Projects">P</a>
 			<a href={resolve("/architecture")} class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]" title="AI architecture">A</a>
 			<a href={resolve("/instructions")} class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]" title="Instructions">I</a>
+			<a href={resolve("/ai-json")} class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]" title="AI JSON">J</a>
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto p-3">
@@ -76,6 +78,7 @@
 
 		<div class="border-t border-[var(--border-color)] p-3">
 			<a href={resolve("/instructions")} class="block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]">Instruction library</a>
+			<a href={resolve("/ai-json")} class="mt-1 block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]">AI JSON workspace</a>
 		</div>
 	{/if}
 </aside>
