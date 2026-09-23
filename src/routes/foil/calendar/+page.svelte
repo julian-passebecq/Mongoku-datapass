@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ReportResult } from "$lib/datapass/reporting";
+	import type { ReportResult } from "$lib/datapass/reporting";\n\timport { SvelteMap } from "svelte/reactivity";
 
 	let { data } = $props();
 	const report = $derived(data.report as ReportResult);
@@ -30,7 +30,7 @@
 	}
 
 	const grouped = $derived.by(() => {
-		const groups = new Map<string, Record<string, unknown>[]>();
+		const groups = new SvelteMap<string, Record<string, unknown>[]>();
 		for (const row of rows) {
 			const key = dateOf(row);
 			const existing = groups.get(key) ?? [];
