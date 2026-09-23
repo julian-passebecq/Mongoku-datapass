@@ -6,6 +6,9 @@
 	import OriginWarning from "$lib/components/OriginWarning.svelte";
 	import PageSwitcher from "$lib/components/PageSwitcher.svelte";
 	import ProjectRail from "$lib/components/ProjectRail.svelte";
+	import RightInspector from "$lib/components/RightInspector.svelte";
+	import ToolRibbon from "$lib/components/ToolRibbon.svelte";
+	import WorkspaceTabs from "$lib/components/WorkspaceTabs.svelte";
 	import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 	import { breadcrumbs } from "$lib/stores/breadcrumbs.svelte";
 	import "../app.css";
@@ -83,6 +86,8 @@
 	</header>
 
 	<OriginWarning serverOrigin={data.serverOrigin} readOnly={data.readOnly} />
+	<WorkspaceTabs presets={data.controlWorkspace.workspacePresets} />
+	<ToolRibbon />
 
 	<div class="flex min-h-[calc(100vh-57px)]">
 		<ProjectRail projects={data.controlWorkspace.projects} />
@@ -95,6 +100,12 @@
 				</div>
 			</div>
 		</main>
+
+		<RightInspector
+			projects={data.controlWorkspace.projects}
+			queries={data.controlWorkspace.savedQueries}
+			presets={data.controlWorkspace.workspacePresets}
+		/>
 	</div>
 
 	<div use:createPortal></div>
