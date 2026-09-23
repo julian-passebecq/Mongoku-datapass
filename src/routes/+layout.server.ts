@@ -1,5 +1,5 @@
 import { env } from "$env/dynamic/private";
-import { loadControlWorkspace } from "$lib/server/datapassControl";
+import { controlWritesEnabled, loadControlWorkspace } from "$lib/server/datapassControl";
 import { getOAuthConfig } from "$lib/server/oauth";
 import type { LayoutServerLoad } from "./$types";
 
@@ -11,6 +11,7 @@ export const load: LayoutServerLoad = async (event) => {
 		serverOrigin: event.url.origin,
 		oauthEnabled: !!(await getOAuthConfig()),
 		user: event.locals.user,
+		controlWritesEnabled: controlWritesEnabled(),
 		controlWorkspace
 	};
 };
