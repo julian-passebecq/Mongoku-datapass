@@ -8,6 +8,8 @@ export type ControlResourceType =
 	| "agentNode"
 	| "instructionProfile"
 	| "savedQuery"
+	| "sourceDescriptor"
+	| "reportDefinition"
 	| "workspacePreset"
 	| "systemNode"
 	| "systemEdge";
