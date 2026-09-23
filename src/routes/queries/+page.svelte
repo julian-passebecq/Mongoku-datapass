@@ -8,8 +8,12 @@
 
 	function openQuery() {
 		const params = new URLSearchParams();
-		if (selectedQueryId) params.set("query", selectedQueryId);
-		if (projectId) params.set("project", projectId);
+		if (selectedQueryId) {
+			params.set("query", selectedQueryId);
+		}
+		if (projectId) {
+			params.set("project", projectId);
+		}
 		goto("/queries?" + params.toString());
 	}
 </script>
