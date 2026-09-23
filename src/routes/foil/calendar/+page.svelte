@@ -10,8 +10,17 @@
 		return value == null ? "" : String(value);
 	}
 
+	function nestedText(row: Record<string, unknown>, objectKey: string, key: string): string {
+		const value = row[objectKey];
+		if (!value || typeof value !== "object" || Array.isArray(value)) {
+			return "";
+		}
+		const nested = (value as Record<string, unknown>)[key];
+		return nested == null ? "" : String(nested);
+	}
+
 	function dateOf(row: Record<string, unknown>): string {
-		return text(row, "nextDueAt") || text(row, "nextReviewAt") || text(row, "targetReviewDate") || "Unscheduled";
+		return text(row, "nextDueAt") || text(row, "nextReviewAt") || text(row, "targetReviewDate") || nestedText(row, "schedule", "nextDueAt") || "Unscheduled";
 	}
 
 	const grouped = $derived.by(() => {
@@ -61,8 +70,14 @@
 								</div>
 								<span class="text-[10px]">{text(row, "priority")}</span>
 							</div>
-							<p class="mt-2 text-[10px] text-[var(--text-muted)]">Owner authority: {text(row, "ownerAuthority") || text(row, "authority") || "FOIL Project Management"}</p>
-							{#if text(row, "recurrence")}<p class="mt-1 font-mono text-[9px] text-[var(--text-muted)]">{text(row, "recurrence")}</p>{/if}
+							<p class="mt-2 text-[10px] text-[var(--text-muted)]">Owner authority: {text(row, "ownerAuthority") || nestedText(row, "schedule", "ownerAuthority") || text(row, "authority") || "FOIL Project Management"}</p>
+							<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+								Schedule: {nestedText(row, "schedule", "type") || text(row, "scheduleType") || "ONE_OFF"}
+								· Last completed: {text(row, "lastCompletedAt") || nestedText(row, "schedule", "lastCompletedAt") || "—"}
+							</p>
+							{#if text(row, "recurrence") || nestedText(row, "schedule", "recurrence") || nestedText(row, "schedule", "rrule")}
+								<p class="mt-1 font-mono text-[9px] text-[var(--text-muted)]">{text(row, "recurrence") || nestedText(row, "schedule", "recurrence") || nestedText(row, "schedule", "rrule")}</p>
+							{/if}
 						</div>
 					{/each}
 				</div>
