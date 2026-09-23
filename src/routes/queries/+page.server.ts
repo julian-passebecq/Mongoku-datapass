@@ -11,7 +11,7 @@ function seedRows(
 	queryId: string,
 	projectId: string | null,
 	workspace: WorkspaceExport
-): Record<string, unknown>[] {
+): unknown[] {
 	const projectIds = projectId ? projectScope(projectId, workspace.projects) : [];
 
 	switch (queryId) {
@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const query = workspace.savedQueries.find((candidate) => candidate.id === queryId);
 	const projectIds = projectId ? projectScope(projectId, workspace.projects) : [];
 
-	let rows: Record<string, unknown>[] = [];
+	let rows: unknown[] = [];
 	let error: string | null = null;
 
 	if (query) {
