@@ -1,7 +1,34 @@
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
 
+	type ReviewOperation = {
+		id: string;
+	};
+
+	type ReviewPreview = {
+		operationId: string;
+		kind: "upsert" | "delete";
+		resourceType: string;
+		resourceId: string;
+		before: unknown;
+		after: unknown;
+		changed: boolean;
+		rationale?: string;
+	};
+
+	type ReviewRow = {
+		id: string;
+		status: "staged" | "accepted" | "rejected" | "stale";
+		baseRevision: number;
+		summary: string;
+		source: string;
+		createdAt: string;
+		operations: ReviewOperation[];
+		preview: ReviewPreview[];
+	};
+
 	let { data } = $props();
+	const changeSets = $derived(data.changeSets as ReviewRow[]);
 
 	let proposalText = $state(
 		JSON.stringify(
@@ -28,10 +55,10 @@
 		return changeSetId + "::" + operationId;
 	}
 
-	function selectedIds(row: any): string[] {
+	function selectedIds(row: ReviewRow): string[] {
 		return (row.operations ?? [])
-			.filter((operation: any) => selected[operationKey(row.id, operation.id)] !== false)
-			.map((operation: any) => operation.id);
+			.filter((operation) => selected[operationKey(row.id, operation.id)] !== false)
+			.map((operation) => operation.id);
 	}
 
 	async function preview() {
@@ -43,9 +70,10 @@
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({ changeSet: JSON.parse(proposalText) })
 			});
-			previewResult = await response.json();
+			const result = (await response.json()) as { error?: string };
+			previewResult = result;
 			if (!response.ok) {
-				message = (previewResult as any)?.error || "Preview failed";
+				message = result.error || "Preview failed";
 			}
 		} catch (error) {
 			message = error instanceof Error ? error.message : "Preview failed";
@@ -76,7 +104,7 @@
 		}
 	}
 
-	async function decide(row: any, action: "accept" | "reject") {
+	async function decide(row: ReviewRow, action: "accept" | "reject") {
 		busy = true;
 		message = "";
 		try {
@@ -141,7 +169,7 @@
 	</section>
 
 	<div class="space-y-4">
-		{#each data.changeSets as row}
+		{#each changeSets as row}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div>
