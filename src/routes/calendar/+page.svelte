@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	import { SvelteMap } from "svelte/reactivity";
 	let { data } = $props();
 
