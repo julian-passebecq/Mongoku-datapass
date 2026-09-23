@@ -17,7 +17,9 @@
 
 		try {
 			const response = await fetch(endpoint, { cache: "no-store" });
-			if (!response.ok) throw new Error("Workspace export failed");
+			if (!response.ok) {
+				throw new Error("Workspace export failed");
+			}
 			const workspace = await response.json();
 			jsonText = JSON.stringify(workspace, null, 2);
 		} catch (error) {
@@ -81,7 +83,9 @@
 	function loadFile(event: Event) {
 		const input = event.currentTarget as HTMLInputElement;
 		const file = input.files?.[0];
-		if (!file) return;
+		if (!file) {
+			return;
+		}
 
 		const reader = new FileReader();
 		reader.onload = () => {
