@@ -9,6 +9,7 @@ import {
 	workspacePresets,
 	workItems
 } from "./controlPlane";
+import { reportCatalog, sourceCatalog } from "./reporting";
 
 const workStatus = z.enum(["backlog", "todo", "in_progress", "blocked", "done"]);
 const projectStatus = z.enum(["active", "paused", "done"]);
@@ -39,7 +40,11 @@ export const workItemSchema = z.object({
 	priority: z.enum(["low", "medium", "high"]),
 	dueDate: z.string().optional(),
 	createdAt: z.string().optional(),
-	tags: z.array(z.string())
+	tags: z.array(z.string()),
+	classification: z.enum(["GLOBAL_PORTFOLIO_WORK", "FOIL_REFERENCE_MIRROR"]).optional(),
+	externalAuthority: z.string().optional(),
+	externalProjectRef: z.string().optional(),
+	externalBacklogRef: z.string().optional()
 });
 
 export const instructionProfileSchema = z.object({
@@ -71,9 +76,14 @@ export const savedMongoQuerySchema = z.object({
 	id: z.string().min(1),
 	name: z.string().min(1),
 	description: z.string(),
+	sourceId: z.string().optional(),
+	authority: z.string().optional(),
+	resourceRef: z.string().optional(),
+	database: z.string().optional(),
 	collection: z.string().min(1),
 	operation: z.enum(["find", "aggregate"]),
 	filter: jsonRecord.optional(),
+	projection: jsonRecord.optional(),
 	pipeline: z.array(jsonRecord).optional(),
 	sort: z.record(z.string(), z.union([z.literal(1), z.literal(-1)])).optional(),
 	limit: z.number().int().positive().max(10000).optional(),
@@ -86,6 +96,66 @@ export const savedMongoQuerySchema = z.object({
 	),
 	presentation: z.enum(["project-board", "status-summary", "table", "count", "calendar", "notes", "detail", "dashboard"]),
 	readOnly: z.literal(true),
+	routeId: z.string().optional(),
+	resultSchema: jsonRecord.optional(),
+	refreshPolicy: z.object({
+		mode: z.enum(["manual", "on-open", "ttl"]),
+		ttlSeconds: z.number().int().positive().optional()
+	}).optional(),
+	tags: z.array(z.string())
+});
+
+
+export const sourceDescriptorSchema = z.object({
+	id: z.string().min(1),
+	authority: z.string().min(1),
+	provider: z.enum(["MONGODB_ATLAS", "GITHUB", "VERCEL", "DATABRICKS", "FABRIC", "OBJECT_STORAGE"]),
+	adapter: z.literal("MONGODB"),
+	resourceRef: z.string().min(1),
+	database: z.string().optional(),
+	readOnly: z.literal(true),
+	defaultRoute: z.boolean(),
+	description: z.string(),
+	aliases: z.array(z.string()).optional(),
+	registryAuthority: z.string().optional()
+});
+
+const reportParameterSchema = z.object({
+	name: z.string().min(1),
+	type: z.enum(["string", "string[]", "date", "boolean"]),
+	required: z.boolean().optional()
+});
+
+const reportStepSchema = z.object({
+	id: z.string().min(1),
+	sourceId: z.string().min(1),
+	authority: z.string().min(1),
+	collection: z.string().min(1),
+	operation: z.enum(["find", "aggregate"]),
+	filter: jsonRecord.optional(),
+	projection: jsonRecord.optional(),
+	pipeline: z.array(jsonRecord).optional(),
+	sort: z.record(z.string(), z.union([z.literal(1), z.literal(-1)])).optional(),
+	limit: z.number().int().positive().max(5000).optional(),
+	parameters: z.array(reportParameterSchema).optional(),
+	optional: z.boolean().optional(),
+	label: z.string().min(1)
+});
+
+export const reportDefinitionSchema = z.object({
+	id: z.string().min(1),
+	title: z.string().min(1),
+	description: z.string(),
+	scope: z.enum(["GLOBAL", "FOIL"]),
+	routeId: z.string().min(1),
+	readOnly: z.literal(true),
+	presentation: z.enum(["dashboard", "kanban", "table", "timeline", "calendar", "questions", "propagation", "resources", "documents", "architecture", "status"]),
+	refreshPolicy: z.object({
+		mode: z.enum(["manual", "on-open", "ttl"]),
+		ttlSeconds: z.number().int().positive().optional()
+	}),
+	parameters: z.array(reportParameterSchema).optional(),
+	steps: z.array(reportStepSchema).min(1),
 	tags: z.array(z.string())
 });
 
@@ -190,6 +260,8 @@ export const workspaceExportSchema = z.object({
 	agentNodes: z.array(agentNodeSchema),
 	instructionProfiles: z.array(instructionProfileSchema),
 	savedQueries: z.array(savedMongoQuerySchema),
+	sources: z.array(sourceDescriptorSchema),
+	reports: z.array(reportDefinitionSchema),
 	workspacePresets: z.array(workspacePresetSchema),
 	systemNodes: z.array(systemNodeSchema),
 	systemEdges: z.array(systemEdgeSchema)
@@ -200,6 +272,8 @@ export const workspaceExportSchema = z.object({
 		["agentNodes", workspace.agentNodes],
 		["instructionProfiles", workspace.instructionProfiles],
 		["savedQueries", workspace.savedQueries],
+		["sources", workspace.sources],
+		["reports", workspace.reports],
 		["workspacePresets", workspace.workspacePresets],
 		["systemNodes", workspace.systemNodes]
 	];
@@ -215,6 +289,7 @@ export const workspaceExportSchema = z.object({
 
 	const projectById = new Map(workspace.projects.map((project) => [project.id, project]));
 	const queryIds = new Set(workspace.savedQueries.map((query) => query.id));
+	const sourceIds = new Set(workspace.sources.map((source) => source.id));
 	const instructionById = new Map(
 		workspace.instructionProfiles.map((profile) => [profile.id, profile])
 	);
@@ -313,6 +388,17 @@ export const workspaceExportSchema = z.object({
 		});
 	}
 
+	for (const report of workspace.reports) {
+		for (const step of report.steps) {
+			if (!sourceIds.has(step.sourceId)) {
+				context.addIssue({
+					code: "custom",
+					message: "Report " + report.id + " references missing source " + step.sourceId
+				});
+			}
+		}
+	}
+
 	for (const preset of workspace.workspacePresets) {
 		if (preset.defaultProjectId && !projectById.has(preset.defaultProjectId)) {
 			context.addIssue({
@@ -365,6 +451,8 @@ export function buildSeedWorkspace(source: "seed" | "import" = "seed"): Workspac
 		agentNodes,
 		instructionProfiles,
 		savedQueries,
+		sources: sourceCatalog,
+		reports: reportCatalog,
 		workspacePresets,
 		systemNodes: foilNodes,
 		systemEdges: foilEdges
