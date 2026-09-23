@@ -31,16 +31,15 @@
 		}
 	});
 
-	function navigate(href: string) {
-		if (href.startsWith("http://") || href.startsWith("https://")) {
-			window.open(href, "_blank", "noopener,noreferrer");
+	function navigate(targetHref: string) {
+		if (targetHref.startsWith("http://") || targetHref.startsWith("https://")) {
+			window.open(targetHref, "_blank", "noopener,noreferrer");
 			return;
 		}
-		goto(href);
+		goto(targetHref);
 	}
 
-	function closeTab(event: MouseEvent, tabId: string, tabHref: string) {
-		event.stopPropagation();
+	function closeTab(tabId: string, tabHref: string) {
 		const wasActive = tabHref === href;
 		workspaceUi.closeTab(tabId);
 		if (wasActive) {
@@ -72,6 +71,14 @@
 			navigate(first.href);
 		}
 	}
+
+	function switchInstance(event: Event) {
+		workspaceUi.setActiveInstance((event.currentTarget as HTMLSelectElement).value);
+		const first = workspaceUi.current()?.tabs[0];
+		if (first) {
+			navigate(first.href);
+		}
+	}
 </script>
 
 <div class="border-b border-[var(--border-color)] bg-[var(--background-color)]">
@@ -90,13 +97,7 @@
 
 		<select
 			value={workspaceUi.activeInstanceId}
-			onchange={(event) => {
-				workspaceUi.setActiveInstance((event.currentTarget as HTMLSelectElement).value);
-				const first = workspaceUi.current()?.tabs[0];
-				if (first) {
-			navigate(first.href);
-		}
-			}}
+			onchange={switchInstance}
 			class="shrink-0 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-1 text-[11px]"
 			title="Workspace instance"
 		>
@@ -105,35 +106,53 @@
 			{/each}
 		</select>
 
-		<button type="button" onclick={createInstance} class="shrink-0 rounded-md border border-[var(--border-color)] px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]" title="Open another workspace instance">+ Workspace</button>
+		<button
+			type="button"
+			onclick={createInstance}
+			class="shrink-0 rounded-md border border-[var(--border-color)] px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]"
+			title="Open another workspace instance"
+		>
+			+ Workspace
+		</button>
 
 		<div class="h-5 w-px shrink-0 bg-[var(--border-color)]"></div>
 
 		{#each instance?.tabs ?? [] as tab}
-			<button
-				type="button"
-				onclick={() => navigate(tab.href)}
-				class={"group flex shrink-0 items-center gap-2 rounded-t-md border border-b-0 border-[var(--border-color)] px-2.5 py-1.5 text-[11px] " + (tab.href === href ? "bg-[var(--hover-background)] font-semibold" : "")}
+			<div
+				class={"flex shrink-0 items-center rounded-t-md border border-b-0 border-[var(--border-color)] text-[11px] " + (tab.href === href ? "bg-[var(--hover-background)] font-semibold" : "")}
 			>
-				<span class="max-w-36 truncate">{tab.title}</span>
-				<span
-					role="button"
-					tabindex="0"
-					onclick={(event) => closeTab(event, tab.id, tab.href)}
-					onkeydown={(event) => {
-						if (event.key === "Enter" || event.key === " ") {
-							closeTab(event as unknown as MouseEvent, tab.id, tab.href);
-						}
-					}}
-					class="opacity-50 hover:opacity-100"
+				<button type="button" onclick={() => navigate(tab.href)} class="max-w-40 truncate px-2.5 py-1.5">
+					{tab.title}
+				</button>
+				<button
+					type="button"
+					onclick={() => closeTab(tab.id, tab.href)}
+					class="px-1.5 py-1.5 opacity-50 hover:opacity-100"
 					aria-label={"Close " + tab.title}
-				>×</span>
-			</button>
+					title={"Close " + tab.title}
+				>
+					×
+				</button>
+			</div>
 		{/each}
 
 		<div class="ml-auto flex shrink-0 gap-1">
-			<button type="button" onclick={() => workspaceUi.toggleBookmark(href, routeTitle)} class="rounded-md px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]" title="Bookmark current tab">☆</button>
-			<button type="button" onclick={() => workspaceUi.toggleRightPanel()} class="rounded-md px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]" title="Toggle right panel">Inspector</button>
+			<button
+				type="button"
+				onclick={() => workspaceUi.toggleBookmark(href, routeTitle)}
+				class="rounded-md px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]"
+				title="Bookmark current tab"
+			>
+				☆
+			</button>
+			<button
+				type="button"
+				onclick={() => workspaceUi.toggleRightPanel()}
+				class="rounded-md px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]"
+				title="Toggle right panel"
+			>
+				Inspector
+			</button>
 		</div>
 	</div>
 </div>
