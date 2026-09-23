@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
+	import { page } from "$app/state";\n\timport { resolve } from "$app/paths";
 	import { onMount } from "svelte";
 	import type { WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
@@ -36,7 +36,7 @@
 			window.open(targetHref, "_blank", "noopener,noreferrer");
 			return;
 		}
-		goto(targetHref);
+		goto(resolve(targetHref));
 	}
 
 	function closeTab(tabId: string, tabHref: string) {
