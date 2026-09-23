@@ -36,18 +36,8 @@
 		return Array.isArray(value) ? value.map(String) : [];
 	}
 
-	const resourcesById = $derived(new Map(resourceRows.map((row) => [text(row, "_id"), row])));
 	const resourceChildren = (parentId: string) =>
 		resourceRows.filter((row) => text(row, "parentResourceId") === parentId);
-
-	const projectRoots = $derived(
-		projectRows.filter((row) => {
-			const related = list(row, "relatedProjects");
-			return (
-				related.length === 0 || !related.some((id) => projectRows.some((candidate) => text(candidate, "_id") === id))
-			);
-		}),
-	);
 
 	const atlasProjects = $derived(resourceRows.filter((row) => text(row, "kind") === "ATLAS_PROJECT"));
 	const repositories = $derived(resourceRows.filter((row) => text(row, "kind") === "GITHUB_REPOSITORY"));
