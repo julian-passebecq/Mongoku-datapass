@@ -257,12 +257,20 @@ const pmBacklogProjection = {
 	title: 1,
 	currentStep: 1,
 	nextAction: 1,
+	blocker: 1,
+	blockers: 1,
 	authority: 1,
 	authorityRefs: 1,
 	targetReviewDate: 1,
+	nextReviewAt: 1,
+	nextDueAt: 1,
+	dueDate: 1,
 	updatedAt: 1,
 	dependencies: 1,
-	relatedAuthorities: 1
+	relatedAuthorities: 1,
+	impactTargets: 1,
+	propagationStatus: 1,
+	propagationPriority: 1
 };
 
 export const reportCatalog: ReportDefinition[] = [
@@ -665,9 +673,11 @@ export const reportCatalog: ReportDefinition[] = [
 			operation: "find",
 			filter: {},
 			projection: {
-				_id: 1, artifactType: 1, fileName: 1, mediaType: 1, byteSize: 1, sha256: 1,
-				project: 1, technology: 1, status: 1, createdAt: 1, repository: 1, branch: 1,
-				commit: 1, binaryPersistence: 1, durableExternalCopy: 1
+				_id: 1, artifactId: 1, artifactType: 1, fileName: 1, mediaType: 1, byteSize: 1, sha256: 1,
+				project: 1, technology: 1, category: 1, date: 1, source: 1, confidentiality: 1,
+				authority: 1, status: 1, storageStatus: 1, storageProvider: 1, bucket: 1, objectKey: 1,
+				versionId: 1, downloadRef: 1, previewRef: 1, textExtractionRef: 1, studyRefs: 1, coreRefs: 1,
+				createdAt: 1, repository: 1, branch: 1, commit: 1, binaryPersistence: 1, durableExternalCopy: 1
 			},
 			sort: { createdAt: -1 },
 			limit: 150,
