@@ -1,5 +1,6 @@
 <script lang="ts">
-\n\timport { SvelteMap } from "svelte/reactivity";
+
+	import { SvelteMap } from "svelte/reactivity";
 	let { data } = $props();
 
 	const project = $derived(data.workspace.projects.find((candidate) => candidate.id === data.projectId));
