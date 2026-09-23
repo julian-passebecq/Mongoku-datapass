@@ -68,7 +68,7 @@
 				{#each data.revisions as revision}<option value={revision.revision}>r{revision.revision} · {revision.summary}</option>{/each}
 			</select>
 		</label>
-		<button type="button" onclick={compare} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white dark:bg-white dark:text-black">Compare</button>
+		<button type="button" onclick={compare} disabled={!left || !right} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-40 dark:bg-white dark:text-black">Compare</button>
 		<span class="ml-auto text-xs text-[var(--text-muted)]">{message}</span>
 	</div>
 
@@ -96,6 +96,8 @@
 						<pre class="overflow-auto text-[10px]">{JSON.stringify(change.before, null, 2)}</pre>
 						<pre class="overflow-auto text-[10px]">{JSON.stringify(change.after, null, 2)}</pre>
 					</div>
+				{:else}
+					<p class="p-4 text-xs text-[var(--text-muted)]">No canonical revisions yet. Initialize the control database or accept a reviewed ChangeSet first.</p>
 				{/each}
 			</div>
 		</section>
