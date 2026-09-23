@@ -1,7 +1,4 @@
-import {
-	executeSavedControlQuery,
-	loadControlWorkspace
-} from "$lib/server/datapassControl";
+import { executeSavedControlQuery } from "$lib/server/datapassControl";
 import type { PageServerLoad } from "./$types";
 
 type StatusSummary = Record<string, number>;
@@ -28,8 +25,8 @@ function localSummary(projectIds: string[], workItems: Array<{ projectId: string
 	return summary;
 }
 
-export const load: PageServerLoad = async () => {
-	const workspace = await loadControlWorkspace();
+export const load: PageServerLoad = async ({ parent }) => {
+	const { controlWorkspace: workspace } = await parent();
 	let portfolioProjects = workspace.projects;
 
 	if (workspace.metadata.source === "mongo") {
