@@ -49,7 +49,7 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Projects</p>
 			<h1 class="mt-2 text-3xl font-semibold tracking-tight">Project control</h1>
 			<p class="mt-2 max-w-3xl text-sm text-[var(--text-muted)]">
-				Portfolio state and work-item state are separate. Both become Mongo-backed when the control database is initialized.
+				Portfolio state and global work references are separate. Domain authorities remain external where registered; FOIL detailed work is read from FOIL Project Management, not duplicated here.
 			</p>
 		</div>
 		<div class="inline-flex rounded-lg border border-[var(--border-color)] p-1">
@@ -114,8 +114,12 @@
 									</div>
 
 									<div class="mt-2 flex gap-3 text-[11px]">
-										<a href={"/architecture?project=" + project.id} class="no-underline hover:underline">Graph</a>
-										<button type="button" onclick={() => { selectedProject = project.id; view = "work"; }} class="hover:underline">Tasks</button>
+										<a href={project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id} class="no-underline hover:underline">Graph</a>
+										{#if project.id === "foil"}
+											<a href="/foil/kanban" class="no-underline hover:underline">Authoritative backlog</a>
+										{:else}
+											<button type="button" onclick={() => { selectedProject = project.id; view = "work"; }} class="hover:underline">Tasks</button>
+										{/if}
 										{#if project.githubRepo}
 											<a href={"https://github.com/" + project.githubRepo} target="_blank" rel="noreferrer" class="no-underline hover:underline">GitHub</a>
 										{/if}
@@ -128,6 +132,12 @@
 			</div>
 		</div>
 	{:else}
+		{#if selectedProject === "foil"}
+			<div class="rounded-xl border border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
+				Detailed FOIL tasks are not authoritative here. This view may contain global portfolio work or explicit FOIL references only.
+				<a href="/foil/kanban" class="ml-2 font-medium no-underline hover:underline">Open FOIL PM backlog →</a>
+			</div>
+		{/if}
 		<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
 			<div>
 				<h2 class="text-lg font-semibold">Work-item Kanban</h2>
@@ -176,6 +186,11 @@
 									</div>
 									<h3 class="mt-3 text-sm font-medium leading-5">{item.title}</h3>
 									<p class="mt-2 text-xs text-[var(--text-muted)]">{projects.find((project) => project.id === item.projectId)?.name}</p>
+									{#if item.classification === "FOIL_REFERENCE_MIRROR"}
+										<div class="mt-2 rounded-md bg-[var(--hover-background)] p-2 text-[10px] text-[var(--text-muted)]">
+											Reference only · Authority: {item.externalAuthority || "FOIL Project Management"} · {item.externalProjectRef || ""} · {item.externalBacklogRef || ""}
+										</div>
+									{/if}
 									<div class="mt-3 flex flex-wrap gap-1">
 										{#each item.tags as tag}
 											<button type="button" onclick={() => (selectedTag = tag)} class="rounded border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]">#{tag}</button>
