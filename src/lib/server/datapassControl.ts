@@ -102,7 +102,9 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 }
 
 async function upsertMany(db: Db, collectionName: string, docs: Array<{ id: string }>) {
-	if (docs.length === 0) return;
+	if (docs.length === 0) {
+		return;
+	}
 
 	await db.collection(collectionName).bulkWrite(
 		docs.map((doc) => ({
@@ -178,7 +180,9 @@ function assertReadOnlyQuery(value: unknown): void {
 		return;
 	}
 
-	if (!value || typeof value !== "object") return;
+	if (!value || typeof value !== "object") {
+		return;
+	}
 
 	for (const [key, nested] of Object.entries(value)) {
 		if (forbiddenQueryKeys.has(key)) {
