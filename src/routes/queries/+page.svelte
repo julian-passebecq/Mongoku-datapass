@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";\n\timport { resolve } from "$app/paths";\n\timport { SvelteURLSearchParams } from "svelte/reactivity";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { SvelteURLSearchParams } from "svelte/reactivity";
 
 	let { data } = $props();
 
