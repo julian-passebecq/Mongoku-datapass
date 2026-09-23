@@ -16,15 +16,21 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	const requestedLeft = Number(url.searchParams.get("left"));
 	const requestedRight = Number(url.searchParams.get("right"));
+	const fallbackLeft = revisions[1]?.revision ?? revisions[0]?.revision;
+	const fallbackRight = revisions[0]?.revision;
 	const left = Number.isInteger(requestedLeft)
 		? requestedLeft
-		: Number(revisions[1]?.revision ?? revisions[0]?.revision);
+		: typeof fallbackLeft === "number"
+			? fallbackLeft
+			: null;
 	const right = Number.isInteger(requestedRight)
 		? requestedRight
-		: Number(revisions[0]?.revision);
+		: typeof fallbackRight === "number"
+			? fallbackRight
+			: null;
 
 	let comparison = null;
-	if (Number.isInteger(left) && Number.isInteger(right)) {
+	if (typeof left === "number" && typeof right === "number") {
 		try {
 			comparison = await compareControlRevisions(left, right);
 		} catch {
