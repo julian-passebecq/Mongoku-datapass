@@ -15,11 +15,19 @@
 		const items = breadcrumbs.items.slice(-2).reverse();
 
 		if (items.length === 0) {
-			return "Mongoku";
+			return "Datapass Mongo Control";
 		}
 
-		return items.map((b) => b.label).join(" - ");
+		return items.map((b) => b.label).join(" - ") + " - Datapass Mongo Control";
 	});
+
+	const nav = [
+		{ href: "/", label: "Home" },
+		{ href: "/projects", label: "Projects" },
+		{ href: "/foil", label: "FOIL" },
+		{ href: "/topology", label: "Topology" },
+		{ href: "/servers", label: "Mongo Explorer" }
+	];
 </script>
 
 <svelte:head>
@@ -27,39 +35,42 @@
 </svelte:head>
 
 <div style="min-height: 100vh">
-	<!-- App bar -->
-	<header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--background-color)]/80">
-		<div class="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="h-14 flex items-center gap-3">
-				<!-- Logo -->
-				<a href={resolve("/")} class="inline-flex items-center gap-2 group no-underline hover:no-underline">
-					<span
-						class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-black dark:bg-white text-white dark:text-black text-sm font-semibold select-none"
-					>
-						M
-					</span>
-					<span class="text-lg font-semibold tracking-tight" style="color: var(--text);">Mongoku</span>
+	<header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--background-color)]/90 backdrop-blur">
+		<div class="mx-auto max-w-[96rem] px-4 sm:px-6 lg:px-8">
+			<div class="flex min-h-14 items-center gap-3">
+				<a href={resolve("/")} class="inline-flex items-center gap-2 no-underline hover:no-underline">
+					<span class="inline-flex h-7 w-7 select-none items-center justify-center rounded-md bg-black text-sm font-semibold text-white dark:bg-white dark:text-black">D</span>
+					<span class="hidden text-base font-semibold tracking-tight sm:inline" style="color: var(--text);">Mongo Control</span>
 				</a>
 
-				<div class="hidden md:block w-px h-5 bg-[var(--border-color)]"></div>
+				<div class="hidden h-5 w-px bg-[var(--border-color)] md:block"></div>
 
-				<!-- Breadcrumbs -->
-				<Breadcrumbs />
+				<nav class="hidden items-center gap-1 lg:flex">
+					{#each nav as item}
+						<a
+							href={resolve(item.href)}
+							class="rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
+						>
+							{item.label}
+						</a>
+					{/each}
+				</nav>
+
+				<div class="hidden xl:block">
+					<Breadcrumbs />
+				</div>
 
 				<div class="ml-auto flex items-center gap-2">
 					<PageSwitcher class="" />
 					<ThemeSwitcher />
 					{#if data.oauthEnabled && data.user}
-						<div class="hidden md:block w-px h-5 bg-[var(--border-color)]"></div>
+						<div class="hidden h-5 w-px bg-[var(--border-color)] md:block"></div>
 						<div class="flex items-center gap-1.5">
-							<span class="text-xs text-[var(--text-muted)] max-w-32 truncate" title={data.user.email}>
+							<span class="hidden max-w-32 truncate text-xs text-[var(--text-muted)] md:inline" title={data.user.email}>
 								{data.user.name || data.user.email || "User"}
 							</span>
 							<form method="POST" action={resolve("/auth/logout")}>
-								<button
-									type="submit"
-									class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--hover-background)] transition-colors cursor-pointer"
-								>
+								<button type="submit" class="inline-flex cursor-pointer items-center justify-center rounded-md px-2 py-1 text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]">
 									Log out
 								</button>
 							</form>
@@ -67,19 +78,23 @@
 					{/if}
 				</div>
 			</div>
+
+			<nav class="flex gap-1 overflow-x-auto pb-2 lg:hidden">
+				{#each nav as item}
+					<a href={resolve(item.href)} class="whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline hover:bg-[var(--hover-background)] hover:text-[var(--text)]">{item.label}</a>
+				{/each}
+			</nav>
 		</div>
 	</header>
 
 	<OriginWarning serverOrigin={data.serverOrigin} readOnly={data.readOnly} />
 
-	<!-- Main -->
-	<main class="max-w-[96rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+	<main class="mx-auto max-w-[96rem] px-4 py-6 sm:px-6 md:py-10 lg:px-8">
 		<Notifications />
 		<div class="flex flex-col gap-6">
 			{@render children()}
 		</div>
 	</main>
 
-	<!-- Portal container for tooltips and other overlay content -->
 	<div use:createPortal></div>
 </div>
