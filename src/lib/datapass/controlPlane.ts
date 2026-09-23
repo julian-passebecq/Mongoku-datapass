@@ -13,6 +13,8 @@ export type Project = {
 	activeItems: number;
 	tags: string[];
 	githubRepo?: string;
+	mongoContextKey?: string;
+	mongoNamespaces?: string[];
 };
 
 export type WorkItem = {
@@ -64,16 +66,16 @@ export type SystemEdge = {
 };
 
 export const projects: Project[] = [
-	{ id: "datapass-studio", name: "Datapass Studio", summary: "Unified data-engineering learning workspace and VS Code tooling.", status: "active", category: "Data engineering", progress: 72, activeItems: 9, tags: ["learning", "vscode", "data-engineering"], githubRepo: "julian-passebecq/datapass-mosaic-vscode" },
+	{ id: "datapass-studio", name: "Datapass Studio", summary: "Unified data-engineering learning workspace and VS Code tooling.", status: "active", category: "Data engineering", progress: 72, activeItems: 9, tags: ["learning", "vscode", "data-engineering"], githubRepo: "julian-passebecq/datapass-mosaic-vscode", mongoContextKey: "datapass", mongoNamespaces: ["datapass.projects", "datapass.work_items", "datapass.agent_context"] },
 	{ id: "datapass-mosaic", name: "Mosaic", summary: "Notebook and workspace experience.", status: "active", parentProjectId: "datapass-studio", category: "Workspace", progress: 68, activeItems: 3, tags: ["notebook", "mosaic"] },
 	{ id: "datapass-sparklab", name: "SparkLab", summary: "Local-first Spark learning kernel.", status: "active", parentProjectId: "datapass-studio", category: "Runtime", progress: 61, activeItems: 2, tags: ["spark", "pyspark"] },
 	{ id: "datapass-dbt", name: "dbt Lab", summary: "dbt transformations, lineage and exercises.", status: "active", parentProjectId: "datapass-studio", category: "Transformation", progress: 54, activeItems: 2, tags: ["dbt", "lineage"] },
-	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, tags: ["desktop", "control-plane"] },
-	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil" },
+	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, tags: ["desktop", "control-plane"], mongoContextKey: "powertoy", mongoNamespaces: ["powertoy.projects", "powertoy.work_items"] },
+	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
 	{ id: "foil-runtime", name: "Runtime", summary: "Oracle VM and simulation services.", status: "active", parentProjectId: "foil", category: "Runtime", progress: 42, activeItems: 2, tags: ["oracle-vm", "simulation"] },
 	{ id: "foil-stream", name: "Streaming", summary: "Kafka and realtime event movement.", status: "active", parentProjectId: "foil", category: "Streaming", progress: 39, activeItems: 2, tags: ["kafka", "events"] },
 	{ id: "foil-data", name: "Data Platform", summary: "MongoDB, Fabric and Databricks integration.", status: "active", parentProjectId: "foil", category: "Data", progress: 48, activeItems: 4, tags: ["mongodb", "fabric", "databricks"] },
-	{ id: "contoso", name: "Contoso Data Studio", summary: "DuckLake, dbt and lightweight analytics laboratory.", status: "active", category: "Analytics lab", progress: 64, activeItems: 5, tags: ["ducklake", "dbt", "contoso"], githubRepo: "julian-passebecq/contoso-data-studio" }
+	{ id: "contoso", name: "Contoso Data Studio", summary: "DuckLake, dbt and lightweight analytics laboratory.", status: "active", category: "Analytics lab", progress: 64, activeItems: 5, tags: ["ducklake", "dbt", "contoso"], githubRepo: "julian-passebecq/contoso-data-studio", mongoContextKey: "contoso", mongoNamespaces: ["contoso.projects", "contoso.datasets", "contoso.work_items"] }
 ];
 
 export const workItems: WorkItem[] = [
