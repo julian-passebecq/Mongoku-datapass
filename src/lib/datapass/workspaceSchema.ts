@@ -6,6 +6,7 @@ import {
 	instructionProfiles,
 	projects,
 	savedQueries,
+	workspacePresets,
 	workItems
 } from "./controlPlane";
 
@@ -37,6 +38,7 @@ export const workItemSchema = z.object({
 	type: z.enum(["task", "bug", "idea", "note", "research", "milestone", "decision"]),
 	priority: z.enum(["low", "medium", "high"]),
 	dueDate: z.string().optional(),
+	createdAt: z.string().optional(),
 	tags: z.array(z.string())
 });
 
@@ -82,8 +84,34 @@ export const savedMongoQuerySchema = z.object({
 			source: z.enum(["project", "project-tree", "manual"]).optional()
 		})
 	),
-	presentation: z.enum(["project-board", "status-summary", "table", "count"]),
+	presentation: z.enum(["project-board", "status-summary", "table", "count", "calendar", "notes", "detail", "dashboard"]),
 	readOnly: z.literal(true),
+	tags: z.array(z.string())
+});
+
+export const workspacePresetSchema = z.object({
+	id: z.string().min(1),
+	name: z.string().min(1),
+	description: z.string(),
+	defaultProjectId: z.string().optional(),
+	tabs: z.array(
+		z.object({
+			id: z.string().min(1),
+			title: z.string().min(1),
+			href: z.string().min(1),
+			projectId: z.string().optional()
+		})
+	),
+	bookmarks: z.array(
+		z.object({
+			id: z.string().min(1),
+			title: z.string().min(1),
+			href: z.string().min(1)
+		})
+	),
+	leftPanelCollapsed: z.boolean(),
+	rightPanelOpen: z.boolean(),
+	rightPanelMode: z.enum(["context", "bookmarks", "queries", "settings"]),
 	tags: z.array(z.string())
 });
 
@@ -114,6 +142,7 @@ export const workspaceExportSchema = z.object({
 	agentNodes: z.array(agentNodeSchema),
 	instructionProfiles: z.array(instructionProfileSchema),
 	savedQueries: z.array(savedMongoQuerySchema),
+	workspacePresets: z.array(workspacePresetSchema),
 	systemNodes: z.array(systemNodeSchema),
 	systemEdges: z.array(systemEdgeSchema)
 });
@@ -133,6 +162,7 @@ export function buildSeedWorkspace(source: "seed" | "import" = "seed"): Workspac
 		agentNodes,
 		instructionProfiles,
 		savedQueries,
+		workspacePresets,
 		systemNodes: foilNodes,
 		systemEdges: foilEdges
 	};
