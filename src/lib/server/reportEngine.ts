@@ -7,6 +7,7 @@ import {
 	type ReportResult,
 	type ReportSection,
 	type ReportSourceTrace,
+	type ResourceRegistryTrace,
 	type SourceDescriptor
 } from "$lib/datapass/reporting";
 import { loadControlWorkspace } from "$lib/server/datapassControl";
@@ -15,6 +16,11 @@ import type { Document, Filter, MongoClient, Sort } from "mongodb";
 
 type SourceBinding = {
 	server: string;
+	database?: string;
+};
+
+type RegistryResolution = {
+	trace: ResourceRegistryTrace;
 	database?: string;
 };
 
@@ -42,6 +48,18 @@ function parseBindings(): Record<string, SourceBinding> {
 	}
 	try {
 		const parsed = JSON.parse(env.DATAPASS_SOURCE_BINDINGS) as Record<string, SourceBinding>;
+		return parsed && typeof parsed === "object" ? parsed : {};
+	} catch {
+		return {};
+	}
+}
+
+function parseResourceBindings(): Record<string, SourceBinding> {
+	if (!env.DATAPASS_RESOURCE_BINDINGS) {
+		return {};
+	}
+	try {
+		const parsed = JSON.parse(env.DATAPASS_RESOURCE_BINDINGS) as Record<string, SourceBinding>;
 		return parsed && typeof parsed === "object" ? parsed : {};
 	} catch {
 		return {};
@@ -122,7 +140,8 @@ function traceFor(
 	source: SourceDescriptor,
 	database: string | undefined,
 	resolved: boolean,
-	message?: string
+	message?: string,
+	resourceRegistry?: ResourceRegistryTrace
 ): ReportSourceTrace {
 	return {
 		reportId,
@@ -136,16 +155,156 @@ function traceFor(
 		operation: step.operation,
 		readOnly: true,
 		resolved,
+		resourceRegistry,
 		message
 	};
+}
+
+function configuredBinding(source: SourceDescriptor): SourceBinding | undefined {
+	return (
+		parseResourceBindings()[source.resourceRef] ??
+		parseBindings()[source.id] ??
+		envBinding(source.id)
+	);
+}
+
+function stringValue(row: Record<string, unknown>, ...keys: string[]): string | undefined {
+	for (const key of keys) {
+		const value = row[key];
+		if (typeof value === "string" && value.trim()) {
+			return value;
+		}
+	}
+	return undefined;
+}
+
+function stringList(row: Record<string, unknown>, key: string): string[] {
+	const value = row[key];
+	return Array.isArray(value) ? value.map(String) : [];
+}
+
+async function resolveRegistryRecord(source: SourceDescriptor): Promise<RegistryResolution | undefined> {
+	if (!source.registryAuthority || source.id === "FOIL_PM") {
+		return undefined;
+	}
+
+	const pmSource = getSourceDescriptor("FOIL_PM");
+	if (!pmSource) {
+		return {
+			trace: {
+				found: false,
+				registryAuthority: source.registryAuthority
+			}
+		};
+	}
+
+	const pmBinding = configuredBinding(pmSource);
+	if (!pmBinding) {
+		return {
+			trace: {
+				found: false,
+				registryAuthority: source.registryAuthority
+			}
+		};
+	}
+
+	const mongo = await getMongo();
+	const selected = mongo
+		.listClients()
+		.find((entry) => entry.name === pmBinding.server || entry._id === pmBinding.server);
+
+	if (!selected) {
+		return {
+			trace: {
+				found: false,
+				registryAuthority: source.registryAuthority
+			}
+		};
+	}
+
+	const pmDatabase = pmBinding.database ?? pmSource.database;
+	if (!pmDatabase) {
+		return {
+			trace: {
+				found: false,
+				registryAuthority: source.registryAuthority
+			}
+		};
+	}
+
+	try {
+		await selected.client.connect();
+		const aliases = source.aliases ?? [];
+		const candidates = [source.resourceRef, source.authority, ...aliases];
+		const row = (await selected.client
+			.db(pmDatabase)
+			.collection("resource_registry")
+			.findOne({
+				$or: [
+					{ _id: { $in: candidates } },
+					{ resourceId: { $in: candidates } },
+					{ id: { $in: candidates } },
+					{ canonicalName: { $in: candidates } },
+					{ recommendedDisplayName: { $in: candidates } },
+					{ name: { $in: candidates } },
+					{ aliases: { $in: candidates } },
+					{ externalId: { $in: candidates } }
+				]
+			})) as Record<string, unknown> | null;
+
+		if (!row) {
+			return {
+				trace: {
+					found: false,
+					registryAuthority: source.registryAuthority
+				}
+			};
+		}
+
+		const database = stringValue(row, "database", "databaseName", "dbName");
+		const canonicalName = stringValue(row, "recommendedDisplayName", "canonicalName", "name");
+		const providerName = stringValue(row, "providerName", "displayName", "name");
+		const registeredAliases = stringList(row, "aliases");
+
+		return {
+			database,
+			trace: {
+				found: true,
+				registryAuthority: source.registryAuthority,
+				resourceId: stringValue(row, "_id", "resourceId", "id") ?? source.resourceRef,
+				canonicalName,
+				providerName,
+				aliases: Array.from(new Set([...(source.aliases ?? []), ...registeredAliases])),
+				resourceKind: stringValue(row, "kind", "resourceKind"),
+				authorityRole: stringValue(row, "role", "authorityRole", "scope"),
+				provider: stringValue(row, "provider"),
+				projectId: stringValue(row, "projectId", "externalId", "providerProjectId"),
+				cluster: stringValue(row, "cluster", "clusterName"),
+				database,
+				repository: stringValue(row, "repository", "repositoryName", "repo"),
+				status: stringValue(row, "status"),
+				defaultRoute: typeof row.defaultRoute === "boolean" ? row.defaultRoute : undefined,
+				lastVerifiedAt: stringValue(row, "verifiedAt", "lastVerifiedAt", "lastVerified")
+			}
+		};
+	} catch {
+		return {
+			trace: {
+				found: false,
+				registryAuthority: source.registryAuthority
+			}
+		};
+	}
 }
 
 async function resolveMongoSource(source: SourceDescriptor): Promise<{
 	client: MongoClient;
 	database: string;
 	server: string;
+	resourceRegistry?: ResourceRegistryTrace;
 } | null> {
-	const binding = parseBindings()[source.id] ?? envBinding(source.id);
+	const registry = await resolveRegistryRecord(source);
+	const binding = configuredBinding(source);
 	if (!binding) {
 		return null;
 	}
@@ -159,7 +318,7 @@ async function resolveMongoSource(source: SourceDescriptor): Promise<{
 		throw new Error("Configured source server was not found for " + source.id);
 	}
 
-	const database = binding.database ?? source.database;
+	const database = binding.database ?? registry?.database ?? source.database;
 	if (!database) {
 		throw new Error("No database configured for source " + source.id);
 	}
@@ -168,7 +327,8 @@ async function resolveMongoSource(source: SourceDescriptor): Promise<{
 	return {
 		client: selected.client,
 		database,
-		server: selected.name
+		server: selected.name,
+		resourceRegistry: registry?.trace
 	};
 }
 
@@ -218,7 +378,7 @@ async function executeStep(
 				source,
 				source.database,
 				false,
-				"No server binding configured. Set DATAPASS_SOURCE_BINDINGS or DATAPASS_SOURCE_" +
+				"No server binding configured. Bind the canonical resource through DATAPASS_RESOURCE_BINDINGS, DATAPASS_SOURCE_BINDINGS or DATAPASS_SOURCE_" +
 					source.id +
 					"_SERVER."
 			)
@@ -254,7 +414,7 @@ async function executeStep(
 				authority: step.authority,
 				sourceId: step.sourceId,
 				rows,
-				trace: traceFor(reportId, step, source, resolved.database, true)
+				trace: traceFor(reportId, step, source, resolved.database, true, undefined, resolved.resourceRegistry)
 			};
 		}
 
@@ -276,7 +436,7 @@ async function executeStep(
 			authority: step.authority,
 			sourceId: step.sourceId,
 			rows,
-			trace: traceFor(reportId, step, source, resolved.database, true)
+			trace: traceFor(reportId, step, source, resolved.database, true, undefined, resolved.resourceRegistry)
 		};
 	} catch (error) {
 		const message = error instanceof Error ? error.message : "Report query failed";
@@ -287,7 +447,7 @@ async function executeStep(
 				authority: step.authority,
 				sourceId: step.sourceId,
 				rows: [],
-				trace: traceFor(reportId, step, source, resolved.database, false, message)
+				trace: traceFor(reportId, step, source, resolved.database, false, message, resolved.resourceRegistry)
 			};
 		}
 		throw error;
