@@ -63,6 +63,15 @@ DATAPASS_SOURCE_BINDINGS='{
   "FOIL_CORE":{"server":"<core-host-key>","database":"foil_control"},
   "FOIL_WORK_ARCHIVE":{"server":"<archive-host-key>","database":"foil_work_archive"}
 }'
+
+# Optional resource-ID bindings. These are useful when FOIL PM resource_registry
+# IDs are more stable than logical source IDs. The registry is still queried
+# first; this mapping only resolves the private configured Mongo connection.
+DATAPASS_RESOURCE_BINDINGS='{
+  "RES-MONGO-DB-PM":{"server":"<pm-host-key>","database":"foil_project_management"},
+  "RES-MONGO-DB-CORE-CONTROL":{"server":"<core-host-key>","database":"foil_control"},
+  "RES-MONGO-DB-WORK-ARCHIVE":{"server":"<archive-host-key>","database":"foil_work_archive"}
+}'
 ```
 
 FOIL resource discovery follows this rule:
@@ -73,6 +82,8 @@ FOIL resource discovery follows this rule:
 4. never declare a registered resource absent merely because a provider list omitted it.
 
 Saved reports can target several authority-native sources, but Mongoku composes results in the application layer rather than attempting arbitrary cross-database `$lookup` joins.
+
+For FOIL domain sources, the report engine resolves the corresponding PM `resource_registry` record first. Report traces carry canonical/provider identity when available, and a registered-but-unbound resource is reported as such rather than treated as nonexistent.
 
 #### Optional Mongoku-owned persistence
 
