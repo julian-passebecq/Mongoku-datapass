@@ -26,6 +26,10 @@ Main additions:
 - project-to-GitHub and project-to-Mongo context mappings
 - versioned custom instruction profiles
 - canonical JSON export/import for projects, queries, presets, instructions and graph data
+- reviewed AI ChangeSets with preview, staging, selected-operation acceptance and stale-base rejection
+- immutable control-plane revisions with A/B comparison and restore-as-new
+- activity/audit log for staged, accepted, rejected and stale proposals
+- saved local workspace checkpoints with automatic pre-restore undo
 - read-only saved-query API for AI/tooling integrations
 - original Mongoku explorer remains available under `/servers`
 
@@ -44,7 +48,7 @@ DATAPASS_CONTROL_DATABASE=datapass_control
 DATAPASS_CONTROL_WRITE_ENABLED=true
 ```
 
-When the control database is empty, the UI uses typed seed data. Open **AI JSON** and use **Merge JSON** to initialize the control collections after enabling writes.
+When the control database is empty, the UI uses typed seed data. Enable writes on a trusted local/private instance and use **AI JSON > Direct JSON commit** once to initialize the control collections. After initialization, model-generated changes should normally use **AI Review** rather than direct workspace replacement.
 
 Control collections:
 
@@ -57,16 +61,40 @@ Control collections:
 - `system_nodes`
 - `system_edges`
 
-### AI JSON + saved-query APIs
+Review/history collections are separate from the canonical workspace replacement set:
+
+- `control_meta`
+- `control_revisions`
+- `control_changesets`
+- `control_activity`
+
+### AI ChangeSets, JSON and saved-query APIs
 
 ```text
+GET  /api/datapass/capabilities
 GET  /api/datapass/workspace
 PUT  /api/datapass/workspace
+
+POST /api/datapass/changesets/preview
+GET  /api/datapass/changesets
+POST /api/datapass/changesets
+POST /api/datapass/changesets/:id
+
+GET  /api/datapass/history
+POST /api/datapass/history/restore
 
 POST /api/datapass/query/:queryId
 ```
 
-Normal AI edits use workspace `mode: "merge"`. Full replacement is intentionally harder and requires `confirmReplace: "replace-workspace"`.
+The preferred AI workflow is:
+
+1. read `/api/datapass/capabilities` and `/api/datapass/workspace`;
+2. create a typed ChangeSet using the current `metadata.revision` and `metadata.fingerprint`;
+3. preview it;
+4. stage it for review;
+5. explicitly accept selected operations or reject it.
+
+If the workspace changed after the proposal was based, acceptance marks it stale and requires a fresh preview. Direct workspace PUT is retained for trusted manual initialization/administration and is revisioned. Full direct replacement still requires `confirmReplace: "replace-workspace"`.
 
 Saved queries are JSON data, not UI source code. They can define a collection, read-only `find`/aggregation logic, parameters, tags and presentation hints. The UI uses those definitions for portfolio status, project details, calendar and notes.
 
@@ -75,6 +103,10 @@ Mongo credentials and connection strings are deliberately excluded from the work
 ### Workspace state
 
 Named workspace presets are part of the canonical Mongo/JSON workspace and can be edited by AI. The currently open tabs, bookmarks and panel state are stored in browser local storage for fast resume, and can be copied/imported as JSON from the right **Settings** panel.
+
+**Workspace States** adds manual checkpoints of this local session state. A restore does not roll back Mongo project data. Every restore creates one automatic pre-restore undo point, and recent checkpoint activity is retained locally.
+
+**History** is different: it versions canonical Mongo control-plane data. Accepted ChangeSets, direct JSON commits and restore-as-new operations create immutable revision snapshots that can be compared A/B.
 
 ### Demo
 
