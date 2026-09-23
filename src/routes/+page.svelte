@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
-	import { projects, workItems } from "$lib/datapass/controlPlane";
 
-	const active = workItems.filter((item) => item.status === "in_progress");
-	const blocked = workItems.filter((item) => item.status === "blocked");
-	const open = workItems.filter((item) => item.status !== "done");
+	let { data } = $props();
+	const projects = $derived(data.controlWorkspace.projects);
+	const workItems = $derived(data.controlWorkspace.workItems);
+	const active = $derived(workItems.filter((item) => item.status === "in_progress"));
+	const blocked = $derived(workItems.filter((item) => item.status === "blocked"));
+	const open = $derived(workItems.filter((item) => item.status !== "done"));
 </script>
 
 <section class="space-y-8">
@@ -51,7 +53,7 @@
 		<section class="rounded-xl border border-[var(--border-color)] p-5">
 			<div class="flex items-start justify-between gap-4">
 				<div><p class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">FOIL</p><h2 class="mt-1 text-xl font-semibold">System visibility</h2></div>
-				<span class="rounded-full border border-[var(--border-color)] px-2.5 py-1 text-xs">Prototype data</span>
+				<span class="rounded-full border border-[var(--border-color)] px-2.5 py-1 text-xs">{data.controlWorkspace.metadata.source}</span>
 			</div>
 			<div class="mt-6 space-y-3 text-sm">
 				<div class="flex items-center justify-between rounded-lg bg-[var(--hover-background)] px-3 py-2"><span>MongoDB</span><span>Healthy</span></div>
