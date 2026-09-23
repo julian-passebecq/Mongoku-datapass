@@ -55,9 +55,9 @@
 	</div>
 
 	<div class="flex flex-wrap gap-2">
-		<button type="button" onclick={() => (selectedTag = "all")} class="rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px]" class:bg-[var(--hover-background)]={selectedTag === "all"}>All tags</button>
+		<button type="button" onclick={() => (selectedTag = "all")} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === "all" ? "bg-[var(--hover-background)]" : "")}>All tags</button>
 		{#each tags as tag}
-			<button type="button" onclick={() => (selectedTag = tag)} class="rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px]" class:bg-[var(--hover-background)]={selectedTag === tag}>#{tag}</button>
+			<button type="button" onclick={() => (selectedTag = tag)} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === tag ? "bg-[var(--hover-background)]" : "")}>#{tag}</button>
 		{/each}
 	</div>
 
