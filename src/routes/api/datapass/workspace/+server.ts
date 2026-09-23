@@ -78,7 +78,8 @@ export const PUT: RequestHandler = async ({ request }) => {
 	const identity = await commitDirectWorkspace(
 		parsed.data.workspace,
 		"manual-json",
-		parsed.data.mode === "replace" ? "Direct workspace replacement" : "Direct workspace JSON commit"
+		parsed.data.mode === "replace" ? "Direct workspace replacement" : "Direct workspace JSON merge",
+		parsed.data.mode
 	);
 	return json({ ok: true, mode: parsed.data.mode, identity });
 };
