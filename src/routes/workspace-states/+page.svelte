@@ -108,7 +108,7 @@
 				<h2 class="text-sm font-semibold">Saved states</h2>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each workspaceUi.checkpoints as checkpoint}
+				{#each workspaceUi.checkpoints as checkpoint, __eachIndex0 (__eachIndex0)}
 					<div class="flex items-start justify-between gap-4 px-4 py-4">
 						<div>
 							<p class="text-sm font-semibold">{checkpoint.title}</p>
@@ -142,7 +142,7 @@
 				<h2 class="text-sm font-semibold">Recent activity</h2>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each workspaceUi.checkpointHistory as event}
+				{#each workspaceUi.checkpointHistory as event, __eachIndex1 (__eachIndex1)}
 					<div class="px-4 py-3">
 						<p class="text-xs font-medium">{event.action} · {event.title}</p>
 						<p class="mt-1 text-[10px] text-[var(--text-muted)]">{event.createdAt}</p>

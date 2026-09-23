@@ -90,7 +90,7 @@
 			title="Apply workspace preset"
 		>
 			<option value="">Workspace preset</option>
-			{#each presets as preset}
+			{#each presets as preset, __eachIndex0 (__eachIndex0)}
 				<option value={preset.id}>{preset.name}</option>
 			{/each}
 		</select>
@@ -101,7 +101,7 @@
 			class="shrink-0 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-1 text-[11px]"
 			title="Workspace instance"
 		>
-			{#each workspaceUi.instances as item}
+			{#each workspaceUi.instances as item, __eachIndex1 (__eachIndex1)}
 				<option value={item.id}>{item.name}</option>
 			{/each}
 		</select>
@@ -117,7 +117,7 @@
 
 		<div class="h-5 w-px shrink-0 bg-[var(--border-color)]"></div>
 
-		{#each instance?.tabs ?? [] as tab}
+		{#each instance?.tabs ?? [] as tab, __eachIndex2 (__eachIndex2)}
 			<div
 				class={"flex shrink-0 items-center rounded-t-md border border-b-0 border-[var(--border-color)] text-[11px] " +
 					(tab.href === href ? "bg-[var(--hover-background)] font-semibold" : "")}

@@ -46,7 +46,7 @@
 			bind:value={selectedProject}
 			class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 		>
-			{#each graphProjects as project}
+			{#each graphProjects as project, __eachIndex0 (__eachIndex0)}
 				<option value={project.id}>{project.name}</option>
 			{/each}
 		</select>
@@ -87,13 +87,13 @@
 	{:else}
 		<div class="overflow-x-auto rounded-xl border border-[var(--border-color)] p-6">
 			<div class="min-w-[900px] space-y-10">
-				{#each levels as level, depth}
+				{#each levels as level, depth (depth)}
 					<div class="relative">
 						{#if depth > 0}
 							<div class="absolute -top-6 left-1/2 h-6 w-px bg-[var(--border-color)]"></div>
 						{/if}
 						<div class="flex justify-center gap-5">
-							{#each level as node}
+							{#each level as node, __eachIndex1 (__eachIndex1)}
 								<article
 									class="w-64 rounded-xl border border-[var(--border-color)] bg-[var(--background-color)] p-4 shadow-sm"
 								>
@@ -115,7 +115,7 @@
 									<div class="mt-3">
 										<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Mongo scope</p>
 										<div class="mt-1 flex flex-wrap gap-1">
-											{#each node.mongoScope as scope}
+											{#each node.mongoScope as scope, __eachIndex2 (__eachIndex2)}
 												<span class="rounded border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]"
 													>{scope}</span
 												>
@@ -130,7 +130,7 @@
 									{/if}
 
 									<div class="mt-3 flex flex-wrap gap-1">
-										{#each node.tags as tag}
+										{#each node.tags as tag, __eachIndex3 (__eachIndex3)}
 											<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">#{tag}</span>
 										{/each}
 									</div>

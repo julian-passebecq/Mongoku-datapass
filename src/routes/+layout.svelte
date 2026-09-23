@@ -58,7 +58,7 @@
 				<div class="hidden h-5 w-px bg-[var(--border-color)] md:block"></div>
 
 				<nav class="hidden items-center gap-1 xl:flex">
-					{#each nav as item}
+					{#each nav as item, __eachIndex0 (__eachIndex0)}
 						<a
 							href={resolve(item.href)}
 							class="rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
@@ -93,7 +93,7 @@
 			</div>
 
 			<nav class="flex gap-1 overflow-x-auto pb-2 xl:hidden">
-				{#each nav as item}
+				{#each nav as item, __eachIndex1 (__eachIndex1)}
 					<a
 						href={resolve(item.href)}
 						class="whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline hover:bg-[var(--hover-background)] hover:text-[var(--text)]"

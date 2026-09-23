@@ -81,7 +81,7 @@
 		class="sticky top-[57px] hidden h-[calc(100vh-57px)] w-72 shrink-0 border-l border-[var(--border-color)] bg-[var(--background-color)] xl:flex xl:flex-col"
 	>
 		<div class="flex items-center gap-1 border-b border-[var(--border-color)] p-2">
-			{#each [{ id: "context", label: "Context" }, { id: "bookmarks", label: "Marks" }, { id: "queries", label: "Queries" }, { id: "settings", label: "Settings" }] as mode}
+			{#each [{ id: "context", label: "Context" }, { id: "bookmarks", label: "Marks" }, { id: "queries", label: "Queries" }, { id: "settings", label: "Settings" }] as mode, __eachIndex0 (__eachIndex0)}
 				<button
 					type="button"
 					onclick={() => workspaceUi.setRightPanelMode(mode.id as "context" | "bookmarks" | "queries" | "settings")}
@@ -104,7 +104,7 @@
 						<h2 class="text-sm font-semibold">{selectedProject.name}</h2>
 						<p class="mt-1 text-[11px] leading-5 text-[var(--text-muted)]">{selectedProject.summary}</p>
 						<div class="mt-3 flex flex-wrap gap-1">
-							{#each selectedProject.tags as tag}<span
+							{#each selectedProject.tags as tag, __eachIndex1 (__eachIndex1)}<span
 									class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">#{tag}</span
 								>{/each}
 						</div>
@@ -158,7 +158,7 @@
 			{:else if instance.rightPanelMode === "bookmarks"}
 				<p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Bookmarks</p>
 				<div class="mt-3 space-y-2">
-					{#each instance.bookmarks as bookmark}
+					{#each instance.bookmarks as bookmark, __eachIndex2 (__eachIndex2)}
 						<button
 							type="button"
 							onclick={() => openHref(bookmark.href)}
@@ -172,7 +172,7 @@
 			{:else if instance.rightPanelMode === "queries"}
 				<p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">Useful queries</p>
 				<div class="mt-3 space-y-2">
-					{#each relevantQueries as query}
+					{#each relevantQueries as query, __eachIndex3 (__eachIndex3)}
 						<button
 							type="button"
 							onclick={() =>
@@ -204,7 +204,8 @@
 							}}
 						>
 							<option value="">Custom</option>
-							{#each presets as preset}<option value={preset.id}>{preset.name}</option>{/each}
+							{#each presets as preset, __eachIndex4 (__eachIndex4)}<option value={preset.id}>{preset.name}</option
+								>{/each}
 						</select>
 					</div>
 

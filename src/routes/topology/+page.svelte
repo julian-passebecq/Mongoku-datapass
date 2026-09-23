@@ -22,7 +22,7 @@
 			</p>
 		</div>
 		<div class="inline-flex rounded-lg border border-[var(--border-color)] p-1">
-			{#each modes as option}
+			{#each modes as option, __eachIndex0 (__eachIndex0)}
 				<button
 					type="button"
 					onclick={() => (mode = option.id)}
@@ -35,7 +35,7 @@
 
 	{#if mode === "infrastructure"}
 		<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-			{#each foilNodes as node}
+			{#each foilNodes as node, __eachIndex1 (__eachIndex1)}
 				<div class="rounded-xl border border-[var(--border-color)] p-5">
 					<p class="text-xs uppercase tracking-wide text-[var(--text-muted)]">{node.kind}</p>
 					<p class="mt-2 text-lg font-semibold">{node.label}</p>
@@ -45,7 +45,7 @@
 		</div>
 	{:else if mode === "data"}
 		<div class="space-y-3 rounded-xl border border-[var(--border-color)] p-5">
-			{#each foilEdges as edge}
+			{#each foilEdges as edge, __eachIndex2 (__eachIndex2)}
 				<div
 					class="grid gap-2 rounded-lg bg-[var(--hover-background)] px-4 py-3 md:grid-cols-[1fr_160px_1fr] md:items-center"
 				>
@@ -57,7 +57,7 @@
 		</div>
 	{:else}
 		<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-			{#each ["turbines", "telemetry", "alerts", "simulations", "maintenance"] as collection}
+			{#each ["turbines", "telemetry", "alerts", "simulations", "maintenance"] as collection, __eachIndex3 (__eachIndex3)}
 				<div class="rounded-xl border border-[var(--border-color)] p-5">
 					<p class="text-xs uppercase tracking-wide text-[var(--text-muted)]">collection</p>
 					<p class="mt-2 font-semibold">{collection}</p>

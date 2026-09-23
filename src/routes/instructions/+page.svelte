@@ -32,7 +32,7 @@
 				class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 			>
 				<option value="all">All projects</option>
-				{#each projects.filter((project) => !project.parentProjectId) as project}
+				{#each projects.filter((project) => !project.parentProjectId) as project, __eachIndex0 (__eachIndex0)}
 					<option value={project.id}>{project.name}</option>
 				{/each}
 			</select>
@@ -41,13 +41,13 @@
 				class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 			>
 				<option value="all">All tags</option>
-				{#each tags as tag}<option value={tag}>{tag}</option>{/each}
+				{#each tags as tag, __eachIndex1 (__eachIndex1)}<option value={tag}>{tag}</option>{/each}
 			</select>
 		</div>
 	</div>
 
 	<div class="grid gap-4 xl:grid-cols-2">
-		{#each visibleProfiles as profile}
+		{#each visibleProfiles as profile, __eachIndex2 (__eachIndex2)}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex items-start justify-between gap-4">
 					<div>
@@ -61,7 +61,7 @@
 				</div>
 				<div class="mt-4 rounded-lg bg-[var(--hover-background)] p-3 text-sm leading-6">{profile.body}</div>
 				<div class="mt-4 flex flex-wrap gap-1">
-					{#each profile.tags as tag}
+					{#each profile.tags as tag, __eachIndex3 (__eachIndex3)}
 						<span class="rounded-full border border-[var(--border-color)] px-2 py-0.5 text-[10px]">#{tag}</span>
 					{/each}
 				</div>

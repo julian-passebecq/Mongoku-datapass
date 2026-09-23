@@ -48,7 +48,7 @@
 		>
 			{foilMode ? "FOIL" : "Tools"}
 		</a>
-		{#each tools as tool}
+		{#each tools as tool, __eachIndex0 (__eachIndex0)}
 			<a
 				href={base + tool.href}
 				class="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"

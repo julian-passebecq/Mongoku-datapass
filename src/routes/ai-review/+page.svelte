@@ -207,7 +207,7 @@
 	</section>
 
 	<div class="space-y-4">
-		{#each changeSets as row}
+		{#each changeSets as row, __eachIndex0 (__eachIndex0)}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div>
@@ -241,7 +241,7 @@
 				</div>
 
 				<div class="mt-4 space-y-2">
-					{#each row.preview ?? [] as change}
+					{#each row.preview ?? [] as change, __eachIndex1 (__eachIndex1)}
 						<label class="flex items-start gap-3 rounded-lg bg-[var(--hover-background)] p-3">
 							{#if row.status === "staged"}
 								<input

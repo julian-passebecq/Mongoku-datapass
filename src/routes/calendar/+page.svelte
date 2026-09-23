@@ -36,7 +36,7 @@
 	</div>
 
 	<div class="grid gap-4 xl:grid-cols-2">
-		{#each grouped as [date, items]}
+		{#each grouped as [date, items], __eachIndex0 (__eachIndex0)}
 			<section class="rounded-xl border border-[var(--border-color)]">
 				<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
 					<div>
@@ -45,7 +45,7 @@
 					</div>
 				</div>
 				<div class="divide-y divide-[var(--border-color)]">
-					{#each items as item}
+					{#each items as item, __eachIndex1 (__eachIndex1)}
 						<div class="px-4 py-3">
 							<div class="flex items-start justify-between gap-3">
 								<div>
@@ -57,7 +57,7 @@
 								<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">{item.status}</span>
 							</div>
 							<div class="mt-2 flex flex-wrap gap-1">
-								{#each item.tags as tag}<span
+								{#each item.tags as tag, __eachIndex2 (__eachIndex2)}<span
 										class="rounded border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]">#{tag}</span
 									>{/each}
 							</div>

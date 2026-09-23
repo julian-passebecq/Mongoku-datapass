@@ -66,20 +66,20 @@
 		</div>
 	</div>
 
-	{#each report.sections.filter((section) => !section.trace.resolved) as section}
+	{#each report.sections.filter((section) => !section.trace.resolved) as section, __eachIndex0 (__eachIndex0)}
 		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
 			{section.label}: {section.trace.message}
 		</div>
 	{/each}
 
 	<div class="grid gap-4 xl:grid-cols-2">
-		{#each grouped as [date, items]}
+		{#each grouped as [date, items], __eachIndex1 (__eachIndex1)}
 			<section class="rounded-xl border border-[var(--border-color)]">
 				<div class="border-b border-[var(--border-color)] px-4 py-3">
 					<h2 class="text-sm font-semibold">{date}</h2>
 				</div>
 				<div class="divide-y divide-[var(--border-color)]">
-					{#each items as row}
+					{#each items as row, __eachIndex2 (__eachIndex2)}
 						<div class="px-4 py-3">
 							<div class="flex items-start justify-between gap-3">
 								<div>

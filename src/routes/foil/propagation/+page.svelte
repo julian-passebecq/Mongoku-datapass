@@ -43,7 +43,7 @@
 
 	<div class="overflow-x-auto rounded-xl border border-[var(--border-color)] p-3">
 		<div class="flex min-w-[1100px] items-center gap-2">
-			{#each lifecycle as state, index}
+			{#each lifecycle as state, index (index)}
 				<div class="flex items-center gap-2">
 					<span class="rounded-md bg-[var(--hover-background)] px-2 py-1 text-[10px] font-medium">{state}</span>
 					{#if index < lifecycle.length - 1}<span class="text-[var(--text-muted)]">→</span>{/if}
@@ -72,7 +72,7 @@
 			<details class="mt-3">
 				<summary class="cursor-pointer text-xs">Show unassessed events</summary>
 				<div class="mt-3 space-y-2">
-					{#each unassessed.slice(0, 20) as row}
+					{#each unassessed.slice(0, 20) as row, __eachIndex0 (__eachIndex0)}
 						<div class="rounded-lg bg-[var(--hover-background)] p-3 text-xs">
 							<p class="font-medium">{text(row, "title") || text(row, "_id")}</p>
 							<p class="mt-1 text-[10px] text-[var(--text-muted)]">
@@ -86,7 +86,7 @@
 	{/if}
 
 	<div class="space-y-4">
-		{#each rows as row}
+		{#each rows as row, __eachIndex1 (__eachIndex1)}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div>
@@ -104,7 +104,7 @@
 				</div>
 
 				<div class="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-					{#each targets(row) as target}
+					{#each targets(row) as target, __eachIndex2 (__eachIndex2)}
 						<div class="rounded-lg bg-[var(--hover-background)] p-3">
 							{#if typeof target === "string"}
 								<p class="text-xs font-medium">{target}</p>

@@ -81,13 +81,13 @@
 		</div>
 	{/if}
 
-	{#each topics as topic}
+	{#each topics as topic, __eachIndex0 (__eachIndex0)}
 		<section class="rounded-xl border border-[var(--border-color)]">
 			<div class="border-b border-[var(--border-color)] px-4 py-3">
 				<h2 class="text-sm font-semibold">{topic}</h2>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each visible.filter((row) => (text(row, "topic") || "Other") === topic) as row}
+				{#each visible.filter((row) => (text(row, "topic") || "Other") === topic) as row, __eachIndex1 (__eachIndex1)}
 					<article class="px-4 py-4">
 						<div class="flex flex-wrap items-center gap-2">
 							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]"

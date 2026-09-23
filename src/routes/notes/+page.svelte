@@ -20,7 +20,7 @@
 	</div>
 
 	<div class="grid gap-4 xl:grid-cols-2">
-		{#each data.items as item}
+		{#each data.items as item, __eachIndex0 (__eachIndex0)}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex items-start justify-between gap-4">
 					<div>
@@ -33,8 +33,8 @@
 					{#if item.createdAt}<span class="text-[10px] text-[var(--text-muted)]">{item.createdAt}</span>{/if}
 				</div>
 				<div class="mt-4 flex flex-wrap gap-1">
-					{#each item.tags as tag}<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]"
-							>#{tag}</span
+					{#each item.tags as tag, __eachIndex1 (__eachIndex1)}<span
+							class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">#{tag}</span
 						>{/each}
 				</div>
 			</article>

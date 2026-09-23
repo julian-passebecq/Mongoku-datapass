@@ -101,7 +101,7 @@
 	</div>
 
 	<div class="flex flex-wrap gap-1 rounded-xl border border-[var(--border-color)] p-1">
-		{#each modes as option}
+		{#each modes as option, __eachIndex0 (__eachIndex0)}
 			<button
 				type="button"
 				onclick={() => (mode = option.id)}
@@ -117,7 +117,7 @@
 				Source: FOIL Project Management portfolio. This view describes FOIL portfolios/apps/studies, not Mongo topology.
 			</div>
 			<div class="grid gap-4 xl:grid-cols-3">
-				{#each projectRows as row}
+				{#each projectRows as row, __eachIndex1 (__eachIndex1)}
 					<article class="rounded-xl border border-[var(--border-color)] p-4">
 						<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">
 							{text(row, "category") || text(row, "technology")}
@@ -155,7 +155,7 @@
 						>FOIL Project Management · router / backlog</span
 					>
 					<span>→</span>
-					{#each sources.filter((source) => source.id !== "FOIL_PM") as source}
+					{#each sources.filter((source) => source.id !== "FOIL_PM") as source, __eachIndex2 (__eachIndex2)}
 						<div class="rounded-lg bg-[var(--hover-background)] px-3 py-2">
 							<p class="font-medium">{source.authority}</p>
 							<p class="mt-1 text-[9px] text-[var(--text-muted)]">{source.id} · {source.resourceRef}</p>
@@ -163,7 +163,7 @@
 					{/each}
 				</div>
 			</div>
-			{#each routingRows as row}
+			{#each routingRows as row, __eachIndex3 (__eachIndex3)}
 				<article class="rounded-xl border border-[var(--border-color)] p-5">
 					<div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
 						<div>
@@ -179,7 +179,7 @@
 					</div>
 					{#if routePairs(row).length > 0}
 						<div class="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-							{#each routePairs(row) as route}
+							{#each routePairs(row) as route, __eachIndex4 (__eachIndex4)}
 								<div class="rounded-lg bg-[var(--hover-background)] p-3">
 									<p class="text-[9px] uppercase text-[var(--text-muted)]">{route.question}</p>
 									<p class="mt-1 text-[11px] font-medium">{route.target}</p>
@@ -192,7 +192,7 @@
 		</div>
 	{:else if mode === "resources"}
 		<div class="space-y-6">
-			{#each atlasProjects as project}
+			{#each atlasProjects as project, __eachIndex5 (__eachIndex5)}
 				<section class="rounded-xl border border-[var(--border-color)] p-5">
 					<div>
 						<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Atlas project</p>
@@ -204,11 +204,11 @@
 						</p>
 					</div>
 					<div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-						{#each resourceChildren(text(project, "_id")) as cluster}
+						{#each resourceChildren(text(project, "_id")) as cluster, __eachIndex6 (__eachIndex6)}
 							<div class="rounded-lg bg-[var(--hover-background)] p-3">
 								<p class="text-[9px] uppercase text-[var(--text-muted)]">{text(cluster, "kind")}</p>
 								<p class="mt-1 text-xs font-semibold">{text(cluster, "name")}</p>
-								{#each resourceChildren(text(cluster, "_id")) as database}
+								{#each resourceChildren(text(cluster, "_id")) as database, __eachIndex7 (__eachIndex7)}
 									<div class="mt-2 rounded border border-[var(--border-color)] p-2">
 										<p class="text-[9px] uppercase text-[var(--text-muted)]">{text(database, "kind")}</p>
 										<p class="mt-1 text-[10px] font-medium">{text(database, "name")}</p>
@@ -228,7 +228,7 @@
 					Repository → branch / implementation role. GitHub remains code authority.
 				</p>
 				<div class="mt-4 space-y-2">
-					{#each repositories as repo}
+					{#each repositories as repo, __eachIndex8 (__eachIndex8)}
 						<div class="rounded-lg bg-[var(--hover-background)] p-3">
 							<p class="text-xs font-semibold">{text(repo, "name")}</p>
 							<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(repo, "role")}</p>
@@ -247,7 +247,7 @@
 					Runtime fields remain provider/runtime evidence, not repository state.
 				</p>
 				<div class="mt-4 space-y-2">
-					{#each projectRows.filter((row) => row.deployment || row.runtime || row.productionDeployment || row.currentPreview) as row}
+					{#each projectRows.filter((row) => row.deployment || row.runtime || row.productionDeployment || row.currentPreview) as row, __eachIndex9 (__eachIndex9)}
 						<div class="rounded-lg bg-[var(--hover-background)] p-3">
 							<p class="text-xs font-semibold">{text(row, "name") || text(row, "_id")}</p>
 							<pre class="mt-2 max-h-40 overflow-auto text-[9px] leading-4">{JSON.stringify(
@@ -274,7 +274,7 @@
 					</p>
 				{/if}
 			</div>
-			{#each propagationRows as row}
+			{#each propagationRows as row, __eachIndex10 (__eachIndex10)}
 				<article class="rounded-xl border border-[var(--border-color)] p-5">
 					<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 						<div>
@@ -288,7 +288,7 @@
 						>
 					</div>
 					<div class="mt-4 flex flex-wrap gap-2">
-						{#each impactTargets(row) as target}
+						{#each impactTargets(row) as target, __eachIndex11 (__eachIndex11)}
 							<span class="rounded-lg bg-[var(--hover-background)] px-3 py-2 text-[10px]">{target}</span>
 						{/each}
 					</div>

@@ -76,7 +76,7 @@
 			</div>
 
 			<div class="space-y-2">
-				{#each roots as project}
+				{#each roots as project, __eachIndex0 (__eachIndex0)}
 					<details open class="group rounded-lg border border-[var(--border-color)]">
 						<summary class="cursor-pointer list-none px-3 py-2">
 							<div class="flex items-center justify-between gap-2">
@@ -113,7 +113,7 @@
 									class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">GitHub</a
 								>
 							{/if}
-							{#each childrenOf(project.id) as child}
+							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
 								<a
 									href={project.id === "foil"
 										? resolve("/foil/report/FOIL_PROJECTS")

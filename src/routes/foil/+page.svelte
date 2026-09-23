@@ -98,7 +98,7 @@
 	</div>
 
 	<div class="flex flex-wrap gap-2">
-		{#each quickActions as action}
+		{#each quickActions as action, __eachIndex0 (__eachIndex0)}
 			<a
 				href={action.href}
 				class="rounded-full border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
@@ -140,7 +140,7 @@
 				<a href="/foil/kanban" class="text-xs no-underline hover:underline">Open Kanban</a>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each nextRows.slice(0, 14) as item}
+				{#each nextRows.slice(0, 14) as item, __eachIndex1 (__eachIndex1)}
 					<div class="grid gap-2 px-5 py-3 md:grid-cols-[72px_120px_1fr]">
 						<span class="text-[10px] font-semibold">{horizon(item)}</span>
 						<span class="text-[10px] text-[var(--text-muted)]">{bucket(item)}</span>
@@ -203,7 +203,7 @@
 				<p class="text-xs text-[var(--text-muted)]">Global FOIL status without deep-fetching every domain authority.</p>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each scorecards.slice(0, 12) as item}
+				{#each scorecards.slice(0, 12) as item, __eachIndex2 (__eachIndex2)}
 					<div class="px-5 py-3">
 						<div class="flex items-start justify-between gap-3">
 							<div>
@@ -225,7 +225,7 @@
 				<p class="text-xs text-[var(--text-muted)]">PM events + Work Archive provenance where configured.</p>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each recent as item}
+				{#each recent as item, __eachIndex3 (__eachIndex3)}
 					<div class="px-5 py-3">
 						<p class="text-sm font-medium">{text(item, "title") || text(item, "summary") || text(item, "eventType")}</p>
 						<p class="mt-1 text-[11px] text-[var(--text-muted)]">

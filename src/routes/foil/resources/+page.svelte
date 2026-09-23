@@ -59,7 +59,7 @@
 		</div>
 		<select bind:value={kind} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-xs">
 			<option value="ALL">All resource kinds</option>
-			{#each kinds as item}<option value={item}>{item}</option>{/each}
+			{#each kinds as item, __eachIndex0 (__eachIndex0)}<option value={item}>{item}</option>{/each}
 		</select>
 	</div>
 
@@ -86,7 +86,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-[var(--border-color)]">
-				{#each visible as row}
+				{#each visible as row, __eachIndex1 (__eachIndex1)}
 					<tr class="align-top">
 						<td class="px-3 py-3 font-medium">{canonicalName(row)}</td>
 						<td class="px-3 py-3">

@@ -56,7 +56,7 @@
 	{/if}
 
 	<div class="grid gap-4 xl:grid-cols-2">
-		{#each rows as row}
+		{#each rows as row, __eachIndex0 (__eachIndex0)}
 			<article class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex items-start justify-between gap-4">
 					<div>

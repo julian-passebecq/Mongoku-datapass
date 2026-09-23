@@ -60,7 +60,7 @@
 		<label class="text-xs">
 			<span class="block text-[10px] uppercase text-[var(--text-muted)]">A</span>
 			<select bind:value={left} class="mt-1 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-2">
-				{#each data.revisions as revision}<option value={revision.revision}
+				{#each data.revisions as revision, __eachIndex0 (__eachIndex0)}<option value={revision.revision}
 						>r{revision.revision} · {revision.summary}</option
 					>{/each}
 			</select>
@@ -68,7 +68,7 @@
 		<label class="text-xs">
 			<span class="block text-[10px] uppercase text-[var(--text-muted)]">B</span>
 			<select bind:value={right} class="mt-1 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-2">
-				{#each data.revisions as revision}<option value={revision.revision}
+				{#each data.revisions as revision, __eachIndex1 (__eachIndex1)}<option value={revision.revision}
 						>r{revision.revision} · {revision.summary}</option
 					>{/each}
 			</select>
@@ -113,7 +113,7 @@
 				<p class="text-[10px] text-[var(--text-muted)]">{data.comparison.changes.length} displayed</p>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each data.comparison.changes as change}
+				{#each data.comparison.changes as change, __eachIndex2 (__eachIndex2)}
 					<div class="grid gap-2 px-4 py-3 xl:grid-cols-[220px_1fr_1fr]">
 						<code class="text-[10px]">{change.path || "(root)"}</code>
 						<pre class="overflow-auto text-[10px]">{JSON.stringify(change.before, null, 2)}</pre>
@@ -132,7 +132,7 @@
 				<h2 class="text-sm font-semibold">Revisions</h2>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each data.revisions as revision}
+				{#each data.revisions as revision, __eachIndex3 (__eachIndex3)}
 					<div class="flex items-start justify-between gap-4 px-4 py-3">
 						<div>
 							<p class="text-xs font-semibold">r{revision.revision} · {revision.summary}</p>
@@ -158,7 +158,7 @@
 		<section class="rounded-xl border border-[var(--border-color)]">
 			<div class="border-b border-[var(--border-color)] px-4 py-3"><h2 class="text-sm font-semibold">Activity</h2></div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each data.activity as event}
+				{#each data.activity as event, __eachIndex4 (__eachIndex4)}
 					<div class="px-4 py-3">
 						<p class="text-xs font-medium">{event.action}</p>
 						<p class="mt-1 text-[11px]">{event.summary}</p>

@@ -66,7 +66,7 @@
 
 	<div class="overflow-x-auto pb-4">
 		<div class="grid min-w-[1760px] grid-cols-8 gap-3">
-			{#each columns as status}
+			{#each columns as status, __eachIndex0 (__eachIndex0)}
 				<section class="rounded-xl border border-[var(--border-color)]">
 					<div class="flex items-center justify-between border-b border-[var(--border-color)] px-3 py-3">
 						<h2 class="text-[11px] font-semibold">{status}</h2>
@@ -75,7 +75,7 @@
 						>
 					</div>
 					<div class="min-h-72 space-y-2 p-2">
-						{#each rows.filter((row) => column(row) === status) as item}
+						{#each rows.filter((row) => column(row) === status) as item, __eachIndex1 (__eachIndex1)}
 							<article class="rounded-lg border border-[var(--border-color)] p-3">
 								<div class="flex items-start justify-between gap-2">
 									<span class="text-[10px] font-semibold">{text(item, "priority") || "—"}</span>

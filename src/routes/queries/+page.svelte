@@ -40,7 +40,9 @@
 						bind:value={selectedQueryId}
 						class="mt-1 w-full rounded-md border border-[var(--border-color)] bg-transparent px-2 py-2 text-xs"
 					>
-						{#each data.workspace.savedQueries as query}<option value={query.id}>{query.name}</option>{/each}
+						{#each data.workspace.savedQueries as query, __eachIndex0 (__eachIndex0)}<option value={query.id}
+								>{query.name}</option
+							>{/each}
 					</select>
 				</div>
 				<div>
@@ -53,7 +55,9 @@
 						class="mt-1 w-full rounded-md border border-[var(--border-color)] bg-transparent px-2 py-2 text-xs"
 					>
 						<option value="">None</option>
-						{#each data.workspace.projects as project}<option value={project.id}>{project.name}</option>{/each}
+						{#each data.workspace.projects as project, __eachIndex1 (__eachIndex1)}<option value={project.id}
+								>{project.name}</option
+							>{/each}
 					</select>
 				</div>
 				<button
@@ -65,7 +69,7 @@
 			</div>
 
 			<div class="mt-5 space-y-2">
-				{#each data.workspace.savedQueries as query}
+				{#each data.workspace.savedQueries as query, __eachIndex2 (__eachIndex2)}
 					<button
 						type="button"
 						onclick={() => {

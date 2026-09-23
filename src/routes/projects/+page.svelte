@@ -87,7 +87,7 @@
 	{#if view === "portfolio"}
 		<div class="overflow-x-auto pb-3">
 			<div class="grid min-w-[1100px] grid-cols-5 gap-4">
-				{#each workStatuses as column}
+				{#each workStatuses as column, __eachIndex0 (__eachIndex0)}
 					<section class="rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
 						<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
 							<h2 class="text-sm font-semibold">{column.label}</h2>
@@ -97,7 +97,7 @@
 						</div>
 
 						<div class="min-h-72 space-y-3 p-3">
-							{#each portfolioProjects.filter((project) => project.kanbanStatus === column.id) as project}
+							{#each portfolioProjects.filter((project) => project.kanbanStatus === column.id) as project, __eachIndex1 (__eachIndex1)}
 								<article class="rounded-lg border border-[var(--border-color)] p-3 shadow-sm">
 									<div class="flex items-start justify-between gap-3">
 										<div class="min-w-0">
@@ -128,7 +128,7 @@
 									</div>
 
 									<div class="mt-3 flex flex-wrap gap-1">
-										{#each project.tags.slice(0, 4) as tag}
+										{#each project.tags.slice(0, 4) as tag, __eachIndex2 (__eachIndex2)}
 											<span class="rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]"
 												>#{tag}</span
 											>
@@ -199,7 +199,7 @@
 					class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 				>
 					<option value="all">All projects</option>
-					{#each projects as project}<option value={project.id}
+					{#each projects as project, __eachIndex3 (__eachIndex3)}<option value={project.id}
 							>{project.parentProjectId ? "↳ " : ""}{project.name}</option
 						>{/each}
 				</select>
@@ -208,14 +208,14 @@
 					class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 				>
 					<option value="all">All item types</option>
-					{#each types as type}<option value={type}>{type}</option>{/each}
+					{#each types as type, __eachIndex4 (__eachIndex4)}<option value={type}>{type}</option>{/each}
 				</select>
 				<select
 					bind:value={selectedTag}
 					class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
 				>
 					<option value="all">All tags</option>
-					{#each tags as tag}<option value={tag}>#{tag}</option>{/each}
+					{#each tags as tag, __eachIndex5 (__eachIndex5)}<option value={tag}>#{tag}</option>{/each}
 				</select>
 			</div>
 		</div>
@@ -227,7 +227,7 @@
 				class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " +
 					(selectedTag === "all" ? "bg-[var(--hover-background)]" : "")}>All tags</button
 			>
-			{#each tags as tag}
+			{#each tags as tag, __eachIndex6 (__eachIndex6)}
 				<button
 					type="button"
 					onclick={() => (selectedTag = tag)}
@@ -239,7 +239,7 @@
 
 		<div class="overflow-x-auto pb-3">
 			<div class="grid min-w-[1100px] grid-cols-5 gap-4">
-				{#each workStatuses as column}
+				{#each workStatuses as column, __eachIndex7 (__eachIndex7)}
 					<section class="rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
 						<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
 							<h2 class="text-sm font-semibold">{column.label}</h2>
@@ -248,7 +248,7 @@
 							>
 						</div>
 						<div class="min-h-72 space-y-3 p-3">
-							{#each visibleItems.filter((item) => item.status === column.id) as item}
+							{#each visibleItems.filter((item) => item.status === column.id) as item, __eachIndex8 (__eachIndex8)}
 								<article class="rounded-lg border border-[var(--border-color)] p-3 shadow-sm">
 									<div class="flex items-start justify-between gap-3">
 										<span
@@ -268,7 +268,7 @@
 										</div>
 									{/if}
 									<div class="mt-3 flex flex-wrap gap-1">
-										{#each item.tags as tag}
+										{#each item.tags as tag, __eachIndex9 (__eachIndex9)}
 											<button
 												type="button"
 												onclick={() => (selectedTag = tag)}

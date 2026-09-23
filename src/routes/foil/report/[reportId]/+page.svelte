@@ -17,7 +17,7 @@
 		<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">{report.description}</p>
 	</div>
 
-	{#each report.sections as section}
+	{#each report.sections as section, __eachIndex0 (__eachIndex0)}
 		<section class="rounded-xl border border-[var(--border-color)]">
 			<div
 				class="flex flex-col gap-2 border-b border-[var(--border-color)] px-4 py-3 md:flex-row md:items-center md:justify-between"
@@ -33,7 +33,7 @@
 
 			{#if section.trace.resolved}
 				<div class="divide-y divide-[var(--border-color)]">
-					{#each section.rows as row}
+					{#each section.rows as row, __eachIndex1 (__eachIndex1)}
 						<div class="px-4 py-3">
 							<p class="text-sm font-medium">
 								{text(row, "title") || text(row, "name") || text(row, "_id") || "Record"}

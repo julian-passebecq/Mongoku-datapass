@@ -106,7 +106,7 @@
 	{/if}
 
 	<div class="grid gap-5 xl:grid-cols-2">
-		{#each entities as entity}
+		{#each entities as entity, __eachIndex0 (__eachIndex0)}
 			{@const id = entityId(entity)}
 			{@const canonicalRepo = text(entity, "canonical_repo") || text(repoFor(id) ?? {}, "repo")}
 			{@const projectWork = workFor(id)}
