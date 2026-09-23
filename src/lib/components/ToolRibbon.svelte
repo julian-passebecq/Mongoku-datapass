@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$app/paths";
+	import { base } from "$app/paths";
 	import { page } from "$app/state";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -23,7 +23,7 @@
 	<div class="flex items-center gap-1 overflow-x-auto">
 		<span class="mr-1 shrink-0 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-muted)]">Tools</span>
 		{#each tools as tool}
-			<a href={resolve(tool.href)} class="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]">{tool.label}</a>
+			<a href={base + tool.href} class="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]">{tool.label}</a>
 		{/each}
 		<div class="ml-auto flex shrink-0 gap-1">
 			<button type="button" onclick={() => workspaceUi.setRightPanelMode("bookmarks")} class="rounded-md px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]">Bookmarks</button>
