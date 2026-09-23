@@ -14,7 +14,8 @@
 	const scorecards = $derived(rows("FOIL_STATUS_NOW", "scorecards"));
 	const p0 = $derived(rows("FOIL_STATUS_NOW", "p0"));
 	const recent = $derived(rows("FOIL_RECENT").slice(0, 12));
-	const propagation = $derived(rows("FOIL_PROPAGATION_PENDING"));
+	const propagation = $derived(rows("FOIL_PROPAGATION_PENDING", "pending"));
+	const propagationUnassessed = $derived(rows("FOIL_PROPAGATION_PENDING", "unassessed"));
 	const maintenance = $derived(rows("FOIL_MAINTENANCE_DUE"));
 	const drift = $derived(rows("FOIL_INSTRUCTION_DRIFT"));
 
@@ -24,6 +25,8 @@
 	}
 
 	function bucket(row: Record<string, unknown>): string {
+		const normalized = text(row, "displayStatus");
+		if (normalized) return normalized;
 		const status = text(row, "status").toUpperCase();
 		if (/DONE|CLOSED|RESOLVED|COMPLETE/.test(status)) return "DONE";
 		if (/BLOCK/.test(status)) return "BLOCKED";
@@ -121,6 +124,9 @@
 				<h2 class="font-semibold">Pending propagation</h2>
 				<p class="mt-1 text-xs text-[var(--text-muted)]">Dirty dependent products are tracked; opening this page performs no synchronization.</p>
 				<p class="mt-4 text-3xl font-semibold">{propagation.length}</p>
+				{#if propagationUnassessed.length > 0}
+					<p class="mt-1 text-[10px] text-[var(--text-muted)]">{propagationUnassessed.length} event(s) have unassessed/legacy propagation metadata.</p>
+				{/if}
 				<a href="/foil/propagation" class="mt-3 inline-block text-xs no-underline hover:underline">Open propagation queue</a>
 			</div>
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
