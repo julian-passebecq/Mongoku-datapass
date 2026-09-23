@@ -59,6 +59,10 @@ export type WorkItem = {
 	dueDate?: string;
 	createdAt?: string;
 	tags: string[];
+	classification?: "GLOBAL_PORTFOLIO_WORK" | "FOIL_REFERENCE_MIRROR";
+	externalAuthority?: string;
+	externalProjectRef?: string;
+	externalBacklogRef?: string;
 };
 
 export type InstructionProfile = {
@@ -88,15 +92,23 @@ export type SavedMongoQuery = {
 	id: string;
 	name: string;
 	description: string;
+	sourceId?: string;
+	authority?: string;
+	resourceRef?: string;
+	database?: string;
 	collection: string;
 	operation: QueryOperation;
 	filter?: Record<string, unknown>;
+	projection?: Record<string, unknown>;
 	pipeline?: Record<string, unknown>[];
 	sort?: Record<string, 1 | -1>;
 	limit?: number;
 	parameters: { name: string; type: "string" | "string[]"; source?: "project" | "project-tree" | "manual" }[];
 	presentation: "project-board" | "status-summary" | "table" | "count" | "calendar" | "notes" | "detail" | "dashboard";
 	readOnly: true;
+	routeId?: string;
+	resultSchema?: Record<string, unknown>;
+	refreshPolicy?: { mode: "manual" | "on-open" | "ttl"; ttlSeconds?: number };
 	tags: string[];
 };
 
@@ -133,7 +145,7 @@ export const projects: Project[] = [
 	{ id: "datapass-sparklab", name: "SparkLab", summary: "Local-first Spark learning kernel.", status: "active", parentProjectId: "datapass-studio", category: "Runtime", progress: 61, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["spark", "pyspark"] },
 	{ id: "datapass-dbt", name: "dbt Lab", summary: "dbt transformations, lineage and exercises.", status: "active", parentProjectId: "datapass-studio", category: "Transformation", progress: 54, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["dbt", "lineage"] },
 	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["desktop", "control-plane"], mongoContextKey: "powertoy", mongoNamespaces: ["powertoy.projects", "powertoy.work_items"] },
-	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil-control-v1", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
+	{ id: "foil", name: "FOIL", summary: "FOIL project family. Mongoku is a read/report cockpit; detailed FOIL backlog remains in FOIL Project Management.", status: "active", category: "Domain family", progress: 46, activeItems: 1, kanbanStatus: "in_progress", tags: ["foil", "authority-routed", "multi-mongo"], githubRepo: "julian-passebecq/foil_databrick_dab", mongoContextKey: "foil" },
 	{ id: "foil-runtime", name: "Runtime", summary: "Oracle VM and simulation services.", status: "active", parentProjectId: "foil", category: "Runtime", progress: 42, activeItems: 2, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["oracle-vm", "simulation"] },
 	{ id: "foil-stream", name: "Streaming", summary: "Kafka and realtime event movement.", status: "active", parentProjectId: "foil", category: "Streaming", progress: 39, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["kafka", "events"] },
 	{ id: "foil-data", name: "Data Platform", summary: "MongoDB, Fabric and Databricks integration.", status: "active", parentProjectId: "foil", category: "Data", progress: 48, activeItems: 4, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["mongodb", "fabric", "databricks"] },
@@ -144,11 +156,9 @@ export const workItems: WorkItem[] = [
 	{ id: "w-001", projectId: "datapass-studio", title: "Connect Mosaic workspace to the shared execution model", status: "in_progress", type: "task", priority: "high", dueDate: "2026-09-25", createdAt: "2026-09-22", tags: ["mosaic", "runtime"] },
 	{ id: "w-002", projectId: "datapass-studio", title: "Add dbt lineage learning view", status: "todo", type: "task", priority: "medium", dueDate: "2026-09-29", createdAt: "2026-09-22", tags: ["dbt", "lineage"] },
 	{ id: "w-003", projectId: "powertoy", title: "Add lightweight project snapshot pane", status: "todo", type: "task", priority: "medium", dueDate: "2026-09-27", createdAt: "2026-09-23", tags: ["desktop", "projects"] },
-	{ id: "w-004", projectId: "foil", title: "Expose Mongo replica-set health in FOIL control view", status: "in_progress", type: "task", priority: "high", dueDate: "2026-09-24", createdAt: "2026-09-23", tags: ["mongodb", "topology"] },
-	{ id: "w-005", projectId: "foil", title: "Map turbine telemetry path from source to analytics", status: "backlog", type: "research", priority: "medium", createdAt: "2026-09-23", tags: ["kafka", "fabric", "databricks"] },
+	{ id: "foil-ref-databricks-live", projectId: "foil", title: "FOIL Databricks live proof pending", status: "todo", type: "milestone", priority: "high", createdAt: "2026-09-22", tags: ["foil", "reference", "databricks"], classification: "FOIL_REFERENCE_MIRROR", externalAuthority: "FOIL Project Management", externalProjectRef: "PORT-DATABRICKS-EXT", externalBacklogRef: "BL-20260921-DATABRICKS-RESUME" },
 	{ id: "w-006", projectId: "contoso", title: "Create guided bronze-to-gold sample project", status: "blocked", type: "milestone", priority: "high", dueDate: "2026-09-26", createdAt: "2026-09-22", tags: ["ducklake", "dbt"] },
 	{ id: "w-007", projectId: "datapass-studio", title: "Document VS Code extension module boundaries", status: "done", type: "decision", priority: "medium", createdAt: "2026-09-21", tags: ["vscode", "architecture"] },
-	{ id: "w-008", projectId: "foil", title: "Leader routes Mongo-specific work to the Data branch before implementation", status: "todo", type: "note", priority: "low", createdAt: "2026-09-23", tags: ["ai", "leader", "mongodb"] },
 	{ id: "w-009", projectId: "powertoy", title: "PowerToy remains a compact launcher; full project management stays in Mongo Control", status: "todo", type: "decision", priority: "low", createdAt: "2026-09-23", tags: ["powertoy", "architecture"] }
 ];
 
