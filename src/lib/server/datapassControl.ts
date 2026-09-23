@@ -3,7 +3,6 @@ import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from 
 import { getMongo } from "$lib/server/mongo";
 import type { Db, Document, Filter, Sort } from "mongodb";
 
-const DEFAULT_DATABASE = "datapass_control";
 const DEFAULT_QUERY_LIMIT = 1000;
 
 const collections = {
@@ -12,6 +11,8 @@ const collections = {
 	agentNodes: "agent_nodes",
 	instructionProfiles: "instruction_profiles",
 	savedQueries: "saved_queries",
+	sources: "source_catalog",
+	reports: "report_catalog",
 	workspacePresets: "workspace_presets",
 	systemNodes: "system_nodes",
 	systemEdges: "system_edges"
@@ -54,16 +55,19 @@ export async function getControlDb(): Promise<Db> {
 	}
 
 	const requested = env.DATAPASS_CONTROL_SERVER;
-	const selected = requested
-		? clients.find((entry) => entry.name === requested || entry._id === requested)
-		: clients[0];
+	if (!requested || !env.DATAPASS_CONTROL_DATABASE) {
+		throw new Error(
+			"App-owned control persistence requires explicit DATAPASS_CONTROL_SERVER and DATAPASS_CONTROL_DATABASE. No control database is created implicitly."
+		);
+	}
+	const selected = clients.find((entry) => entry.name === requested || entry._id === requested);
 
 	if (!selected) {
 		throw new Error("Configured Datapass control MongoDB server was not found");
 	}
 
 	await selected.client.connect();
-	return selected.client.db(env.DATAPASS_CONTROL_DATABASE || DEFAULT_DATABASE);
+	return selected.client.db(env.DATAPASS_CONTROL_DATABASE);
 }
 
 async function readCollection(db: Db, name: string): Promise<Record<string, unknown>[]> {
@@ -92,11 +96,14 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			};
 		}
 
-		const [workItems, agentNodes, instructionProfiles, savedQueries, workspacePresets, systemNodes, systemEdges] = await Promise.all([
+		const seed = buildSeedWorkspace();
+		const [workItems, agentNodes, instructionProfiles, savedQueries, sources, reports, workspacePresets, systemNodes, systemEdges] = await Promise.all([
 			readCollection(db, collections.workItems),
 			readCollection(db, collections.agentNodes),
 			readCollection(db, collections.instructionProfiles),
 			readCollection(db, collections.savedQueries),
+			readCollection(db, collections.sources),
+			readCollection(db, collections.reports),
 			readCollection(db, collections.workspacePresets),
 			readCollection(db, collections.systemNodes),
 			readCollection(db, collections.systemEdges)
@@ -115,6 +122,8 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			agentNodes,
 			instructionProfiles,
 			savedQueries,
+			sources: sources.length > 0 ? sources : seed.sources,
+			reports: reports.length > 0 ? reports : seed.reports,
 			workspacePresets,
 			systemNodes,
 			systemEdges
@@ -144,6 +153,8 @@ export function controlWritesEnabled(): boolean {
 	return (
 		env.DATAPASS_CONTROL_DISABLED !== "true" &&
 		env.DATAPASS_CONTROL_WRITE_ENABLED === "true" &&
+		!!env.DATAPASS_CONTROL_SERVER &&
+		!!env.DATAPASS_CONTROL_DATABASE &&
 		env.MONGOKU_READ_ONLY_MODE !== "true"
 	);
 }
@@ -162,6 +173,8 @@ export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "me
 		upsertMany(db, collections.agentNodes, parsed.agentNodes),
 		upsertMany(db, collections.instructionProfiles, parsed.instructionProfiles),
 		upsertMany(db, collections.savedQueries, parsed.savedQueries),
+		upsertMany(db, collections.sources, parsed.sources),
+		upsertMany(db, collections.reports, parsed.reports),
 		upsertMany(db, collections.workspacePresets, parsed.workspacePresets),
 		upsertMany(db, collections.systemNodes, parsed.systemNodes),
 		upsertMany(
