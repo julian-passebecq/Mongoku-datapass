@@ -84,8 +84,11 @@ export type ResourceRegistryTrace = {
 	provider?: string;
 	projectId?: string;
 	cluster?: string;
+	clusterId?: string;
 	database?: string;
 	repository?: string;
+	repositoryId?: string;
+	providerResourceId?: string;
 	status?: string;
 	defaultRoute?: boolean;
 	lastVerifiedAt?: string;
