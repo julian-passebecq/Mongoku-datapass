@@ -307,6 +307,12 @@ export async function executeReport(
 	reportId: string,
 	parameters: Record<string, unknown> = {}
 ): Promise<ReportResult> {
+	const current = new Date();
+	const runtimeParameters: Record<string, unknown> = {
+		today: current.toISOString().slice(0, 10),
+		now: current.toISOString(),
+		...parameters
+	};
 	const workspace = await loadControlWorkspace();
 	const report: ReportDefinition | undefined =
 		workspace.reports.find((candidate) => candidate.id === reportId) ?? getReportDefinition(reportId);
@@ -316,7 +322,7 @@ export async function executeReport(
 
 	const sections: ReportSection[] = [];
 	for (const step of report.steps) {
-		sections.push(await executeStep(report.id, step, parameters, workspace.sources));
+		sections.push(await executeStep(report.id, step, runtimeParameters, workspace.sources));
 	}
 
 	return {
