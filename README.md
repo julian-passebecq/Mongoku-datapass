@@ -33,40 +33,80 @@ Main additions:
 - read-only saved-query API for AI/tooling integrations
 - original Mongoku explorer remains available under `/servers`
 
-### Control database
+### Authority-aware sources and optional app persistence
 
-The project-management/control data is stored separately from the databases you inspect.
+Mongoku-datapass is a **control surface / query-report layer**. It does not require a Mongoku-owned MongoDB database to read existing authority systems.
 
-```bash
-# Optional: choose a configured Mongoku connection by host name or connection id.
-DATAPASS_CONTROL_SERVER=localhost:27017
+The first serious integration is FOIL, whose authorities already exist independently. In particular:
 
-# Default: datapass_control
-DATAPASS_CONTROL_DATABASE=datapass_control
+- global project cartography: Atlas project `DATAPASSCONTROL`, cluster `ClusterDP`, database `dataprojects_control`
+- detailed FOIL project/backlog/resource routing: `foil_project_management`
+- accepted engineering truth: `foil_control`
+- provenance/artifacts: `foil_work_archive`
+- other FOIL authorities remain separate (STUDY, AI Reasoning, IT DEV, FRONT, Databricks, Fabric, etc.)
 
-# Writes are OFF by default. Enable only on a local/private trusted instance.
-DATAPASS_CONTROL_WRITE_ENABLED=true
+There is intentionally **no default `datapass_control` database** and this application does not create one implicitly.
+
+#### Read-only source bindings
+
+Logical source IDs live in the exported JSON/report catalog, but credentials do not. Connections are configured server-side:
+
+```text
+DATAPASS_CONTROL_DISABLED=true
+DATAPASS_CONTROL_WRITE_ENABLED=false
+MONGOKU_READ_ONLY_MODE=true
+MONGOKU_DEFAULT_HOST="<private Mongo URIs separated by semicolons>"
+
+DATAPASS_SOURCE_BINDINGS='{
+  "DATAPROJECTS_GLOBAL":{"server":"<global-host-key>","database":"dataprojects_control"},
+  "FOIL_PM":{"server":"<pm-host-key>","database":"foil_project_management"},
+  "FOIL_CORE":{"server":"<core-host-key>","database":"foil_control"},
+  "FOIL_WORK_ARCHIVE":{"server":"<archive-host-key>","database":"foil_work_archive"}
+}'
 ```
 
-When the control database is empty, the UI uses typed seed data. Enable writes on a trusted local/private instance and use **AI JSON > Direct JSON commit** once to initialize the control collections. After initialization, model-generated changes should normally use **AI Review** rather than direct workspace replacement.
+FOIL resource discovery follows this rule:
 
-Control collections:
+1. read **FOIL Project Management `resource_registry` first**;
+2. resolve canonical names, aliases, project/cluster/database/repository IDs and routes;
+3. use provider-native enumeration only for discovery/verification;
+4. never declare a registered resource absent merely because a provider list omitted it.
+
+Saved reports can target several authority-native sources, but Mongoku composes results in the application layer rather than attempting arbitrary cross-database `$lookup` joins.
+
+#### Optional Mongoku-owned persistence
+
+AI ChangeSets, revision history and AI-editable source/report definitions can optionally be persisted by Mongoku. That mode is disabled until an explicit architectural decision selects the exact storage location.
+
+If enabled, **both** values are mandatory:
+
+```text
+DATAPASS_CONTROL_DISABLED=false
+DATAPASS_CONTROL_WRITE_ENABLED=true
+DATAPASS_CONTROL_SERVER=<explicit configured connection>
+DATAPASS_CONTROL_DATABASE=<explicit approved database>
+```
+
+There is no fallback to the first Mongo connection and no implicit database name.
+
+When app-owned persistence is explicitly enabled, its collections are:
 
 - `projects`
 - `work_items`
 - `agent_nodes`
 - `instruction_profiles`
 - `saved_queries`
+- `source_catalog`
+- `report_catalog`
 - `workspace_presets`
 - `system_nodes`
 - `system_edges`
-
-Review/history collections are separate from the canonical workspace replacement set:
-
 - `control_meta`
 - `control_revisions`
 - `control_changesets`
 - `control_activity`
+
+These application collections are configuration/history for Mongoku itself. They must not become detailed FOIL task, artifact, evidence or reasoning authorities.
 
 ### AI ChangeSets, JSON and saved-query APIs
 
@@ -84,6 +124,7 @@ GET  /api/datapass/history
 POST /api/datapass/history/restore
 
 POST /api/datapass/query/:queryId
+GET  /api/datapass/reports/:reportId
 ```
 
 The preferred AI workflow is:
@@ -96,7 +137,7 @@ The preferred AI workflow is:
 
 If the workspace changed after the proposal was based, acceptance marks it stale and requires a fresh preview. Direct workspace PUT is retained for trusted manual initialization/administration and is revisioned. Full direct replacement still requires `confirmReplace: "replace-workspace"`.
 
-Saved queries are JSON data, not UI source code. They can define a collection, read-only `find`/aggregation logic, parameters, tags and presentation hints. The UI uses those definitions for portfolio status, project details, calendar and notes.
+Saved queries and report definitions are JSON data, not UI source code. They can declare a logical `sourceId`, authority/resource reference, database/collection, read-only `find` or aggregation logic, projections, parameters, presentation hints and refresh policy. Credentials remain server-side. Report definitions and source descriptors participate in the reviewed ChangeSet/revision model when app persistence is enabled.
 
 Mongo credentials and connection strings are deliberately excluded from the workspace JSON export.
 
@@ -138,18 +179,9 @@ This renders the full Mongo Control workspace using typed seed data without expo
 
 #### Private Mongo-connected deployment
 
-For a private deployment, configure Vercel environment variables instead of committing credentials:
+For a private **read-only authority cockpit**, keep control persistence disabled and configure private Mongo connections plus `DATAPASS_SOURCE_BINDINGS` as Vercel environment variables. No Mongoku-owned database is required.
 
-```text
-DATAPASS_CONTROL_DISABLED=false
-DATAPASS_CONTROL_WRITE_ENABLED=true
-DATAPASS_CONTROL_DATABASE=datapass_control
-DATAPASS_CONTROL_SERVER=<configured-host-name-or-id>
-MONGOKU_DEFAULT_HOST=mongodb+srv://...
-MONGOKU_DATABASE_FILE=/tmp/.mongoku.db
-```
-
-Keep the deployment protected when writes are enabled. Mongo credentials are never part of the workspace JSON export.
+Only enable `DATAPASS_CONTROL_WRITE_ENABLED=true` if a separate architectural decision explicitly approves the app-owned persistence server/database. Keep any write-enabled deployment protected. Mongo credentials are never part of the workspace JSON export.
 
 ### Demo
 
