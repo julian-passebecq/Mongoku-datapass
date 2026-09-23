@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { page } from "$app/state";\n\timport { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 	import { workStatuses } from "$lib/datapass/controlPlane";
 
 	let { data } = $props();
