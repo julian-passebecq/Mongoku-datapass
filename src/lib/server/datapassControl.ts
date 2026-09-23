@@ -19,6 +19,21 @@ const collections = {
 
 const allowedQueryCollections = new Set<string>(Object.values(collections));
 const forbiddenQueryKeys = new Set(["$out", "$merge", "$where", "$function", "$accumulator"]);
+const allowedAggregationStages = new Set([
+	"$match",
+	"$group",
+	"$sort",
+	"$project",
+	"$limit",
+	"$skip",
+	"$unwind",
+	"$count",
+	"$addFields",
+	"$set",
+	"$unset",
+	"$replaceWith",
+	"$replaceRoot"
+]);
 
 function withoutMongoId(doc: Document): Record<string, unknown> {
 	const copy: Record<string, unknown> = { ...doc };
@@ -194,6 +209,23 @@ function assertReadOnlyQuery(value: unknown): void {
 	}
 }
 
+function assertAllowedPipeline(pipeline: unknown): asserts pipeline is Document[] {
+	if (!Array.isArray(pipeline)) {
+		throw new Error("Saved aggregation pipeline must be an array");
+	}
+
+	for (const stage of pipeline) {
+		if (!stage || typeof stage !== "object" || Array.isArray(stage)) {
+			throw new Error("Each aggregation stage must be an object");
+		}
+
+		const keys = Object.keys(stage);
+		if (keys.length !== 1 || !allowedAggregationStages.has(keys[0])) {
+			throw new Error("Aggregation stage is not allowed in saved control queries: " + keys.join(", "));
+		}
+	}
+}
+
 export async function executeSavedControlQuery(
 	queryId: string,
 	parameters: Record<string, unknown> = {}
@@ -232,8 +264,9 @@ export async function executeSavedControlQuery(
 
 	const pipeline = substituteParameters(query.pipeline ?? [], parameters);
 	assertReadOnlyQuery(pipeline);
+	assertAllowedPipeline(pipeline);
 
-	const stages = pipeline as Document[];
+	const stages = pipeline;
 	if (query.limit) {
 		stages.push({ $limit: limit });
 	}
