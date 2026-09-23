@@ -1,4 +1,4 @@
-import { executeSavedControlQuery } from "$lib/server/datapassControl";
+import { executeSavedQuery } from "$lib/server/savedQueryEngine";
 import type { PageServerLoad } from "./$types";
 
 function projectScope(projectId: string, projects: Array<{ id: string; parentProjectId?: string }>): string[] {
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	if (workspace.metadata.source === "mongo" && workspace.savedQueries.some((query) => query.id === queryId)) {
 		try {
-			const rows = await executeSavedControlQuery(queryId, projectId ? { projectIds } : {});
+			const rows = await executeSavedQuery(queryId, projectId ? { projectIds } : {});
 			items = rows as typeof workspace.workItems;
 		} catch {
 			// Canonical workspace fallback.
