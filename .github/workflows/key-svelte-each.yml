@@ -29,7 +29,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Add keys to unkeyed Svelte each blocks
         run: |
-          cat > /tmp/key-each.mjs <<'EOF'
+          cat > .key-each.mjs <<'EOF'
           import fs from "node:fs";
           import path from "node:path";
           import { parse } from "svelte/compiler";
@@ -91,7 +91,8 @@ jobs:
             console.log(file + ": keyed " + patches.length + " each block(s)");
           }
           EOF
-          node /tmp/key-each.mjs
+          node .key-each.mjs
+          rm .key-each.mjs
       - name: Validate and format syntax
         run: pnpm format
       - name: Commit keyed each blocks
