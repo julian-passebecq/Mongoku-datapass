@@ -129,6 +129,54 @@ export const systemEdgeSchema = z.object({
 	label: z.string()
 });
 
+function duplicateIds(values: Array<{ id: string }>): string[] {
+	const seen = new Set<string>();
+	const duplicates = new Set<string>();
+	for (const value of values) {
+		if (seen.has(value.id)) {
+			duplicates.add(value.id);
+		}
+		seen.add(value.id);
+	}
+	return Array.from(duplicates);
+}
+
+function findParentCycle(
+	ids: string[],
+	parentOf: (id: string) => string | undefined
+): string[] | null {
+	const globallyDone = new Set<string>();
+
+	for (const start of ids) {
+		if (globallyDone.has(start)) {
+			continue;
+		}
+
+		const path: string[] = [];
+		const indexById = new Map<string, number>();
+		let current: string | undefined = start;
+
+		while (current) {
+			if (indexById.has(current)) {
+				const index = indexById.get(current)!;
+				return [...path.slice(index), current];
+			}
+			if (globallyDone.has(current)) {
+				break;
+			}
+			indexById.set(current, path.length);
+			path.push(current);
+			current = parentOf(current);
+		}
+
+		for (const id of path) {
+			globallyDone.add(id);
+		}
+	}
+
+	return null;
+}
+
 export const workspaceExportSchema = z.object({
 	schemaVersion: z.literal(1),
 	metadata: z.object({
@@ -145,6 +193,161 @@ export const workspaceExportSchema = z.object({
 	workspacePresets: z.array(workspacePresetSchema),
 	systemNodes: z.array(systemNodeSchema),
 	systemEdges: z.array(systemEdgeSchema)
+}).superRefine((workspace, context) => {
+	const uniqueGroups: Array<[string, Array<{ id: string }>]> = [
+		["projects", workspace.projects],
+		["workItems", workspace.workItems],
+		["agentNodes", workspace.agentNodes],
+		["instructionProfiles", workspace.instructionProfiles],
+		["savedQueries", workspace.savedQueries],
+		["workspacePresets", workspace.workspacePresets],
+		["systemNodes", workspace.systemNodes]
+	];
+
+	for (const [name, values] of uniqueGroups) {
+		for (const id of duplicateIds(values)) {
+			context.addIssue({
+				code: "custom",
+				message: "Duplicate " + name + " id: " + id
+			});
+		}
+	}
+
+	const projectById = new Map(workspace.projects.map((project) => [project.id, project]));
+	const queryIds = new Set(workspace.savedQueries.map((query) => query.id));
+	const instructionById = new Map(
+		workspace.instructionProfiles.map((profile) => [profile.id, profile])
+	);
+	const agentById = new Map(workspace.agentNodes.map((agent) => [agent.id, agent]));
+	const systemNodeIds = new Set(workspace.systemNodes.map((node) => node.id));
+
+	for (const project of workspace.projects) {
+		if (project.parentProjectId && !projectById.has(project.parentProjectId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Project " + project.id + " references missing parent " + project.parentProjectId
+			});
+		}
+		if (project.statusQueryId && !queryIds.has(project.statusQueryId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Project " + project.id + " references missing status query " + project.statusQueryId
+			});
+		}
+	}
+
+	const projectCycle = findParentCycle(
+		workspace.projects.map((project) => project.id),
+		(id) => projectById.get(id)?.parentProjectId
+	);
+	if (projectCycle) {
+		context.addIssue({
+			code: "custom",
+			message: "Project hierarchy cycle: " + projectCycle.join(" -> ")
+		});
+	}
+
+	for (const item of workspace.workItems) {
+		if (!projectById.has(item.projectId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Work item " + item.id + " references missing project " + item.projectId
+			});
+		}
+	}
+
+	for (const profile of workspace.instructionProfiles) {
+		if (!projectById.has(profile.projectId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Instruction profile " + profile.id + " references missing project " + profile.projectId
+			});
+		}
+	}
+
+	for (const agent of workspace.agentNodes) {
+		if (!projectById.has(agent.projectId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Agent " + agent.id + " references missing project " + agent.projectId
+			});
+		}
+		if (agent.parentId) {
+			const parent = agentById.get(agent.parentId);
+			if (!parent) {
+				context.addIssue({
+					code: "custom",
+					message: "Agent " + agent.id + " references missing parent " + agent.parentId
+				});
+			} else if (parent.projectId !== agent.projectId) {
+				context.addIssue({
+					code: "custom",
+					message: "Agent " + agent.id + " parent belongs to another project"
+				});
+			}
+		}
+		if (agent.instructionProfileId) {
+			const profile = instructionById.get(agent.instructionProfileId);
+			if (!profile) {
+				context.addIssue({
+					code: "custom",
+					message: "Agent " + agent.id + " references missing instruction profile " + agent.instructionProfileId
+				});
+			} else if (profile.projectId !== agent.projectId) {
+				context.addIssue({
+					code: "custom",
+					message: "Agent " + agent.id + " instruction profile belongs to another project"
+				});
+			}
+		}
+	}
+
+	const agentCycle = findParentCycle(
+		workspace.agentNodes.map((agent) => agent.id),
+		(id) => agentById.get(id)?.parentId
+	);
+	if (agentCycle) {
+		context.addIssue({
+			code: "custom",
+			message: "Agent hierarchy cycle: " + agentCycle.join(" -> ")
+		});
+	}
+
+	for (const preset of workspace.workspacePresets) {
+		if (preset.defaultProjectId && !projectById.has(preset.defaultProjectId)) {
+			context.addIssue({
+				code: "custom",
+				message: "Workspace preset " + preset.id + " references missing default project " + preset.defaultProjectId
+			});
+		}
+		for (const tab of preset.tabs) {
+			if (tab.projectId && !projectById.has(tab.projectId)) {
+				context.addIssue({
+					code: "custom",
+					message: "Workspace preset " + preset.id + " tab " + tab.id + " references missing project " + tab.projectId
+				});
+			}
+		}
+	}
+
+	const edgeKeys = new Set<string>();
+	for (const edge of workspace.systemEdges) {
+		const key = edge.from + "::" + edge.to;
+		if (edgeKeys.has(key)) {
+			context.addIssue({
+				code: "custom",
+				message: "Duplicate system edge: " + key
+			});
+		}
+		edgeKeys.add(key);
+
+		if (!systemNodeIds.has(edge.from) || !systemNodeIds.has(edge.to)) {
+			context.addIssue({
+				code: "custom",
+				message: "System edge " + key + " references a missing node"
+			});
+		}
+	}
 });
 
 export type WorkspaceExport = z.infer<typeof workspaceExportSchema>;
