@@ -8,6 +8,10 @@
 
 	const roots = $derived(projects.filter((project) => !project.parentProjectId));
 	const childrenOf = (projectId: string) => projects.filter((project) => project.parentProjectId === projectId);
+	const architectureHref = (projectId: string) =>
+		projectId === "foil" ? resolve("/foil/architecture") : resolve("/architecture") + "?project=" + projectId;
+	const workHref = (projectId: string) =>
+		projectId === "foil" ? resolve("/foil/kanban") : resolve("/projects") + "?project=" + projectId;
 </script>
 
 <aside
@@ -60,13 +64,16 @@
 							</div>
 						</summary>
 						<div class="border-t border-[var(--border-color)] px-2 py-2">
-							<a href={resolve("/architecture") + "?project=" + project.id} class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">Architecture</a>
-							<a href={resolve("/projects") + "?project=" + project.id} class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">Tasks</a>
+							<a href={architectureHref(project.id)} class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">Architecture</a>
+							<a href={workHref(project.id)} class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">{project.id === "foil" ? "Authoritative backlog" : "Tasks"}</a>
+							{#if project.id === "foil"}
+								<a href={resolve("/foil/resources")} class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">Authorities & resources</a>
+							{/if}
 							{#if project.githubRepo}
 								<a href={"https://github.com/" + project.githubRepo} target="_blank" rel="noreferrer" class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">GitHub</a>
 							{/if}
 							{#each childrenOf(project.id) as child}
-								<a href={resolve("/architecture") + "?project=" + child.id} class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline">
+								<a href={project.id === "foil" ? resolve("/foil/report/FOIL_PROJECTS") : resolve("/architecture") + "?project=" + child.id} class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline">
 									<span class="font-medium">{child.name}</span>
 									<span class="ml-1 text-[var(--text-muted)]">· {child.tags.slice(0, 2).join(", ")}</span>
 								</a>
