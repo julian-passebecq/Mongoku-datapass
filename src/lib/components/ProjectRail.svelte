@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import type { Project } from "$lib/datapass/controlPlane";
+	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let { projects } = $props<{ projects: Project[] }>();
-	let collapsed = $state(false);
+	const collapsed = $derived(workspaceUi.current()?.leftPanelCollapsed ?? false);
 
 	const roots = $derived(projects.filter((project) => !project.parentProjectId));
 	const childrenOf = (projectId: string) => projects.filter((project) => project.parentProjectId === projectId);
@@ -23,7 +24,7 @@
 		{/if}
 		<button
 			type="button"
-			onclick={() => (collapsed = !collapsed)}
+			onclick={() => workspaceUi.toggleLeftPanel()}
 			class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border-color)] text-xs hover:bg-[var(--hover-background)]"
 			aria-label={collapsed ? "Expand project rail" : "Collapse project rail"}
 			title={collapsed ? "Expand project rail" : "Collapse project rail"}
