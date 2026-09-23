@@ -140,6 +140,12 @@
 						</select>
 					</div>
 
+					<div class="grid grid-cols-3 gap-1">
+						<button type="button" onclick={() => goto("/ai-review")} class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]">AI Review</button>
+						<button type="button" onclick={() => goto("/history")} class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]">History</button>
+						<button type="button" onclick={() => goto("/workspace-states")} class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]">States</button>
+					</div>
+
 					<button type="button" onclick={copyUiState} class="w-full rounded-md border border-[var(--border-color)] px-3 py-2 text-xs hover:bg-[var(--hover-background)]">Copy UI state JSON</button>
 
 					<textarea bind:value={importText} rows="8" class="w-full rounded-md border border-[var(--border-color)] bg-transparent p-2 font-mono text-[10px]" placeholder="Paste UI-state JSON"></textarea>
