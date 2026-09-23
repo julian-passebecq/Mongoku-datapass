@@ -270,7 +270,11 @@ const pmBacklogProjection = {
 	relatedAuthorities: 1,
 	impactTargets: 1,
 	propagationStatus: 1,
-	propagationPriority: 1
+	propagationPriority: 1,
+	tasks: 1,
+	schedule: 1,
+	ownerAuthority: 1,
+	reportRefs: 1
 };
 
 export const reportCatalog: ReportDefinition[] = [
@@ -359,7 +363,12 @@ export const reportCatalog: ReportDefinition[] = [
 				authority: "FOIL Project Management",
 				collection: "backlog",
 				operation: "find",
-				filter: { priority: "P0", status: { $nin: ["DONE", "done", "CLOSED", "closed"] } },
+				filter: {
+					$or: [
+						{ priority: { $regex: "^P0", $options: "i" } },
+						{ tasks: { $elemMatch: { priority: { $regex: "^P0", $options: "i" } } } }
+					]
+				},
 				projection: pmBacklogProjection,
 				sort: { updatedAt: -1 },
 				limit: 50,
@@ -453,30 +462,52 @@ export const reportCatalog: ReportDefinition[] = [
 	{
 		id: "FOIL_PROPAGATION_PENDING",
 		title: "Pending propagation",
-		description: "New-input impact records not yet reconciled. Optional until the PM propagation collection exists.",
+		description: "Impact metadata stored on FOIL Project Management events. Missing legacy metadata is shown separately from explicit NO_IMPACT.",
 		scope: "FOIL",
 		routeId: "propagation",
 		readOnly: true,
 		presentation: "propagation",
 		refreshPolicy: { mode: "on-open" },
-		steps: [{
-			id: "pending",
-			sourceId: "FOIL_PM",
-			authority: "FOIL Project Management",
-			collection: "propagation_queue",
-			operation: "find",
-			filter: { propagationStatus: { $nin: ["VERIFIED", "RECONCILED", "NO_IMPACT"] } },
-			sort: { propagationPriority: 1, detectedAt: -1 },
-			limit: 250,
-			optional: true,
-			label: "Pending propagation"
-		}],
-		tags: ["foil", "impact", "propagation"]
+		steps: [
+			{
+				id: "pending",
+				sourceId: "FOIL_PM",
+				authority: "FOIL Project Management",
+				collection: "events",
+				operation: "find",
+				filter: {
+					$or: [
+						{ propagationStatus: { $in: ["NEW_INPUT", "CLASSIFIED", "PRIMARY_AUTHORITY_UPDATED", "IMPACT_ANALYZED", "DEPENDENT_TARGETS_DIRTY", "DEFERRED", "READY_TO_PROPAGATE", "APPLIED", "VERIFY_REQUIRED"] } },
+						{ impactTargets: { $elemMatch: { status: { $in: ["DIRTY", "REVIEW_REQUIRED", "READY_TO_PROPAGATE", "VERIFY_REQUIRED"] } } } },
+						{ impactTargets: { $elemMatch: { state: { $in: ["DIRTY", "REVIEW_REQUIRED", "READY_TO_PROPAGATE", "VERIFY_REQUIRED"] } } } }
+					]
+				},
+				sort: { propagationPriority: 1, occurredAt: -1, updatedAt: -1 },
+				limit: 250,
+				label: "Pending propagation"
+			},
+			{
+				id: "unassessed",
+				sourceId: "FOIL_PM",
+				authority: "FOIL Project Management",
+				collection: "events",
+				operation: "find",
+				filter: {
+					propagationStatus: { $exists: false },
+					impactTargets: { $exists: false }
+				},
+				projection: { _id: 1, eventType: 1, title: 1, summary: 1, sourceRef: 1, relatedPortfolioIds: 1, occurredAt: 1, updatedAt: 1, status: 1 },
+				sort: { occurredAt: -1, updatedAt: -1 },
+				limit: 100,
+				label: "Unassessed / legacy propagation metadata"
+			}
+		],
+		tags: ["foil", "impact", "propagation", "events"]
 	},
 	{
 		id: "FOIL_APPS_IMPACTED",
 		title: "FOIL apps impacted",
-		description: "Impacted products derived from pending propagation records.",
+		description: "Impacted products derived from pending propagation metadata on PM events.",
 		scope: "FOIL",
 		routeId: "apps-impacted",
 		readOnly: true,
@@ -486,16 +517,21 @@ export const reportCatalog: ReportDefinition[] = [
 			id: "impact",
 			sourceId: "FOIL_PM",
 			authority: "FOIL Project Management",
-			collection: "propagation_queue",
+			collection: "events",
 			operation: "find",
-			filter: { propagationStatus: { $nin: ["VERIFIED", "RECONCILED", "NO_IMPACT"] } },
-			projection: { _id: 1, sourceRevision: 1, impactTargets: 1, propagationStatus: 1, propagationPriority: 1, detectedAt: 1, requiredBy: 1, appliedRefs: 1, verificationRefs: 1 },
-			sort: { propagationPriority: 1, detectedAt: -1 },
+			filter: {
+				$or: [
+					{ propagationStatus: { $in: ["DEPENDENT_TARGETS_DIRTY", "DEFERRED", "READY_TO_PROPAGATE", "APPLIED", "VERIFY_REQUIRED"] } },
+					{ impactTargets: { $elemMatch: { status: { $in: ["DIRTY", "REVIEW_REQUIRED", "READY_TO_PROPAGATE", "VERIFY_REQUIRED"] } } } },
+					{ impactTargets: { $elemMatch: { state: { $in: ["DIRTY", "REVIEW_REQUIRED", "READY_TO_PROPAGATE", "VERIFY_REQUIRED"] } } } }
+				]
+			},
+			projection: { _id: 1, eventType: 1, title: 1, sourceRef: 1, backlogRefs: 1, backlogRef: 1, sourceRevision: 1, impactTargets: 1, propagationStatus: 1, propagationPriority: 1, detectedAt: 1, occurredAt: 1, requiredBy: 1, appliedRefs: 1, verificationRefs: 1 },
+			sort: { propagationPriority: 1, occurredAt: -1, updatedAt: -1 },
 			limit: 250,
-			optional: true,
 			label: "Impacted applications"
 		}],
-		tags: ["foil", "apps", "impact"]
+		tags: ["foil", "apps", "impact", "events"]
 	},
 	{
 		id: "FOIL_FRANCIS_QUESTIONS",
@@ -536,14 +572,16 @@ export const reportCatalog: ReportDefinition[] = [
 			collection: "backlog",
 			operation: "find",
 			filter: {
-				status: { $nin: ["DONE", "done", "CLOSED", "closed"] },
 				$or: [
-					{ category: { $regex: "AUDIT|MAINT|BACKUP|REVIEW|CHECK", $options: "i" } },
-					{ targetReviewDate: { $exists: true } }
+					{ "schedule.type": { $in: ["RECURRING", "CONDITION_REVIEW"] } },
+					{ category: { $in: ["RECURRING_CONTROL", "PROPAGATION_CONTROL"] } },
+					{ targetReviewDate: { $exists: true } },
+					{ nextReviewAt: { $exists: true } },
+					{ nextDueAt: { $exists: true } }
 				]
 			},
 			projection: pmBacklogProjection,
-			sort: { targetReviewDate: 1, priority: 1 },
+			sort: { "schedule.nextDueAt": 1, targetReviewDate: 1, priority: 1 },
 			limit: 200,
 			label: "Maintenance and reviews"
 		}],
@@ -558,23 +596,42 @@ export const reportCatalog: ReportDefinition[] = [
 		readOnly: true,
 		presentation: "table",
 		refreshPolicy: { mode: "on-open" },
-		steps: [{
-			id: "contradictions",
-			sourceId: "FOIL_CORE",
-			authority: "FOIL Core Truth",
-			collection: "work_items",
-			operation: "find",
-			filter: {
-				$or: [
-					{ kind: { $regex: "CONTRAD", $options: "i" } },
-					{ area: { $regex: "CONTRAD", $options: "i" } }
-				],
-				status: { $nin: ["resolved", "RESOLVED", "closed", "CLOSED"] }
+		steps: [
+			{
+				id: "core-conflicts",
+				sourceId: "FOIL_CORE",
+				authority: "FOIL Core Truth",
+				collection: "work_items",
+				operation: "find",
+				filter: {
+					$or: [
+						{ kind: { $regex: "CONFLICT|CONTRAD", $options: "i" } },
+						{ _id: { $regex: "^CONFLICT", $options: "i" } }
+					],
+					status: { $nin: ["resolved", "RESOLVED", "closed", "CLOSED", "superseded", "SUPERSEDED"] }
+				},
+				sort: { priority: 1, updatedAt: -1 },
+				limit: 150,
+				label: "Core Truth conflicts"
 			},
-			sort: { updatedAt: -1, priority: 1 },
-			limit: 150,
-			label: "Open contradictions"
-		}],
+			{
+				id: "study-assessments",
+				sourceId: "FOIL_STUDY",
+				authority: "FOIL STUDY",
+				collection: "claim_assessments",
+				operation: "find",
+				filter: {
+					$or: [
+						{ "contradictionsAndGaps.0": { $exists: true } },
+						{ openChecks: { $elemMatch: { status: { $nin: ["RESOLVED", "DONE", "CLOSED"] } } } }
+					]
+				},
+				sort: { updatedAt: -1 },
+				limit: 150,
+				optional: true,
+				label: "STUDY claim assessments"
+			}
+		],
 		tags: ["foil", "evidence", "contradictions"]
 	},
 	{
@@ -752,33 +809,23 @@ export const reportCatalog: ReportDefinition[] = [
 		refreshPolicy: { mode: "on-open" },
 		steps: [
 			{
-				id: "dated-backlog",
+				id: "scheduled-backlog",
 				sourceId: "FOIL_PM",
 				authority: "FOIL Project Management",
 				collection: "backlog",
 				operation: "find",
 				filter: {
 					$or: [
+						{ schedule: { $exists: true } },
 						{ targetReviewDate: { $exists: true } },
 						{ nextReviewAt: { $exists: true } },
 						{ nextDueAt: { $exists: true } }
 					]
 				},
-				sort: { targetReviewDate: 1, nextReviewAt: 1, nextDueAt: 1 },
+				projection: pmBacklogProjection,
+				sort: { "schedule.nextDueAt": 1, targetReviewDate: 1, nextReviewAt: 1, nextDueAt: 1 },
 				limit: 250,
 				label: "Scheduled PM work"
-			},
-			{
-				id: "recurring-schedule",
-				sourceId: "FOIL_PM",
-				authority: "FOIL Project Management",
-				collection: "maintenance_schedule",
-				operation: "find",
-				filter: {},
-				sort: { nextDueAt: 1 },
-				limit: 250,
-				optional: true,
-				label: "Recurring schedule"
 			}
 		],
 		tags: ["foil", "calendar", "maintenance"]
