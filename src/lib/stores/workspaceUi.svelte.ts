@@ -64,7 +64,9 @@ class WorkspaceUiState {
 	}
 
 	hydrate(presets: WorkspacePreset[], currentHref: string, currentTitle: string) {
-		if (!browser || this.hydrated) return;
+		if (!browser || this.hydrated) {
+			return;
+		}
 
 		try {
 			const raw = localStorage.getItem(STORAGE_KEY);
@@ -106,7 +108,9 @@ class WorkspaceUiState {
 	}
 
 	persist() {
-		if (!browser || !this.hydrated) return;
+		if (!browser || !this.hydrated) {
+			return;
+		}
 		const snapshot: WorkspaceUiSnapshot = {
 			version: 1,
 			activeInstanceId: this.activeInstanceId,
@@ -117,10 +121,14 @@ class WorkspaceUiState {
 
 	ensureTab(href: string, title: string, projectId?: string) {
 		const instance = this.current();
-		if (!instance || !href) return;
+		if (!instance || !href) {
+			return;
+		}
 
 		const existing = instance.tabs.find((tab) => tab.href === href);
-		if (existing) return;
+		if (existing) {
+			return;
+		}
 
 		instance.tabs.push({
 			id: makeId("tab"),
@@ -133,13 +141,17 @@ class WorkspaceUiState {
 
 	closeTab(tabId: string) {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		instance.tabs = instance.tabs.filter((tab) => tab.id !== tabId);
 		this.persist();
 	}
 
 	setActiveInstance(instanceId: string) {
-		if (!this.instances.some((instance) => instance.id === instanceId)) return;
+		if (!this.instances.some((instance) => instance.id === instanceId)) {
+			return;
+		}
 		this.activeInstanceId = instanceId;
 		this.persist();
 	}
