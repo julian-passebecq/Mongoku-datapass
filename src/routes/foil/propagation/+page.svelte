@@ -3,8 +3,10 @@
 
 	let { data } = $props();
 	const report = $derived(data.report as ReportResult);
-	const section = $derived(report.sections[0]);
+	const section = $derived(report.sections.find((item) => item.id === "pending"));
+	const unassessedSection = $derived(report.sections.find((item) => item.id === "unassessed"));
 	const rows = $derived(section?.rows ?? []);
+	const unassessed = $derived(unassessedSection?.rows ?? []);
 
 	const lifecycle = [
 		"NEW_INPUT",
@@ -52,7 +54,27 @@
 	{#if section && !section.trace.resolved}
 		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-5 text-xs text-[var(--text-muted)]">
 			<p>{section.trace.message}</p>
-			<p class="mt-2">The optional PM propagation collection does not exist yet; Mongoku has not created it.</p>
+			<p class="mt-2">Propagation is read from FOIL Project Management events. Mongoku does not create a separate propagation collection.</p>
+		</div>
+	{/if}
+
+	{#if unassessed.length > 0}
+		<div class="rounded-xl border border-[var(--border-color)] p-5">
+			<h2 class="text-sm font-semibold">Propagation coverage incomplete</h2>
+			<p class="mt-2 text-xs text-[var(--text-muted)]">
+				{unassessed.length} PM event(s) have no propagationStatus or impactTargets metadata. They are unassessed/legacy records, not explicit NO_IMPACT decisions.
+			</p>
+			<details class="mt-3">
+				<summary class="cursor-pointer text-xs">Show unassessed events</summary>
+				<div class="mt-3 space-y-2">
+					{#each unassessed.slice(0, 20) as row}
+						<div class="rounded-lg bg-[var(--hover-background)] p-3 text-xs">
+							<p class="font-medium">{text(row, "title") || text(row, "_id")}</p>
+							<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(row, "eventType")} · {text(row, "occurredAt")}</p>
+						</div>
+					{/each}
+				</div>
+			</details>
 		</div>
 	{/if}
 
