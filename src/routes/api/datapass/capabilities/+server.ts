@@ -16,6 +16,8 @@ export const GET: RequestHandler = async () => {
 			"agentNode",
 			"instructionProfile",
 			"savedQuery",
+			"sourceDescriptor",
+			"reportDefinition",
 			"workspacePreset",
 			"systemNode",
 			"systemEdge"
@@ -30,7 +32,14 @@ export const GET: RequestHandler = async () => {
 		},
 		savedQuery: {
 			operations: ["find", "aggregate"],
-			readOnly: true
+			readOnly: true,
+			multiSource: true,
+			credentialsInJson: false
+		},
+		reporting: {
+			readOnly: true,
+			resourceDiscovery: "authority registry first, provider enumeration second",
+			crossSourceJoinMode: "application-layer composition; no arbitrary cross-database $lookup"
 		},
 		endpoints: {
 			workspace: "/api/datapass/workspace",
@@ -39,7 +48,8 @@ export const GET: RequestHandler = async () => {
 			changeSetDecision: "/api/datapass/changesets/:id",
 			history: "/api/datapass/history",
 			restore: "/api/datapass/history/restore",
-			query: "/api/datapass/query/:queryId"
+			query: "/api/datapass/query/:queryId",
+			report: "/api/datapass/reports/:reportId"
 		}
 	}, {
 		headers: { "cache-control": "no-store" }
