@@ -133,7 +133,7 @@ export const projects: Project[] = [
 	{ id: "datapass-sparklab", name: "SparkLab", summary: "Local-first Spark learning kernel.", status: "active", parentProjectId: "datapass-studio", category: "Runtime", progress: 61, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["spark", "pyspark"] },
 	{ id: "datapass-dbt", name: "dbt Lab", summary: "dbt transformations, lineage and exercises.", status: "active", parentProjectId: "datapass-studio", category: "Transformation", progress: 54, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["dbt", "lineage"] },
 	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["desktop", "control-plane"], mongoContextKey: "powertoy", mongoNamespaces: ["powertoy.projects", "powertoy.work_items"] },
-	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
+	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil-control-v1", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
 	{ id: "foil-runtime", name: "Runtime", summary: "Oracle VM and simulation services.", status: "active", parentProjectId: "foil", category: "Runtime", progress: 42, activeItems: 2, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["oracle-vm", "simulation"] },
 	{ id: "foil-stream", name: "Streaming", summary: "Kafka and realtime event movement.", status: "active", parentProjectId: "foil", category: "Streaming", progress: 39, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["kafka", "events"] },
 	{ id: "foil-data", name: "Data Platform", summary: "MongoDB, Fabric and Databricks integration.", status: "active", parentProjectId: "foil", category: "Data", progress: 48, activeItems: 4, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["mongodb", "fabric", "databricks"] },
@@ -161,7 +161,7 @@ export const instructionProfiles: InstructionProfile[] = [
 
 export const agentNodes: AgentNode[] = [
 	{ id: "foil-leader", projectId: "foil", label: "FOIL Leader", role: "Project leader", responsibilities: ["architecture", "delegation", "decision routing"], mongoScope: ["foil.projects", "foil.decisions", "foil.agent_context"], tags: ["leader", "architecture"], instructionProfileId: "foil-lead-v1" },
-	{ id: "foil-code", projectId: "foil", label: "Code", role: "Implementation agent", parentId: "foil-leader", responsibilities: ["application code", "tests", "integration"], mongoScope: ["foil.tasks", "foil.code_context"], tags: ["code", "tests"], instructionProfileId: "foil-code-v1", githubRepo: "julian-passebecq/foil" },
+	{ id: "foil-code", projectId: "foil", label: "Code", role: "Implementation agent", parentId: "foil-leader", responsibilities: ["application code", "tests", "integration"], mongoScope: ["foil.tasks", "foil.code_context"], tags: ["code", "tests"], instructionProfileId: "foil-code-v1" },
 	{ id: "foil-data-agent", projectId: "foil", label: "Data", role: "Data-platform agent", parentId: "foil-leader", responsibilities: ["MongoDB", "Kafka", "analytics contracts"], mongoScope: ["foil.telemetry", "foil.alerts", "foil.simulations"], tags: ["mongodb", "kafka", "data"], instructionProfileId: "foil-data-v1" },
 	{ id: "foil-ops", projectId: "foil", label: "Ops", role: "Runtime operations agent", parentId: "foil-leader", responsibilities: ["Oracle VM", "health", "Grafana"], mongoScope: ["foil.runtime_state", "foil.ops_events"], tags: ["ops", "grafana"], instructionProfileId: "foil-ops-v1" },
 	{ id: "foil-backend", projectId: "foil", label: "Backend", role: "Backend specialist", parentId: "foil-code", responsibilities: ["APIs", "services", "connectors"], mongoScope: ["foil.service_config"], tags: ["backend", "api"] },
@@ -316,7 +316,7 @@ export const workspacePresets: WorkspacePreset[] = [
 			{ id: "foil-calendar", title: "Calendar", href: "/calendar?project=foil", projectId: "foil" }
 		],
 		bookmarks: [
-			{ id: "foil-github", title: "FOIL GitHub", href: "https://github.com/julian-passebecq/foil" },
+			{ id: "foil-github", title: "FOIL GitHub", href: "https://github.com/julian-passebecq/foil-control-v1" },
 			{ id: "mongo-explorer", title: "Mongo Explorer", href: "/servers" }
 		],
 		leftPanelCollapsed: false,
