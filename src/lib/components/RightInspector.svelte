@@ -22,7 +22,9 @@
 	const selectedProject = $derived(projects.find((project) => project.id === selectedProjectId));
 	const relevantQueries = $derived(
 		queries.filter((query) => {
-			if (selectedProject) return query.tags.includes("projects") || query.tags.includes("dashboard");
+			if (selectedProject) {
+				return query.tags.includes("projects") || query.tags.includes("dashboard");
+			}
 			return query.tags.includes("dashboard") || query.tags.includes("projects");
 		}).slice(0, 8)
 	);
@@ -128,7 +130,9 @@
 							value={instance.presetId || ""}
 							onchange={(event) => {
 								const preset = presets.find((candidate) => candidate.id === (event.currentTarget as HTMLSelectElement).value);
-								if (preset) workspaceUi.applyPreset(preset);
+								if (preset) {
+									workspaceUi.applyPreset(preset);
+								}
 							}}
 						>
 							<option value="">Custom</option>
