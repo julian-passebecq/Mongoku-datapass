@@ -10,6 +10,72 @@ operations, including sort/skip/limit. Built on TypeScript/Node.js/SvelteKit.
 
 You can even have mappings between documents to navigate your DB easily.
 
+## Datapass Mongo Control fork
+
+This fork keeps Mongoku as the lightweight MongoDB explorer and adds a project/AI control plane on top of it.
+
+Main additions:
+
+- project + subproject hierarchy
+- project portfolio Kanban and work-item Kanban
+- calendar and notes views backed by saved Mongo queries
+- collapsible left project panel, right context/queries/settings panel, and tool ribbon
+- persistent local tabs, bookmarks and multiple workspace instances
+- AI-editable workspace presets stored in Mongo/JSON
+- AI-role graph (leader, peers and recursive child agents)
+- project-to-GitHub and project-to-Mongo context mappings
+- versioned custom instruction profiles
+- canonical JSON export/import for projects, queries, presets, instructions and graph data
+- read-only saved-query API for AI/tooling integrations
+- original Mongoku explorer remains available under `/servers`
+
+### Control database
+
+The project-management/control data is stored separately from the databases you inspect.
+
+```bash
+# Optional: choose a configured Mongoku connection by host name or connection id.
+DATAPASS_CONTROL_SERVER=localhost:27017
+
+# Default: datapass_control
+DATAPASS_CONTROL_DATABASE=datapass_control
+
+# Writes are OFF by default. Enable only on a local/private trusted instance.
+DATAPASS_CONTROL_WRITE_ENABLED=true
+```
+
+When the control database is empty, the UI uses typed seed data. Open **AI JSON** and use **Merge JSON** to initialize the control collections after enabling writes.
+
+Control collections:
+
+- `projects`
+- `work_items`
+- `agent_nodes`
+- `instruction_profiles`
+- `saved_queries`
+- `workspace_presets`
+- `system_nodes`
+- `system_edges`
+
+### AI JSON + saved-query APIs
+
+```text
+GET  /api/datapass/workspace
+PUT  /api/datapass/workspace
+
+POST /api/datapass/query/:queryId
+```
+
+Normal AI edits use workspace `mode: "merge"`. Full replacement is intentionally harder and requires `confirmReplace: "replace-workspace"`.
+
+Saved queries are JSON data, not UI source code. They can define a collection, read-only `find`/aggregation logic, parameters, tags and presentation hints. The UI uses those definitions for portfolio status, project details, calendar and notes.
+
+Mongo credentials and connection strings are deliberately excluded from the workspace JSON export.
+
+### Workspace state
+
+Named workspace presets are part of the canonical Mongo/JSON workspace and can be edited by AI. The currently open tabs, bookmarks and panel state are stored in browser local storage for fast resume, and can be copied/imported as JSON from the right **Settings** panel.
+
 ### Demo
 
 https://github.com/user-attachments/assets/f37bee71-64f2-454a-a5d6-1697ba8aa070
