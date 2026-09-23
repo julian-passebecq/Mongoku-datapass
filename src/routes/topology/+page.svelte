@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { foilEdges, foilNodes } from "$lib/datapass/controlPlane";
+	let { data } = $props();
+	const foilNodes = $derived(data.controlWorkspace.systemNodes);
+	const foilEdges = $derived(data.controlWorkspace.systemEdges);
 
 	let mode = $state<"infrastructure" | "data" | "mongo">("infrastructure");
-	const nodeById = new Map(foilNodes.map((node) => [node.id, node]));
+	const nodeById = $derived(new Map(foilNodes.map((node) => [node.id, node])));
 	const modes = [
 		{ id: "infrastructure", label: "Infrastructure" },
 		{ id: "data", label: "Data flow" },
