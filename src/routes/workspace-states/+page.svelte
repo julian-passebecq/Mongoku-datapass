@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";\n\timport { resolve } from "$app/paths";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let title = $state("");
