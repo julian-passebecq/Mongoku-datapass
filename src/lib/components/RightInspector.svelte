@@ -29,6 +29,19 @@
 		}).slice(0, 8)
 	);
 
+	function projectRoute(kind: "board" | "architecture" | "calendar" | "notes", projectId: string) {
+		if (projectId === "foil") {
+			if (kind === "board") return "/foil/kanban";
+			if (kind === "architecture") return "/foil/architecture";
+			if (kind === "calendar") return "/foil/calendar";
+			return "/foil/report/FOIL_RECENT";
+		}
+		if (kind === "board") return "/projects?project=" + projectId;
+		if (kind === "architecture") return "/architecture?project=" + projectId;
+		if (kind === "calendar") return "/calendar?project=" + projectId;
+		return "/notes?project=" + projectId;
+	}
+
 	function openHref(href: string) {
 		if (href.startsWith("http://") || href.startsWith("https://")) {
 			window.open(href, "_blank", "noopener,noreferrer");
@@ -82,10 +95,10 @@
 							{#each selectedProject.tags as tag}<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">#{tag}</span>{/each}
 						</div>
 						<div class="mt-3 space-y-1 text-[11px]">
-							<button type="button" onclick={() => goto("/projects?project=" + selectedProject.id)} class="block hover:underline">Project board</button>
-							<button type="button" onclick={() => goto("/architecture?project=" + selectedProject.id)} class="block hover:underline">AI graph</button>
-							<button type="button" onclick={() => goto("/calendar?project=" + selectedProject.id)} class="block hover:underline">Calendar</button>
-							<button type="button" onclick={() => goto("/notes?project=" + selectedProject.id)} class="block hover:underline">Notes</button>
+							<button type="button" onclick={() => goto(projectRoute("board", selectedProject.id))} class="block hover:underline">{selectedProject.id === "foil" ? "Authoritative backlog" : "Project board"}</button>
+							<button type="button" onclick={() => goto(projectRoute("architecture", selectedProject.id))} class="block hover:underline">{selectedProject.id === "foil" ? "Authority architecture" : "AI graph"}</button>
+							<button type="button" onclick={() => goto(projectRoute("calendar", selectedProject.id))} class="block hover:underline">Calendar</button>
+							<button type="button" onclick={() => goto(projectRoute("notes", selectedProject.id))} class="block hover:underline">{selectedProject.id === "foil" ? "Recent authority changes" : "Notes"}</button>
 							{#if selectedProject.githubRepo}
 								<a href={"https://github.com/" + selectedProject.githubRepo} target="_blank" rel="noreferrer" class="block no-underline hover:underline">GitHub repo</a>
 							{/if}
