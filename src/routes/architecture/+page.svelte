@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { agentNodes, instructionProfiles, projects } from "$lib/datapass/controlPlane";
 
-	const graphProjects = projects.filter((project) => agentNodes.some((node) => node.projectId === project.id));
-	let selectedProject = $state(page.url.searchParams.get("project") || graphProjects[0]?.id || "foil");
+	let { data } = $props();
+	const projects = $derived(data.controlWorkspace.projects);
+	const agentNodes = $derived(data.controlWorkspace.agentNodes);
+	const instructionProfiles = $derived(data.controlWorkspace.instructionProfiles);
+	const graphProjects = $derived(projects.filter((project) => agentNodes.some((node) => node.projectId === project.id)));
+	let selectedProject = $state(page.url.searchParams.get("project") || "foil");
 
 	const selectedNodes = $derived(agentNodes.filter((node) => node.projectId === selectedProject));
 	const selectedProjectRecord = $derived(projects.find((project) => project.id === selectedProject));
