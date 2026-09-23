@@ -18,7 +18,9 @@ function localSummary(projectIds: string[], workItems: Array<{ projectId: string
 	const summary: StatusSummary = {};
 
 	for (const item of workItems) {
-		if (!projectIds.includes(item.projectId)) continue;
+		if (!projectIds.includes(item.projectId)) {
+			continue;
+		}
 		summary[item.status] = (summary[item.status] ?? 0) + 1;
 	}
 
