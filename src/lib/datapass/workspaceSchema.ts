@@ -167,3 +167,50 @@ export function buildSeedWorkspace(source: "seed" | "import" = "seed"): Workspac
 		systemEdges: foilEdges
 	};
 }
+
+
+export const controlResourceTypeSchema = z.enum([
+	"project",
+	"workItem",
+	"agentNode",
+	"instructionProfile",
+	"savedQuery",
+	"workspacePreset",
+	"systemNode",
+	"systemEdge"
+]);
+
+export const controlChangeOperationSchema = z.object({
+	id: z.string().min(1).max(120),
+	kind: z.enum(["upsert", "delete"]),
+	resourceType: controlResourceTypeSchema,
+	resourceId: z.string().min(1).max(200),
+	value: jsonRecord.optional(),
+	rationale: z.string().max(2000).optional()
+}).superRefine((operation, context) => {
+	if (operation.kind === "upsert" && !operation.value) {
+		context.addIssue({
+			code: z.ZodIssueCode.custom,
+			message: "Upsert operations require value"
+		});
+	}
+	if (operation.kind === "delete" && operation.value) {
+		context.addIssue({
+			code: z.ZodIssueCode.custom,
+			message: "Delete operations must not include value"
+		});
+	}
+});
+
+export const controlChangeSetSchema = z.object({
+	schemaVersion: z.literal(1),
+	id: z.string().min(1).max(120),
+	source: z.string().min(1).max(200),
+	summary: z.string().min(1).max(2000),
+	createdAt: z.string(),
+	baseRevision: z.number().int().nonnegative(),
+	baseFingerprint: z.string().min(1).max(128),
+	operations: z.array(controlChangeOperationSchema).min(1).max(50)
+});
+
+export type ControlChangeSetInput = z.infer<typeof controlChangeSetSchema>;
