@@ -2,6 +2,35 @@ export type ProjectStatus = "active" | "paused" | "done";
 export type WorkStatus = "backlog" | "todo" | "in_progress" | "blocked" | "done";
 export type WorkType = "task" | "bug" | "idea" | "note" | "research" | "milestone" | "decision";
 export type QueryOperation = "find" | "aggregate";
+export type ControlResourceType =
+	| "project"
+	| "workItem"
+	| "agentNode"
+	| "instructionProfile"
+	| "savedQuery"
+	| "workspacePreset"
+	| "systemNode"
+	| "systemEdge";
+
+export type ControlChangeOperation = {
+	id: string;
+	kind: "upsert" | "delete";
+	resourceType: ControlResourceType;
+	resourceId: string;
+	value?: Record<string, unknown>;
+	rationale?: string;
+};
+
+export type ControlChangeSet = {
+	schemaVersion: 1;
+	id: string;
+	source: string;
+	summary: string;
+	createdAt: string;
+	baseRevision: number;
+	baseFingerprint: string;
+	operations: ControlChangeOperation[];
+};
 
 export type Project = {
 	id: string;
