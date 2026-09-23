@@ -34,7 +34,33 @@ export type WorkspaceUiSnapshot = {
 	instances: WorkspaceInstance[];
 };
 
+export type WorkspaceCheckpoint = {
+	id: string;
+	title: string;
+	note: string;
+	createdAt: string;
+	snapshot: WorkspaceUiSnapshot;
+};
+
+export type WorkspaceCheckpointEvent = {
+	id: string;
+	action: "save" | "restore" | "delete" | "undo";
+	checkpointId: string;
+	title: string;
+	createdAt: string;
+};
+
+type WorkspaceCheckpointStore = {
+	version: 1;
+	entries: WorkspaceCheckpoint[];
+	undo?: WorkspaceCheckpoint;
+	history: WorkspaceCheckpointEvent[];
+};
+
 const STORAGE_KEY = "datapass-mongo-control.ui.v1";
+const CHECKPOINT_STORAGE_KEY = "datapass-mongo-control.checkpoints.v1";
+const CHECKPOINT_LIMIT = 20;
+const CHECKPOINT_HISTORY_LIMIT = 30;
 
 function makeId(prefix: string) {
 	return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
@@ -58,6 +84,9 @@ class WorkspaceUiState {
 	hydrated = $state(false);
 	activeInstanceId = $state("");
 	instances = $state<WorkspaceInstance[]>([]);
+	checkpoints = $state<WorkspaceCheckpoint[]>([]);
+	checkpointUndo = $state<WorkspaceCheckpoint | undefined>(undefined);
+	checkpointHistory = $state<WorkspaceCheckpointEvent[]>([]);
 
 	current(): WorkspaceInstance | undefined {
 		return this.instances.find((instance) => instance.id === this.activeInstanceId) ?? this.instances[0];
@@ -102,6 +131,7 @@ class WorkspaceUiState {
 			}
 		}
 
+		this.hydrateCheckpoints();
 		this.hydrated = true;
 		this.ensureTab(currentHref, currentTitle);
 		this.persist();
@@ -235,6 +265,131 @@ class WorkspaceUiState {
 			instance.bookmarks.push({ id: makeId("bookmark"), title, href });
 		}
 		this.persist();
+	}
+
+
+	private snapshot(): WorkspaceUiSnapshot {
+		return structuredClone({
+			version: 1,
+			activeInstanceId: this.activeInstanceId,
+			instances: this.instances
+		});
+	}
+
+	private hydrateCheckpoints() {
+		if (!browser) {
+			return;
+		}
+		try {
+			const raw = localStorage.getItem(CHECKPOINT_STORAGE_KEY);
+			if (!raw) {
+				return;
+			}
+			const parsed = JSON.parse(raw) as WorkspaceCheckpointStore;
+			if (parsed.version !== 1 || !Array.isArray(parsed.entries)) {
+				return;
+			}
+			this.checkpoints = parsed.entries.slice(0, CHECKPOINT_LIMIT);
+			this.checkpointUndo = parsed.undo;
+			this.checkpointHistory = Array.isArray(parsed.history)
+				? parsed.history.slice(0, CHECKPOINT_HISTORY_LIMIT)
+				: [];
+		} catch {
+			// Invalid checkpoint state is ignored without touching current UI state.
+		}
+	}
+
+	private persistCheckpoints() {
+		if (!browser || !this.hydrated) {
+			return;
+		}
+		const data: WorkspaceCheckpointStore = {
+			version: 1,
+			entries: this.checkpoints.slice(0, CHECKPOINT_LIMIT),
+			undo: this.checkpointUndo,
+			history: this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT)
+		};
+		localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify(data));
+	}
+
+	private checkpointEvent(
+		action: WorkspaceCheckpointEvent["action"],
+		checkpointId: string,
+		title: string
+	) {
+		this.checkpointHistory.unshift({
+			id: makeId("checkpoint-event"),
+			action,
+			checkpointId,
+			title,
+			createdAt: new Date().toISOString()
+		});
+		this.checkpointHistory = this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT);
+	}
+
+	saveCheckpoint(title: string, note = "") {
+		const cleanTitle = title.trim();
+		if (!cleanTitle) {
+			throw new Error("Checkpoint title is required");
+		}
+		if (this.checkpoints.length >= CHECKPOINT_LIMIT) {
+			throw new Error("Workspace checkpoint limit reached. Delete one before saving another.");
+		}
+		const checkpoint: WorkspaceCheckpoint = {
+			id: makeId("checkpoint"),
+			title: cleanTitle.slice(0, 120),
+			note: note.trim().slice(0, 500),
+			createdAt: new Date().toISOString(),
+			snapshot: this.snapshot()
+		};
+		this.checkpoints.unshift(checkpoint);
+		this.checkpointEvent("save", checkpoint.id, checkpoint.title);
+		this.persistCheckpoints();
+		return checkpoint;
+	}
+
+	restoreCheckpoint(id: string) {
+		const checkpoint = this.checkpoints.find((entry) => entry.id === id);
+		if (!checkpoint) {
+			throw new Error("Workspace checkpoint not found");
+		}
+
+		this.checkpointUndo = {
+			id: makeId("checkpoint-undo"),
+			title: "Before last restore",
+			note: "Automatic undo point",
+			createdAt: new Date().toISOString(),
+			snapshot: this.snapshot()
+		};
+
+		this.instances = structuredClone(checkpoint.snapshot.instances);
+		this.activeInstanceId = checkpoint.snapshot.activeInstanceId;
+		this.checkpointEvent("restore", checkpoint.id, checkpoint.title);
+		this.persist();
+		this.persistCheckpoints();
+	}
+
+	undoCheckpointRestore() {
+		if (!this.checkpointUndo) {
+			throw new Error("No restore undo point is available");
+		}
+		const undo = this.checkpointUndo;
+		this.instances = structuredClone(undo.snapshot.instances);
+		this.activeInstanceId = undo.snapshot.activeInstanceId;
+		this.checkpointUndo = undefined;
+		this.checkpointEvent("undo", undo.id, undo.title);
+		this.persist();
+		this.persistCheckpoints();
+	}
+
+	deleteCheckpoint(id: string) {
+		const checkpoint = this.checkpoints.find((entry) => entry.id === id);
+		if (!checkpoint) {
+			return;
+		}
+		this.checkpoints = this.checkpoints.filter((entry) => entry.id !== id);
+		this.checkpointEvent("delete", checkpoint.id, checkpoint.title);
+		this.persistCheckpoints();
 	}
 
 	exportJson(): string {
