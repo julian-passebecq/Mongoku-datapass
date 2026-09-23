@@ -5,6 +5,7 @@
 	const report = $derived(data.report as ReportResult);
 	const section = $derived(report.sections[0]);
 	const rows = $derived(section?.rows ?? []);
+	const sources = $derived(data.sources ?? []);
 	let kind = $state("ALL");
 
 	function text(row: Record<string, unknown>, key: string): string {
@@ -21,13 +22,23 @@
 		return parent ? text(parent, "name") : "";
 	}
 
+	function sourceFor(row: Record<string, unknown>) {
+		return sources.find((source) => source.resourceRef === text(row, "_id"));
+	}
+
 	function canonicalName(row: Record<string, unknown>): string {
-		return text(row, "recommendedDisplayName") || text(row, "canonicalName") || text(row, "name");
+		return text(row, "recommendedDisplayName") || sourceFor(row)?.authority || text(row, "canonicalName") || text(row, "name");
+	}
+
+	function providerName(row: Record<string, unknown>): string {
+		return text(row, "providerName") || sourceFor(row)?.aliases?.[0] || text(row, "name");
 	}
 
 	function aliases(row: Record<string, unknown>): string {
 		const value = row.aliases;
-		return Array.isArray(value) ? value.map(String).join(", ") : "";
+		const registered = Array.isArray(value) ? value.map(String) : [];
+		const sourceAliases = sourceFor(row)?.aliases ?? [];
+		return Array.from(new Set([...registered, ...sourceAliases])).join(", ");
 	}
 </script>
 
@@ -71,7 +82,7 @@
 					<tr class="align-top">
 						<td class="px-3 py-3 font-medium">{canonicalName(row)}</td>
 						<td class="px-3 py-3">
-							<p>{text(row, "name")}</p>
+							<p>{providerName(row)}</p>
 							{#if aliases(row)}<p class="mt-1 text-[10px] text-[var(--text-muted)]">{aliases(row)}</p>{/if}
 						</td>
 						<td class="px-3 py-3">{text(row, "kind")}</td>
