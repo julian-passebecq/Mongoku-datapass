@@ -72,6 +72,25 @@ export type ReportDefinition = {
 	tags: string[];
 };
 
+export type ResourceRegistryTrace = {
+	found: boolean;
+	registryAuthority: string;
+	resourceId?: string;
+	canonicalName?: string;
+	providerName?: string;
+	aliases?: string[];
+	resourceKind?: string;
+	authorityRole?: string;
+	provider?: string;
+	projectId?: string;
+	cluster?: string;
+	database?: string;
+	repository?: string;
+	status?: string;
+	defaultRoute?: boolean;
+	lastVerifiedAt?: string;
+};
+
 export type ReportSourceTrace = {
 	reportId: string;
 	stepId: string;
@@ -84,6 +103,7 @@ export type ReportSourceTrace = {
 	operation: "find" | "aggregate";
 	readOnly: true;
 	resolved: boolean;
+	resourceRegistry?: ResourceRegistryTrace;
 	message?: string;
 };
 
