@@ -3,6 +3,7 @@
 
 	let { data } = $props();
 	const reports = $derived(data.reports as ReportResult[]);
+	const sources = $derived(data.sources ?? []);
 	let mode = $state<"projects" | "authority" | "resources" | "runtime" | "propagation">("authority");
 
 	const getReport = (id: string) => reports.find((item) => item.reportId === id);
@@ -123,10 +124,13 @@
 		<div class="space-y-4">
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
 				<div class="flex flex-wrap items-center justify-center gap-3 text-xs">
-					<span class="rounded-lg border border-[var(--border-color)] px-4 py-3 font-semibold">Project Management · router / backlog</span>
+					<span class="rounded-lg border border-[var(--border-color)] px-4 py-3 font-semibold">FOIL Project Management · router / backlog</span>
 					<span>→</span>
-					{#each ["Core Truth", "STUDY", "AI Reasoning", "IT DEV", "FRONT", "Labs", "Work Archive", "GitHub"] as authority}
-						<span class="rounded-lg bg-[var(--hover-background)] px-3 py-2">{authority}</span>
+					{#each sources.filter((source) => source.id !== "FOIL_PM") as source}
+						<div class="rounded-lg bg-[var(--hover-background)] px-3 py-2">
+							<p class="font-medium">{source.authority}</p>
+							<p class="mt-1 text-[9px] text-[var(--text-muted)]">{source.id} · {source.resourceRef}</p>
+						</div>
 					{/each}
 				</div>
 			</div>
