@@ -1,9 +1,9 @@
-<script lang="ts">
+<script lang="ts">\n\timport { SvelteMap } from "svelte/reactivity";
 	let { data } = $props();
 
 	const project = $derived(data.workspace.projects.find((candidate) => candidate.id === data.projectId));
 	const grouped = $derived.by(() => {
-		const groups = new Map<string, typeof data.items>();
+		const groups = new SvelteMap<string, typeof data.items>();
 		for (const item of data.items) {
 			const date = item.dueDate || "Unscheduled";
 			const current = groups.get(date) || [];
