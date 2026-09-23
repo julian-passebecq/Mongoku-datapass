@@ -2,12 +2,14 @@ import { env } from "$env/dynamic/private";
 import {
 	getReportDefinition,
 	getSourceDescriptor,
+	type ReportDefinition,
 	type ReportQueryStep,
 	type ReportResult,
 	type ReportSection,
 	type ReportSourceTrace,
 	type SourceDescriptor
 } from "$lib/datapass/reporting";
+import { loadControlWorkspace } from "$lib/server/datapassControl";
 import { getMongo } from "$lib/server/mongo";
 import type { Document, Filter, MongoClient, Sort } from "mongodb";
 
@@ -173,9 +175,10 @@ async function resolveMongoSource(source: SourceDescriptor): Promise<{
 async function executeStep(
 	reportId: string,
 	step: ReportQueryStep,
-	parameters: Record<string, unknown>
+	parameters: Record<string, unknown>,
+	sources?: SourceDescriptor[]
 ): Promise<ReportSection> {
-	const source = getSourceDescriptor(step.sourceId);
+	const source = sources?.find((candidate) => candidate.id === step.sourceId) ?? getSourceDescriptor(step.sourceId);
 	if (!source) {
 		throw new Error("Unknown source: " + step.sourceId);
 	}
@@ -296,21 +299,24 @@ export async function executeSourceQuery(
 	parameters: Record<string, unknown> = {},
 	reportId = "AD_HOC"
 ): Promise<ReportSection> {
-	return executeStep(reportId, step, parameters);
+	const workspace = await loadControlWorkspace();
+	return executeStep(reportId, step, parameters, workspace.sources);
 }
 
 export async function executeReport(
 	reportId: string,
 	parameters: Record<string, unknown> = {}
 ): Promise<ReportResult> {
-	const report = getReportDefinition(reportId);
+	const workspace = await loadControlWorkspace();
+	const report: ReportDefinition | undefined =
+		workspace.reports.find((candidate) => candidate.id === reportId) ?? getReportDefinition(reportId);
 	if (!report) {
 		throw new Error("Unknown report: " + reportId);
 	}
 
 	const sections: ReportSection[] = [];
 	for (const step of report.steps) {
-		sections.push(await executeStep(report.id, step, parameters));
+		sections.push(await executeStep(report.id, step, parameters, workspace.sources));
 	}
 
 	return {
@@ -333,7 +339,8 @@ export async function executeReports(
 		try {
 			results.push(await executeReport(reportId, parameters));
 		} catch (error) {
-			const report = getReportDefinition(reportId);
+			const workspace = await loadControlWorkspace();
+			const report = workspace.reports.find((candidate) => candidate.id === reportId) ?? getReportDefinition(reportId);
 			if (!report) {
 				continue;
 			}
