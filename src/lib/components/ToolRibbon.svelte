@@ -11,6 +11,9 @@
 		{ label: "Calendar", href: project ? "/calendar?project=" + project : "/calendar" },
 		{ label: "Notes", href: project ? "/notes?project=" + project : "/notes" },
 		{ label: "Queries", href: "/queries" },
+		{ label: "AI Review", href: "/ai-review" },
+		{ label: "History", href: "/history" },
+		{ label: "States", href: "/workspace-states" },
 		{ label: "AI JSON", href: "/ai-json" },
 		{ label: "Mongo", href: "/servers" }
 	]);
