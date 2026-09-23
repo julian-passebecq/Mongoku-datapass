@@ -28,6 +28,7 @@ export type WorkItem = {
 	type: WorkType;
 	priority: "low" | "medium" | "high";
 	dueDate?: string;
+	createdAt?: string;
 	tags: string[];
 };
 
@@ -65,8 +66,21 @@ export type SavedMongoQuery = {
 	sort?: Record<string, 1 | -1>;
 	limit?: number;
 	parameters: { name: string; type: "string" | "string[]"; source?: "project" | "project-tree" | "manual" }[];
-	presentation: "project-board" | "status-summary" | "table" | "count";
+	presentation: "project-board" | "status-summary" | "table" | "count" | "calendar" | "notes" | "detail" | "dashboard";
 	readOnly: true;
+	tags: string[];
+};
+
+export type WorkspacePreset = {
+	id: string;
+	name: string;
+	description: string;
+	defaultProjectId?: string;
+	tabs: { id: string; title: string; href: string; projectId?: string }[];
+	bookmarks: { id: string; title: string; href: string }[];
+	leftPanelCollapsed: boolean;
+	rightPanelOpen: boolean;
+	rightPanelMode: "context" | "bookmarks" | "queries" | "settings";
 	tags: string[];
 };
 
@@ -98,13 +112,15 @@ export const projects: Project[] = [
 ];
 
 export const workItems: WorkItem[] = [
-	{ id: "w-001", projectId: "datapass-studio", title: "Connect Mosaic workspace to the shared execution model", status: "in_progress", type: "task", priority: "high", tags: ["mosaic", "runtime"] },
-	{ id: "w-002", projectId: "datapass-studio", title: "Add dbt lineage learning view", status: "todo", type: "task", priority: "medium", tags: ["dbt", "lineage"] },
-	{ id: "w-003", projectId: "powertoy", title: "Add lightweight project snapshot pane", status: "todo", type: "task", priority: "medium", tags: ["desktop", "projects"] },
-	{ id: "w-004", projectId: "foil", title: "Expose Mongo replica-set health in FOIL control view", status: "in_progress", type: "task", priority: "high", tags: ["mongodb", "topology"] },
-	{ id: "w-005", projectId: "foil", title: "Map turbine telemetry path from source to analytics", status: "backlog", type: "research", priority: "medium", tags: ["kafka", "fabric", "databricks"] },
-	{ id: "w-006", projectId: "contoso", title: "Create guided bronze-to-gold sample project", status: "blocked", type: "milestone", priority: "high", tags: ["ducklake", "dbt"] },
-	{ id: "w-007", projectId: "datapass-studio", title: "Document VS Code extension module boundaries", status: "done", type: "decision", priority: "medium", tags: ["vscode", "architecture"] }
+	{ id: "w-001", projectId: "datapass-studio", title: "Connect Mosaic workspace to the shared execution model", status: "in_progress", type: "task", priority: "high", dueDate: "2026-09-25", createdAt: "2026-09-22", tags: ["mosaic", "runtime"] },
+	{ id: "w-002", projectId: "datapass-studio", title: "Add dbt lineage learning view", status: "todo", type: "task", priority: "medium", dueDate: "2026-09-29", createdAt: "2026-09-22", tags: ["dbt", "lineage"] },
+	{ id: "w-003", projectId: "powertoy", title: "Add lightweight project snapshot pane", status: "todo", type: "task", priority: "medium", dueDate: "2026-09-27", createdAt: "2026-09-23", tags: ["desktop", "projects"] },
+	{ id: "w-004", projectId: "foil", title: "Expose Mongo replica-set health in FOIL control view", status: "in_progress", type: "task", priority: "high", dueDate: "2026-09-24", createdAt: "2026-09-23", tags: ["mongodb", "topology"] },
+	{ id: "w-005", projectId: "foil", title: "Map turbine telemetry path from source to analytics", status: "backlog", type: "research", priority: "medium", createdAt: "2026-09-23", tags: ["kafka", "fabric", "databricks"] },
+	{ id: "w-006", projectId: "contoso", title: "Create guided bronze-to-gold sample project", status: "blocked", type: "milestone", priority: "high", dueDate: "2026-09-26", createdAt: "2026-09-22", tags: ["ducklake", "dbt"] },
+	{ id: "w-007", projectId: "datapass-studio", title: "Document VS Code extension module boundaries", status: "done", type: "decision", priority: "medium", createdAt: "2026-09-21", tags: ["vscode", "architecture"] },
+	{ id: "w-008", projectId: "foil", title: "Leader routes Mongo-specific work to the Data branch before implementation", status: "todo", type: "note", priority: "low", createdAt: "2026-09-23", tags: ["ai", "leader", "mongodb"] },
+	{ id: "w-009", projectId: "powertoy", title: "PowerToy remains a compact launcher; full project management stays in Mongo Control", status: "todo", type: "decision", priority: "low", createdAt: "2026-09-23", tags: ["powertoy", "architecture"] }
 ];
 
 export const instructionProfiles: InstructionProfile[] = [
@@ -170,6 +186,129 @@ export const savedQueries: SavedMongoQuery[] = [
 		presentation: "table",
 		readOnly: true,
 		tags: ["projects", "work-items"]
+	},
+	{
+		id: "calendar-upcoming",
+		name: "Upcoming calendar items",
+		description: "Returns open work items that have a due date. Used by the general and project calendar.",
+		collection: "work_items",
+		operation: "find",
+		filter: { status: { $ne: "done" }, dueDate: { $exists: true } },
+		sort: { dueDate: 1 },
+		parameters: [],
+		presentation: "calendar",
+		readOnly: true,
+		tags: ["calendar", "dashboard", "work-items"]
+	},
+	{
+		id: "project-calendar",
+		name: "Project calendar",
+		description: "Returns dated work items for one project tree.",
+		collection: "work_items",
+		operation: "find",
+		filter: { projectId: { $in: "{{projectIds}}" }, status: { $ne: "done" }, dueDate: { $exists: true } },
+		sort: { dueDate: 1 },
+		parameters: [{ name: "projectIds", type: "string[]", source: "project-tree" }],
+		presentation: "calendar",
+		readOnly: true,
+		tags: ["calendar", "projects"]
+	},
+	{
+		id: "notes-recent",
+		name: "Notes and decisions",
+		description: "Returns note, decision and research items across the workspace.",
+		collection: "work_items",
+		operation: "find",
+		filter: { type: { $in: ["note", "decision", "research"] } },
+		sort: { createdAt: -1 },
+		parameters: [],
+		presentation: "notes",
+		readOnly: true,
+		tags: ["notes", "decisions", "dashboard"]
+	},
+	{
+		id: "project-notes",
+		name: "Project notes",
+		description: "Returns note, decision and research items for a selected project tree.",
+		collection: "work_items",
+		operation: "find",
+		filter: { projectId: { $in: "{{projectIds}}" }, type: { $in: ["note", "decision", "research"] } },
+		sort: { createdAt: -1 },
+		parameters: [{ name: "projectIds", type: "string[]", source: "project-tree" }],
+		presentation: "notes",
+		readOnly: true,
+		tags: ["notes", "projects"]
+	},
+	{
+		id: "project-detail",
+		name: "Project detail",
+		description: "Returns the project control document for a selected project id.",
+		collection: "projects",
+		operation: "find",
+		filter: { id: "{{projectId}}" },
+		limit: 1,
+		parameters: [{ name: "projectId", type: "string", source: "project" }],
+		presentation: "detail",
+		readOnly: true,
+		tags: ["projects", "detail", "inspector"]
+	}
+];
+
+
+export const workspacePresets: WorkspacePreset[] = [
+	{
+		id: "project-manager",
+		name: "Project Manager",
+		description: "General portfolio, calendar, notes and project-control workspace.",
+		tabs: [
+			{ id: "dashboard", title: "Dashboard", href: "/" },
+			{ id: "projects", title: "Projects", href: "/projects" },
+			{ id: "calendar", title: "Calendar", href: "/calendar" },
+			{ id: "notes", title: "Notes", href: "/notes" }
+		],
+		bookmarks: [
+			{ id: "ai-json", title: "AI JSON", href: "/ai-json" },
+			{ id: "queries", title: "Queries", href: "/queries" }
+		],
+		leftPanelCollapsed: false,
+		rightPanelOpen: true,
+		rightPanelMode: "context",
+		tags: ["projects", "daily"]
+	},
+	{
+		id: "foil-command",
+		name: "FOIL Command",
+		description: "FOIL project, AI graph, tasks and system visibility.",
+		defaultProjectId: "foil",
+		tabs: [
+			{ id: "foil", title: "FOIL", href: "/foil", projectId: "foil" },
+			{ id: "foil-graph", title: "AI Graph", href: "/architecture?project=foil", projectId: "foil" },
+			{ id: "foil-work", title: "Tasks", href: "/projects?project=foil", projectId: "foil" },
+			{ id: "foil-calendar", title: "Calendar", href: "/calendar?project=foil", projectId: "foil" }
+		],
+		bookmarks: [
+			{ id: "foil-github", title: "FOIL GitHub", href: "https://github.com/julian-passebecq/foil" },
+			{ id: "mongo-explorer", title: "Mongo Explorer", href: "/servers" }
+		],
+		leftPanelCollapsed: false,
+		rightPanelOpen: true,
+		rightPanelMode: "context",
+		tags: ["foil", "operations"]
+	},
+	{
+		id: "mongo-focus",
+		name: "Mongo Focus",
+		description: "Lightweight Mongo exploration plus editable saved queries.",
+		tabs: [
+			{ id: "mongo", title: "Mongo Explorer", href: "/servers" },
+			{ id: "queries", title: "Saved Queries", href: "/queries" },
+			{ id: "ai-json", title: "AI JSON", href: "/ai-json" }
+		],
+		bookmarks: [],
+		leftPanelCollapsed: true,
+		rightPanelOpen: true,
+		rightPanelMode: "queries",
+		tags: ["mongodb", "queries"]
 	}
 ];
 
