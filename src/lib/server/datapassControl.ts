@@ -41,7 +41,7 @@ function withoutMongoId(doc: Document): Record<string, unknown> {
 	return copy;
 }
 
-async function getControlDb(): Promise<Db> {
+export async function getControlDb(): Promise<Db> {
 	const mongo = await getMongo();
 	const clients = mongo.listClients();
 
