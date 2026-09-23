@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
+	import { page } from "$app/state";\n\timport { resolve } from "$app/paths";
 	import type { Project, SavedMongoQuery, WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -56,7 +56,7 @@
 		if (href.startsWith("http://") || href.startsWith("https://")) {
 			window.open(href, "_blank", "noopener,noreferrer");
 		} else {
-			goto(href);
+			goto(resolve(href));
 		}
 	}
 
@@ -176,7 +176,7 @@
 						<button
 							type="button"
 							onclick={() =>
-								goto("/queries?query=" + query.id + (selectedProject ? "&project=" + selectedProject.id : ""))}
+								goto(resolve("/queries?query=" + query.id + (selectedProject ? "&project=" + selectedProject.id : "")))}
 							class="block w-full rounded-md border border-[var(--border-color)] px-3 py-2 text-left"
 						>
 							<span class="block text-xs font-medium">{query.name}</span>
@@ -212,19 +212,19 @@
 					<div class="grid grid-cols-3 gap-1">
 						<button
 							type="button"
-							onclick={() => goto("/ai-review")}
+							onclick={() => goto(resolve("/ai-review"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>AI Review</button
 						>
 						<button
 							type="button"
-							onclick={() => goto("/history")}
+							onclick={() => goto(resolve("/history"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>History</button
 						>
 						<button
 							type="button"
-							onclick={() => goto("/workspace-states")}
+							onclick={() => goto(resolve("/workspace-states"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>States</button
 						>
