@@ -3,9 +3,12 @@ import { z } from "zod";
 import { workspaceExportSchema } from "$lib/datapass/workspaceSchema";
 import {
 	controlWritesEnabled,
-	loadControlWorkspace,
-	saveControlWorkspace
+	loadControlWorkspace
 } from "$lib/server/datapassControl";
+import {
+	commitDirectWorkspace,
+	getWorkspaceIdentity
+} from "$lib/server/datapassHistory";
 import type { RequestHandler } from "./$types";
 
 const writeRequestSchema = z.object({
@@ -16,7 +19,16 @@ const writeRequestSchema = z.object({
 
 export const GET: RequestHandler = async () => {
 	const workspace = await loadControlWorkspace();
-	return json(workspace, {
+	const identity = await getWorkspaceIdentity();
+	return json({
+		...workspace,
+		metadata: {
+			...workspace.metadata,
+			revision: identity.revision,
+			fingerprint: identity.fingerprint,
+			updatedAt: identity.updatedAt
+		}
+	}, {
 		headers: {
 			"cache-control": "no-store"
 		}
@@ -63,6 +75,10 @@ export const PUT: RequestHandler = async ({ request }) => {
 		);
 	}
 
-	await saveControlWorkspace(parsed.data.workspace, parsed.data.mode);
-	return json({ ok: true, mode: parsed.data.mode });
+	const identity = await commitDirectWorkspace(
+		parsed.data.workspace,
+		"manual-json",
+		parsed.data.mode === "replace" ? "Direct workspace replacement" : "Direct workspace JSON commit"
+	);
+	return json({ ok: true, mode: parsed.data.mode, identity });
 };
