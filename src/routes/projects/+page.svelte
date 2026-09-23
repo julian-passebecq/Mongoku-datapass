@@ -1,18 +1,32 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { projects, workItems, workStatuses } from "$lib/datapass/controlPlane";
+	import { workStatuses } from "$lib/datapass/controlPlane";
 
+	let { data } = $props();
+
+	let view = $state<"portfolio" | "work">("portfolio");
 	let selectedProject = $state(page.url.searchParams.get("project") || "all");
 	let selectedType = $state("all");
 	let selectedTag = $state("all");
 
+	const projects = $derived(data.workspace.projects);
+	const workItems = $derived(data.workspace.workItems);
+	const savedQueries = $derived(data.workspace.savedQueries);
+	const portfolioProjects = $derived(data.portfolioProjects);
+	const projectSummaries = $derived(data.projectSummaries);
+
 	const types = ["task", "bug", "idea", "note", "research", "milestone", "decision"];
-	const tags = Array.from(new Set(workItems.flatMap((item) => item.tags))).sort();
+	const tags = $derived(Array.from(new Set(workItems.flatMap((item) => item.tags))).sort());
 
 	const projectScope = $derived.by(() => {
 		if (selectedProject === "all") return projects.map((project) => project.id);
-		const childIds = projects.filter((project) => project.parentProjectId === selectedProject).map((project) => project.id);
-		return [selectedProject, ...childIds];
+
+		const collect = (projectId: string): string[] => {
+			const childIds = projects.filter((project) => project.parentProjectId === projectId).map((project) => project.id);
+			return [projectId, ...childIds.flatMap(collect)];
+		};
+
+		return collect(selectedProject);
 	});
 
 	const visibleItems = $derived(
@@ -24,72 +38,153 @@
 	);
 
 	const selectedProjectRecord = $derived(projects.find((project) => project.id === selectedProject));
+	const portfolioQuery = $derived(savedQueries.find((query) => query.id === "project-portfolio-board"));
 </script>
 
 <section class="space-y-6">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
 		<div>
 			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Projects</p>
-			<h1 class="mt-2 text-3xl font-semibold tracking-tight">Work board</h1>
-			<p class="mt-2 max-w-3xl text-sm text-[var(--text-muted)]">A focused Kanban over project-management documents, with project, subproject and tag context.</p>
-			{#if selectedProjectRecord?.githubRepo}
-				<a href={"https://github.com/" + selectedProjectRecord.githubRepo} target="_blank" rel="noreferrer" class="mt-2 inline-block text-xs no-underline hover:underline">
-					GitHub: {selectedProjectRecord.githubRepo}
-				</a>
-			{/if}
+			<h1 class="mt-2 text-3xl font-semibold tracking-tight">Project control</h1>
+			<p class="mt-2 max-w-3xl text-sm text-[var(--text-muted)]">
+				Portfolio state and work-item state are separate. Both become Mongo-backed when the control database is initialized.
+			</p>
 		</div>
+		<div class="inline-flex rounded-lg border border-[var(--border-color)] p-1">
+			<button type="button" onclick={() => (view = "portfolio")} class={"rounded-md px-3 py-1.5 text-xs font-medium " + (view === "portfolio" ? "bg-[var(--hover-background)]" : "")}>Portfolio</button>
+			<button type="button" onclick={() => (view = "work")} class={"rounded-md px-3 py-1.5 text-xs font-medium " + (view === "work" ? "bg-[var(--hover-background)]" : "")}>Work items</button>
+		</div>
+	</div>
+
+	<div class="flex flex-wrap items-center gap-2 text-xs text-[var(--text-muted)]">
+		<span class="rounded-full border border-[var(--border-color)] px-2.5 py-1">Source: {data.workspace.metadata.source}</span>
+		{#if data.workspace.metadata.controlDatabase}
+			<span class="rounded-full border border-[var(--border-color)] px-2.5 py-1">DB: {data.workspace.metadata.controlDatabase}</span>
+		{/if}
+		{#if view === "portfolio" && portfolioQuery}
+			<span class="rounded-full border border-[var(--border-color)] px-2.5 py-1">Query: {portfolioQuery.id}</span>
+		{/if}
+	</div>
+
+	{#if view === "portfolio"}
+		<div class="overflow-x-auto pb-3">
+			<div class="grid min-w-[1100px] grid-cols-5 gap-4">
+				{#each workStatuses as column}
+					<section class="rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
+						<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
+							<h2 class="text-sm font-semibold">{column.label}</h2>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-xs text-[var(--text-muted)]">
+								{portfolioProjects.filter((project) => project.kanbanStatus === column.id).length}
+							</span>
+						</div>
+
+						<div class="min-h-72 space-y-3 p-3">
+							{#each portfolioProjects.filter((project) => project.kanbanStatus === column.id) as project}
+								<article class="rounded-lg border border-[var(--border-color)] p-3 shadow-sm">
+									<div class="flex items-start justify-between gap-3">
+										<div class="min-w-0">
+											{#if project.parentProjectId}
+												<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Subproject</p>
+											{/if}
+											<h3 class="truncate text-sm font-semibold">{project.name}</h3>
+											<p class="mt-1 text-[11px] text-[var(--text-muted)]">{project.category}</p>
+										</div>
+										<span class="text-[10px] text-[var(--text-muted)]">{project.progress}%</span>
+									</div>
+
+									<p class="mt-3 text-xs leading-5 text-[var(--text-muted)]">{project.summary}</p>
+
+									<div class="mt-3 grid grid-cols-2 gap-1 text-[10px]">
+										<span class="rounded bg-[var(--hover-background)] px-2 py-1">Todo {projectSummaries[project.id]?.todo ?? 0}</span>
+										<span class="rounded bg-[var(--hover-background)] px-2 py-1">Doing {projectSummaries[project.id]?.in_progress ?? 0}</span>
+										<span class="rounded bg-[var(--hover-background)] px-2 py-1">Blocked {projectSummaries[project.id]?.blocked ?? 0}</span>
+										<span class="rounded bg-[var(--hover-background)] px-2 py-1">Backlog {projectSummaries[project.id]?.backlog ?? 0}</span>
+									</div>
+
+									<div class="mt-3 flex flex-wrap gap-1">
+										{#each project.tags.slice(0, 4) as tag}
+											<span class="rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]">#{tag}</span>
+										{/each}
+									</div>
+
+									<div class="mt-3 border-t border-[var(--border-color)] pt-2 text-[10px] text-[var(--text-muted)]">
+										Status query: {project.statusQueryId || "manual"}
+									</div>
+
+									<div class="mt-2 flex gap-3 text-[11px]">
+										<a href={"/architecture?project=" + project.id} class="no-underline hover:underline">Graph</a>
+										<button type="button" onclick={() => { selectedProject = project.id; view = "work"; }} class="hover:underline">Tasks</button>
+										{#if project.githubRepo}
+											<a href={"https://github.com/" + project.githubRepo} target="_blank" rel="noreferrer" class="no-underline hover:underline">GitHub</a>
+										{/if}
+									</div>
+								</article>
+							{/each}
+						</div>
+					</section>
+				{/each}
+			</div>
+		</div>
+	{:else}
+		<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+			<div>
+				<h2 class="text-lg font-semibold">Work-item Kanban</h2>
+				{#if selectedProjectRecord?.githubRepo}
+					<a href={"https://github.com/" + selectedProjectRecord.githubRepo} target="_blank" rel="noreferrer" class="mt-1 inline-block text-xs no-underline hover:underline">GitHub: {selectedProjectRecord.githubRepo}</a>
+				{/if}
+			</div>
+
+			<div class="flex flex-wrap gap-2">
+				<select bind:value={selectedProject} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
+					<option value="all">All projects</option>
+					{#each projects as project}<option value={project.id}>{project.parentProjectId ? "↳ " : ""}{project.name}</option>{/each}
+				</select>
+				<select bind:value={selectedType} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
+					<option value="all">All item types</option>
+					{#each types as type}<option value={type}>{type}</option>{/each}
+				</select>
+				<select bind:value={selectedTag} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
+					<option value="all">All tags</option>
+					{#each tags as tag}<option value={tag}>#{tag}</option>{/each}
+				</select>
+			</div>
+		</div>
+
 		<div class="flex flex-wrap gap-2">
-			<select bind:value={selectedProject} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
-				<option value="all">All projects</option>
-				{#each projects as project}<option value={project.id}>{project.parentProjectId ? "↳ " : ""}{project.name}</option>{/each}
-			</select>
-			<select bind:value={selectedType} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
-				<option value="all">All item types</option>
-				{#each types as type}<option value={type}>{type}</option>{/each}
-			</select>
-			<select bind:value={selectedTag} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm">
-				<option value="all">All tags</option>
-				{#each tags as tag}<option value={tag}>#{tag}</option>{/each}
-			</select>
-		</div>
-	</div>
-
-	<div class="flex flex-wrap gap-2">
-		<button type="button" onclick={() => (selectedTag = "all")} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === "all" ? "bg-[var(--hover-background)]" : "")}>All tags</button>
-		{#each tags as tag}
-			<button type="button" onclick={() => (selectedTag = tag)} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === tag ? "bg-[var(--hover-background)]" : "")}>#{tag}</button>
-		{/each}
-	</div>
-
-	<div class="overflow-x-auto pb-3">
-		<div class="grid min-w-[1100px] grid-cols-5 gap-4">
-			{#each workStatuses as column}
-				<section class="rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
-					<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
-						<h2 class="text-sm font-semibold">{column.label}</h2>
-						<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-xs text-[var(--text-muted)]">{visibleItems.filter((item) => item.status === column.id).length}</span>
-					</div>
-					<div class="min-h-72 space-y-3 p-3">
-						{#each visibleItems.filter((item) => item.status === column.id) as item}
-							<article class="rounded-lg border border-[var(--border-color)] p-3 shadow-sm">
-								<div class="flex items-start justify-between gap-3">
-									<span class="rounded-md bg-[var(--hover-background)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{item.type}</span>
-									<span class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{item.priority}</span>
-								</div>
-								<h3 class="mt-3 text-sm font-medium leading-5">{item.title}</h3>
-								<p class="mt-2 text-xs text-[var(--text-muted)]">{projects.find((project) => project.id === item.projectId)?.name}</p>
-								<div class="mt-3 flex flex-wrap gap-1">
-									{#each item.tags as tag}
-										<button type="button" onclick={() => (selectedTag = tag)} class="rounded border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]">#{tag}</button>
-									{/each}
-								</div>
-							</article>
-						{/each}
-					</div>
-				</section>
+			<button type="button" onclick={() => (selectedTag = "all")} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === "all" ? "bg-[var(--hover-background)]" : "")}>All tags</button>
+			{#each tags as tag}
+				<button type="button" onclick={() => (selectedTag = tag)} class={"rounded-full border border-[var(--border-color)] px-2.5 py-1 text-[11px] " + (selectedTag === tag ? "bg-[var(--hover-background)]" : "")}>#{tag}</button>
 			{/each}
 		</div>
-	</div>
 
-	<p class="text-xs text-[var(--text-muted)]">The board is still using seeded typed data. The next backend pass will persist projects, tags, work items, instruction profiles and graph nodes in the Datapass control database.</p>
+		<div class="overflow-x-auto pb-3">
+			<div class="grid min-w-[1100px] grid-cols-5 gap-4">
+				{#each workStatuses as column}
+					<section class="rounded-xl border border-[var(--border-color)] bg-[var(--background-color)]">
+						<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
+							<h2 class="text-sm font-semibold">{column.label}</h2>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-xs text-[var(--text-muted)]">{visibleItems.filter((item) => item.status === column.id).length}</span>
+						</div>
+						<div class="min-h-72 space-y-3 p-3">
+							{#each visibleItems.filter((item) => item.status === column.id) as item}
+								<article class="rounded-lg border border-[var(--border-color)] p-3 shadow-sm">
+									<div class="flex items-start justify-between gap-3">
+										<span class="rounded-md bg-[var(--hover-background)] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{item.type}</span>
+										<span class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">{item.priority}</span>
+									</div>
+									<h3 class="mt-3 text-sm font-medium leading-5">{item.title}</h3>
+									<p class="mt-2 text-xs text-[var(--text-muted)]">{projects.find((project) => project.id === item.projectId)?.name}</p>
+									<div class="mt-3 flex flex-wrap gap-1">
+										{#each item.tags as tag}
+											<button type="button" onclick={() => (selectedTag = tag)} class="rounded border border-[var(--border-color)] px-1.5 py-0.5 text-[10px]">#{tag}</button>
+										{/each}
+									</div>
+								</article>
+							{/each}
+						</div>
+					</section>
+				{/each}
+			</div>
+		</div>
+	{/if}
 </section>
