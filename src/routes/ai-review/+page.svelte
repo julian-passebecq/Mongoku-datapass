@@ -30,17 +30,30 @@
 	let { data } = $props();
 	const changeSets = $derived(data.changeSets as ReviewRow[]);
 
+	const exampleProject = data.controlWorkspace.projects[0];
+
 	let proposalText = $state(
 		JSON.stringify(
 			{
 				schemaVersion: 1,
 				id: "proposal-example",
 				source: "AI",
-				summary: "Describe the intended control-plane change",
+				summary: "Preview a no-op project proposal",
 				createdAt: new Date().toISOString(),
 				baseRevision: data.identity.revision,
 				baseFingerprint: data.identity.fingerprint,
-				operations: []
+				operations: exampleProject
+					? [
+							{
+								id: "operation-1",
+								kind: "upsert",
+								resourceType: "project",
+								resourceId: exampleProject.id,
+								value: exampleProject,
+								rationale: "No-op example that validates the ChangeSet review path."
+							}
+						]
+					: []
 			},
 			null,
 			2
