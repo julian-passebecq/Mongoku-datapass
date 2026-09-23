@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from "$app/state";
+	import { page } from "$app/state";\n\timport { resolve } from "$app/paths";
 	import { workStatuses } from "$lib/datapass/controlPlane";
 
 	let { data } = $props();
@@ -141,11 +141,11 @@
 
 									<div class="mt-2 flex gap-3 text-[11px]">
 										<a
-											href={project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id}
+											href={resolve(project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id)}
 											class="no-underline hover:underline">Graph</a
 										>
 										{#if project.id === "foil"}
-											<a href="/foil/kanban" class="no-underline hover:underline">Authoritative backlog</a>
+											<a href={resolve("/foil/kanban")} class="no-underline hover:underline">Authoritative backlog</a>
 										{:else}
 											<button
 												type="button"
