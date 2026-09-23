@@ -1,9 +1,10 @@
 import { env } from "$env/dynamic/private";
 import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { getMongo } from "$lib/server/mongo";
-import type { Db, Document } from "mongodb";
+import type { Db, Document, Filter, Sort } from "mongodb";
 
 const DEFAULT_DATABASE = "datapass_control";
+const DEFAULT_QUERY_LIMIT = 1000;
 
 const collections = {
 	projects: "projects",
@@ -15,9 +16,13 @@ const collections = {
 	systemEdges: "system_edges"
 } as const;
 
-function withoutMongoId<T extends Document>(doc: T): Omit<T, "_id"> {
-	const { _id: _ignored, ...rest } = doc;
-	return rest;
+const allowedQueryCollections = new Set<string>(Object.values(collections));
+const forbiddenQueryKeys = new Set(["$out", "$merge", "$where", "$function", "$accumulator"]);
+
+function withoutMongoId(doc: Document): Record<string, unknown> {
+	const copy: Record<string, unknown> = { ...doc };
+	delete copy._id;
+	return copy;
 }
 
 async function getControlDb(): Promise<Db> {
@@ -43,7 +48,7 @@ async function getControlDb(): Promise<Db> {
 
 async function readCollection(db: Db, name: string): Promise<Record<string, unknown>[]> {
 	const docs = await db.collection(name).find({}).toArray();
-	return docs.map((doc) => withoutMongoId(doc) as Record<string, unknown>);
+	return docs.map(withoutMongoId);
 }
 
 export async function loadControlWorkspace(): Promise<WorkspaceExport> {
@@ -126,6 +131,102 @@ export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "me
 		upsertMany(db, collections.instructionProfiles, parsed.instructionProfiles),
 		upsertMany(db, collections.savedQueries, parsed.savedQueries),
 		upsertMany(db, collections.systemNodes, parsed.systemNodes),
-		upsertMany(db, collections.systemEdges, parsed.systemEdges.map((edge, index) => ({ id: edge.from + "::" + edge.to + "::" + index, ...edge })))
+		upsertMany(
+			db,
+			collections.systemEdges,
+			parsed.systemEdges.map((edge, index) => ({
+				id: edge.from + "::" + edge.to + "::" + index,
+				...edge
+			}))
+		)
 	]);
+}
+
+function substituteParameters(value: unknown, parameters: Record<string, unknown>): unknown {
+	if (typeof value === "string") {
+		const match = value.match(/^\{\{([A-Za-z0-9_-]+)\}\}$/);
+		if (match) {
+			const parameterName = match[1];
+			if (!(parameterName in parameters)) {
+				throw new Error("Missing query parameter: " + parameterName);
+			}
+			return parameters[parameterName];
+		}
+		return value;
+	}
+
+	if (Array.isArray(value)) {
+		return value.map((item) => substituteParameters(item, parameters));
+	}
+
+	if (value && typeof value === "object") {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, nested]) => [key, substituteParameters(nested, parameters)])
+		);
+	}
+
+	return value;
+}
+
+function assertReadOnlyQuery(value: unknown): void {
+	if (Array.isArray(value)) {
+		for (const item of value) assertReadOnlyQuery(item);
+		return;
+	}
+
+	if (!value || typeof value !== "object") return;
+
+	for (const [key, nested] of Object.entries(value)) {
+		if (forbiddenQueryKeys.has(key)) {
+			throw new Error("Forbidden operator in saved control query: " + key);
+		}
+		assertReadOnlyQuery(nested);
+	}
+}
+
+export async function executeSavedControlQuery(
+	queryId: string,
+	parameters: Record<string, unknown> = {}
+): Promise<Record<string, unknown>[]> {
+	const workspace = await loadControlWorkspace();
+	const query = workspace.savedQueries.find((candidate) => candidate.id === queryId);
+
+	if (!query) {
+		throw new Error("Saved control query not found: " + queryId);
+	}
+
+	if (!query.readOnly) {
+		throw new Error("Only read-only saved control queries can be executed");
+	}
+
+	if (!allowedQueryCollections.has(query.collection)) {
+		throw new Error("Saved query targets a non-control collection");
+	}
+
+	const db = await getControlDb();
+	const collection = db.collection(query.collection);
+	const limit = Math.min(query.limit ?? DEFAULT_QUERY_LIMIT, DEFAULT_QUERY_LIMIT);
+
+	if (query.operation === "find") {
+		const filter = substituteParameters(query.filter ?? {}, parameters);
+		assertReadOnlyQuery(filter);
+
+		let cursor = collection.find(filter as Filter<Document>);
+		if (query.sort) {
+			cursor = cursor.sort(query.sort as Sort);
+		}
+		cursor = cursor.limit(limit);
+
+		return (await cursor.toArray()).map(withoutMongoId);
+	}
+
+	const pipeline = substituteParameters(query.pipeline ?? [], parameters);
+	assertReadOnlyQuery(pipeline);
+
+	const stages = pipeline as Document[];
+	if (query.limit) {
+		stages.push({ $limit: limit });
+	}
+
+	return (await collection.aggregate(stages, { maxTimeMS: 5000 }).toArray()).map(withoutMongoId);
 }
