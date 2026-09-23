@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
+	import { goto } from "$app/navigation";\n\timport { resolve } from "$app/paths";\n\timport { SvelteURLSearchParams } from "svelte/reactivity";
 
 	let { data } = $props();
 
@@ -7,14 +7,14 @@
 	let selectedQueryId = $state(data.queryId);
 
 	function openQuery() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (selectedQueryId) {
 			params.set("query", selectedQueryId);
 		}
 		if (projectId) {
 			params.set("project", projectId);
 		}
-		goto("/queries?" + params.toString());
+		goto(resolve("/queries?" + params.toString()));
 	}
 </script>
 
