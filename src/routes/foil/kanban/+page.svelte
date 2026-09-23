@@ -83,9 +83,18 @@
 									<div class="mt-3"><p class="text-[9px] uppercase text-[var(--text-muted)]">Next action</p><p class="mt-1 text-[10px] leading-4">{text(item, "nextAction")}</p></div>
 								{/if}
 
+								{#if text(item, "blocker") || list(item, "blockers").length > 0}
+									<div class="mt-3 rounded-md border border-[var(--border-color)] p-2">
+										<p class="text-[9px] uppercase text-[var(--text-muted)]">Blocker</p>
+										<p class="mt-1 text-[10px] leading-4">{text(item, "blocker") || list(item, "blockers").join(", ")}</p>
+									</div>
+								{/if}
+
 								<div class="mt-3 grid grid-cols-2 gap-1 text-[9px] text-[var(--text-muted)]">
 									<span>Impact {impactCount(item)}</span>
-									<span>{text(item, "targetReviewDate") || text(item, "nextReviewAt")}</span>
+									<span>{text(item, "nextDueAt") || text(item, "dueDate") || text(item, "targetReviewDate") || text(item, "nextReviewAt")}</span>
+									<span>{text(item, "authority") || "FOIL Project Management"}</span>
+									<span>{text(item, "propagationStatus") || "—"}</span>
 								</div>
 
 								<details class="mt-3 border-t border-[var(--border-color)] pt-2">
