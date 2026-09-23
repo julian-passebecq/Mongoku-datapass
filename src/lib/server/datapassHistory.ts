@@ -424,16 +424,61 @@ async function commitWorkspace(input: {
 	return { revision: nextRevision, fingerprint, updatedAt: createdAt };
 }
 
+function mergeByKey<T>(
+	current: T[],
+	incoming: T[],
+	keyOf: (value: T) => string
+): T[] {
+	const merged = new Map(current.map((value) => [keyOf(value), value]));
+	for (const value of incoming) {
+		merged.set(keyOf(value), value);
+	}
+	return Array.from(merged.values());
+}
+
+function mergeWorkspace(current: WorkspaceExport, incoming: WorkspaceExport): WorkspaceExport {
+	return workspaceExportSchema.parse({
+		...current,
+		...incoming,
+		metadata: incoming.metadata,
+		projects: mergeByKey(current.projects, incoming.projects, (value) => value.id),
+		workItems: mergeByKey(current.workItems, incoming.workItems, (value) => value.id),
+		agentNodes: mergeByKey(current.agentNodes, incoming.agentNodes, (value) => value.id),
+		instructionProfiles: mergeByKey(
+			current.instructionProfiles,
+			incoming.instructionProfiles,
+			(value) => value.id
+		),
+		savedQueries: mergeByKey(current.savedQueries, incoming.savedQueries, (value) => value.id),
+		workspacePresets: mergeByKey(
+			current.workspacePresets,
+			incoming.workspacePresets,
+			(value) => value.id
+		),
+		systemNodes: mergeByKey(current.systemNodes, incoming.systemNodes, (value) => value.id),
+		systemEdges: mergeByKey(
+			current.systemEdges,
+			incoming.systemEdges,
+			(value) => value.from + "::" + value.to
+		)
+	});
+}
+
 export async function commitDirectWorkspace(
 	workspace: WorkspaceExport,
 	source: string,
-	summary: string
+	summary: string,
+	mode: "merge" | "replace" = "merge"
 ) {
 	if (!controlWritesEnabled()) {
 		throw new Error("Datapass control writes are disabled");
 	}
 	const parsed = workspaceExportSchema.parse(workspace);
-	return commitWorkspace({ workspace: parsed, source, summary });
+	const candidate =
+		mode === "merge"
+			? mergeWorkspace(await loadControlWorkspace(), parsed)
+			: parsed;
+	return commitWorkspace({ workspace: candidate, source, summary });
 }
 
 export async function acceptControlChangeSet(id: string, selectedIds?: string[]) {
