@@ -11,7 +11,7 @@ import {
 	type ResourceRegistryTrace,
 	type SourceDescriptor
 } from "$lib/datapass/reporting";
-import { applyReportSemantics } from "$lib/datapass/reportSemantics";
+import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/reportSemantics";
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { loadControlWorkspace } from "$lib/server/datapassControl";
 import { getMongo } from "$lib/server/mongo";
@@ -157,14 +157,7 @@ function assertAllowedPipeline(pipeline: unknown): asserts pipeline is Document[
 }
 
 function limitsFor(step: ReportQueryStep): { requestedLimit: number; effectiveLimit: number } {
-	const requestedLimit = step.limit ?? DEFAULT_QUERY_LIMIT;
-	if (!Number.isInteger(requestedLimit) || requestedLimit <= 0) {
-		throw new Error("Report query limit must be a positive integer");
-	}
-	return {
-		requestedLimit,
-		effectiveLimit: Math.min(requestedLimit, MAX_QUERY_LIMIT)
-	};
+	return normalizeReportLimit(step.limit, DEFAULT_QUERY_LIMIT, MAX_QUERY_LIMIT);
 }
 
 function byteLength(value: unknown): number {
