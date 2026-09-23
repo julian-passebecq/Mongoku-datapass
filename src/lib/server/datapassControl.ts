@@ -1,7 +1,6 @@
 import { env } from "$env/dynamic/private";
 import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { getMongo } from "$lib/server/mongo";
-import { executeSourceQuery } from "$lib/server/reportEngine";
 import type { Db, Document, Filter, Sort } from "mongodb";
 
 const DEFAULT_QUERY_LIMIT = 1000;
@@ -265,35 +264,6 @@ export async function executeSavedControlQuery(
 
 	if (!query.readOnly) {
 		throw new Error("Only read-only saved control queries can be executed");
-	}
-
-	if (query.sourceId) {
-		const section = await executeSourceQuery(
-			{
-				id: query.id,
-				sourceId: query.sourceId,
-				authority: query.authority ?? "Unspecified authority",
-				collection: query.collection,
-				operation: query.operation,
-				filter: query.filter,
-				projection: query.projection,
-				pipeline: query.pipeline,
-				sort: query.sort,
-				limit: query.limit,
-				parameters: query.parameters.map((parameter) => ({
-					name: parameter.name,
-					type: parameter.type,
-					required: true
-				})),
-				label: query.name
-			},
-			parameters,
-			query.routeId ?? query.id
-		);
-		if (!section.trace.resolved) {
-			throw new Error(section.trace.message ?? "Saved query source is unavailable");
-		}
-		return section.rows;
 	}
 
 	if (!allowedQueryCollections.has(query.collection)) {
