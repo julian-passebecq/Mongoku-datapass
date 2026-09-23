@@ -4,7 +4,9 @@ import {
 	controlChangeSetSchema,
 	instructionProfileSchema,
 	projectSchema,
+	reportDefinitionSchema,
 	savedMongoQuerySchema,
+	sourceDescriptorSchema,
 	systemEdgeSchema,
 	systemNodeSchema,
 	workspaceExportSchema,
@@ -81,6 +83,8 @@ function workspacePayload(workspace: WorkspaceExport) {
 		agentNodes: workspace.agentNodes,
 		instructionProfiles: workspace.instructionProfiles,
 		savedQueries: workspace.savedQueries,
+		sources: workspace.sources,
+		reports: workspace.reports,
 		workspacePresets: workspace.workspacePresets,
 		systemNodes: workspace.systemNodes,
 		systemEdges: workspace.systemEdges
@@ -144,6 +148,10 @@ function collectionFor(workspace: WorkspaceExport, resourceType: ControlResource
 			return workspace.instructionProfiles;
 		case "savedQuery":
 			return workspace.savedQueries;
+		case "sourceDescriptor":
+			return workspace.sources;
+		case "reportDefinition":
+			return workspace.reports;
 		case "workspacePreset":
 			return workspace.workspacePresets;
 		case "systemNode":
@@ -176,6 +184,10 @@ function parseResource(resourceType: ControlResourceType, value: unknown): unkno
 			return instructionProfileSchema.parse(value);
 		case "savedQuery":
 			return savedMongoQuerySchema.parse(value);
+		case "sourceDescriptor":
+			return sourceDescriptorSchema.parse(value);
+		case "reportDefinition":
+			return reportDefinitionSchema.parse(value);
 		case "workspacePreset":
 			return workspacePresetSchema.parse(value);
 		case "systemNode":
