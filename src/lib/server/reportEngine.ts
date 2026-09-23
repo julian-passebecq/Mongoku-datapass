@@ -297,13 +297,15 @@ async function resolveRegistryRecord(source: SourceDescriptor): Promise<Registry
 	}
 }
 
-async function resolveMongoSource(source: SourceDescriptor): Promise<{
+async function resolveMongoSource(
+	source: SourceDescriptor,
+	registry?: RegistryResolution
+): Promise<{
 	client: MongoClient;
 	database: string;
 	server: string;
 	resourceRegistry?: ResourceRegistryTrace;
 } | null> {
-	const registry = await resolveRegistryRecord(source);
 	const binding = configuredBinding(source);
 	if (!binding) {
 		return null;
@@ -348,8 +350,10 @@ async function executeStep(
 	}
 
 	let resolved: Awaited<ReturnType<typeof resolveMongoSource>>;
+	let registry: RegistryResolution | undefined;
 	try {
-		resolved = await resolveMongoSource(source);
+		registry = await resolveRegistryRecord(source);
+		resolved = await resolveMongoSource(source, registry);
 	} catch (error) {
 		if (step.optional) {
 			const message = error instanceof Error ? error.message : "Source resolution failed";
@@ -359,7 +363,7 @@ async function executeStep(
 				authority: step.authority,
 				sourceId: step.sourceId,
 				rows: [],
-				trace: traceFor(reportId, step, source, source.database, false, message)
+				trace: traceFor(reportId, step, source, source.database, false, message, registry?.trace)
 			};
 		}
 		throw error;
@@ -378,9 +382,11 @@ async function executeStep(
 				source,
 				source.database,
 				false,
-				"No server binding configured. Bind the canonical resource through DATAPASS_RESOURCE_BINDINGS, DATAPASS_SOURCE_BINDINGS or DATAPASS_SOURCE_" +
+				(registry?.trace.found ? "PM resource_registry resolved this canonical resource, but no private server binding is configured. " : "") +
+					"Bind it through DATAPASS_RESOURCE_BINDINGS, DATAPASS_SOURCE_BINDINGS or DATAPASS_SOURCE_" +
 					source.id +
-					"_SERVER."
+					"_SERVER.",
+				registry?.trace
 			)
 		};
 	}
