@@ -466,6 +466,8 @@ export const controlResourceTypeSchema = z.enum([
 	"agentNode",
 	"instructionProfile",
 	"savedQuery",
+	"sourceDescriptor",
+	"reportDefinition",
 	"workspacePreset",
 	"systemNode",
 	"systemEdge"
