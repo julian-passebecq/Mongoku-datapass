@@ -29,14 +29,26 @@
 
 	function projectRoute(kind: "board" | "architecture" | "calendar" | "notes", projectId: string) {
 		if (projectId === "foil") {
-			if (kind === "board") return "/foil/kanban";
-			if (kind === "architecture") return "/foil/architecture";
-			if (kind === "calendar") return "/foil/calendar";
+			if (kind === "board") {
+				return "/foil/kanban";
+			}
+			if (kind === "architecture") {
+				return "/foil/architecture";
+			}
+			if (kind === "calendar") {
+				return "/foil/calendar";
+			}
 			return "/foil/report/FOIL_RECENT";
 		}
-		if (kind === "board") return "/projects?project=" + projectId;
-		if (kind === "architecture") return "/architecture?project=" + projectId;
-		if (kind === "calendar") return "/calendar?project=" + projectId;
+		if (kind === "board") {
+			return "/projects?project=" + projectId;
+		}
+		if (kind === "architecture") {
+			return "/architecture?project=" + projectId;
+		}
+		if (kind === "calendar") {
+			return "/calendar?project=" + projectId;
+		}
 		return "/notes?project=" + projectId;
 	}
 

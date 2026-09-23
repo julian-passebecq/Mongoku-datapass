@@ -12,17 +12,29 @@
 	}
 
 	function storageStatus(row: Record<string, unknown>): string {
-		if (text(row, "storageStatus")) return text(row, "storageStatus");
-		if (text(row, "objectKey") || text(row, "durableExternalCopy")) return "EXTERNAL_OBJECT";
-		if (text(row, "binaryPersistence") || text(row, "downloadRef")) return "LOCAL_REF_ONLY";
+		if (text(row, "storageStatus")) {
+			return text(row, "storageStatus");
+		}
+		if (text(row, "objectKey") || text(row, "durableExternalCopy")) {
+			return "EXTERNAL_OBJECT";
+		}
+		if (text(row, "binaryPersistence") || text(row, "downloadRef")) {
+			return "LOCAL_REF_ONLY";
+		}
 		return "NOT_CONFIGURED";
 	}
 
 	function size(row: Record<string, unknown>): string {
 		const value = Number(row.byteSize ?? 0);
-		if (!value) return "—";
-		if (value < 1024) return value + " B";
-		if (value < 1024 * 1024) return Math.round(value / 1024) + " KB";
+		if (!value) {
+			return "—";
+		}
+		if (value < 1024) {
+			return value + " B";
+		}
+		if (value < 1024 * 1024) {
+			return Math.round(value / 1024) + " KB";
+		}
 		return (value / 1024 / 1024).toFixed(1) + " MB";
 	}
 </script>

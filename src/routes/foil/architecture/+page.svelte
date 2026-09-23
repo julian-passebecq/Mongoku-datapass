@@ -70,9 +70,13 @@
 
 	function impactTargets(row: Record<string, unknown>): string[] {
 		const value = row.impactTargets;
-		if (!Array.isArray(value)) return [];
+		if (!Array.isArray(value)) {
+			return [];
+		}
 		return value.map((target) => {
-			if (typeof target === "string") return target;
+			if (typeof target === "string") {
+				return target;
+			}
 			if (target && typeof target === "object") {
 				const record = target as Record<string, unknown>;
 				return (

@@ -26,19 +26,33 @@
 
 	function bucket(row: Record<string, unknown>): string {
 		const normalized = text(row, "displayStatus");
-		if (normalized) return normalized;
+		if (normalized) {
+			return normalized;
+		}
 		const status = text(row, "status").toUpperCase();
-		if (/DONE|CLOSED|RESOLVED|COMPLETE/.test(status)) return "DONE";
-		if (/BLOCK/.test(status)) return "BLOCKED";
-		if (/WAIT|USER|BUSINESS|EXTERNAL/.test(status)) return "WAITING_EXTERNAL";
-		if (/VERIFY|REVIEW|QUALIFIED|PRETEST/.test(status)) return "VERIFY";
+		if (/DONE|CLOSED|RESOLVED|COMPLETE/.test(status)) {
+			return "DONE";
+		}
+		if (/BLOCK/.test(status)) {
+			return "BLOCKED";
+		}
+		if (/WAIT|USER|BUSINESS|EXTERNAL/.test(status)) {
+			return "WAITING_EXTERNAL";
+		}
+		if (/VERIFY|REVIEW|QUALIFIED|PRETEST/.test(status)) {
+			return "VERIFY";
+		}
 		return "ACTIONABLE";
 	}
 
 	function horizon(row: Record<string, unknown>): string {
 		const priority = text(row, "priority").toUpperCase();
-		if (priority.startsWith("P0")) return "NOW";
-		if (priority.startsWith("P1")) return "NEXT";
+		if (priority.startsWith("P0")) {
+			return "NOW";
+		}
+		if (priority.startsWith("P1")) {
+			return "NEXT";
+		}
 		return "LATER";
 	}
 
