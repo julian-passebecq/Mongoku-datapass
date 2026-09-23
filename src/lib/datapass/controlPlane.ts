@@ -1,6 +1,7 @@
 export type ProjectStatus = "active" | "paused" | "done";
 export type WorkStatus = "backlog" | "todo" | "in_progress" | "blocked" | "done";
 export type WorkType = "task" | "bug" | "idea" | "note" | "research" | "milestone" | "decision";
+export type QueryOperation = "find" | "aggregate";
 
 export type Project = {
 	id: string;
@@ -11,6 +12,8 @@ export type Project = {
 	category: string;
 	progress: number;
 	activeItems: number;
+	kanbanStatus: WorkStatus;
+	statusQueryId?: string;
 	tags: string[];
 	githubRepo?: string;
 	mongoContextKey?: string;
@@ -51,6 +54,22 @@ export type AgentNode = {
 	githubRepo?: string;
 };
 
+export type SavedMongoQuery = {
+	id: string;
+	name: string;
+	description: string;
+	collection: string;
+	operation: QueryOperation;
+	filter?: Record<string, unknown>;
+	pipeline?: Record<string, unknown>[];
+	sort?: Record<string, 1 | -1>;
+	limit?: number;
+	parameters: { name: string; type: "string" | "string[]"; source?: "project" | "project-tree" | "manual" }[];
+	presentation: "project-board" | "status-summary" | "table" | "count";
+	readOnly: true;
+	tags: string[];
+};
+
 export type SystemNode = {
 	id: string;
 	label: string;
@@ -66,16 +85,16 @@ export type SystemEdge = {
 };
 
 export const projects: Project[] = [
-	{ id: "datapass-studio", name: "Datapass Studio", summary: "Unified data-engineering learning workspace and VS Code tooling.", status: "active", category: "Data engineering", progress: 72, activeItems: 9, tags: ["learning", "vscode", "data-engineering"], githubRepo: "julian-passebecq/datapass-mosaic-vscode", mongoContextKey: "datapass", mongoNamespaces: ["datapass.projects", "datapass.work_items", "datapass.agent_context"] },
-	{ id: "datapass-mosaic", name: "Mosaic", summary: "Notebook and workspace experience.", status: "active", parentProjectId: "datapass-studio", category: "Workspace", progress: 68, activeItems: 3, tags: ["notebook", "mosaic"] },
-	{ id: "datapass-sparklab", name: "SparkLab", summary: "Local-first Spark learning kernel.", status: "active", parentProjectId: "datapass-studio", category: "Runtime", progress: 61, activeItems: 2, tags: ["spark", "pyspark"] },
-	{ id: "datapass-dbt", name: "dbt Lab", summary: "dbt transformations, lineage and exercises.", status: "active", parentProjectId: "datapass-studio", category: "Transformation", progress: 54, activeItems: 2, tags: ["dbt", "lineage"] },
-	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, tags: ["desktop", "control-plane"], mongoContextKey: "powertoy", mongoNamespaces: ["powertoy.projects", "powertoy.work_items"] },
-	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
-	{ id: "foil-runtime", name: "Runtime", summary: "Oracle VM and simulation services.", status: "active", parentProjectId: "foil", category: "Runtime", progress: 42, activeItems: 2, tags: ["oracle-vm", "simulation"] },
-	{ id: "foil-stream", name: "Streaming", summary: "Kafka and realtime event movement.", status: "active", parentProjectId: "foil", category: "Streaming", progress: 39, activeItems: 2, tags: ["kafka", "events"] },
-	{ id: "foil-data", name: "Data Platform", summary: "MongoDB, Fabric and Databricks integration.", status: "active", parentProjectId: "foil", category: "Data", progress: 48, activeItems: 4, tags: ["mongodb", "fabric", "databricks"] },
-	{ id: "contoso", name: "Contoso Data Studio", summary: "DuckLake, dbt and lightweight analytics laboratory.", status: "active", category: "Analytics lab", progress: 64, activeItems: 5, tags: ["ducklake", "dbt", "contoso"], githubRepo: "julian-passebecq/contoso-data-studio", mongoContextKey: "contoso", mongoNamespaces: ["contoso.projects", "contoso.datasets", "contoso.work_items"] }
+	{ id: "datapass-studio", name: "Datapass Studio", summary: "Unified data-engineering learning workspace and VS Code tooling.", status: "active", category: "Data engineering", progress: 72, activeItems: 9, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["learning", "vscode", "data-engineering"], githubRepo: "julian-passebecq/datapass-mosaic-vscode", mongoContextKey: "datapass", mongoNamespaces: ["datapass.projects", "datapass.work_items", "datapass.agent_context"] },
+	{ id: "datapass-mosaic", name: "Mosaic", summary: "Notebook and workspace experience.", status: "active", parentProjectId: "datapass-studio", category: "Workspace", progress: 68, activeItems: 3, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["notebook", "mosaic"] },
+	{ id: "datapass-sparklab", name: "SparkLab", summary: "Local-first Spark learning kernel.", status: "active", parentProjectId: "datapass-studio", category: "Runtime", progress: 61, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["spark", "pyspark"] },
+	{ id: "datapass-dbt", name: "dbt Lab", summary: "dbt transformations, lineage and exercises.", status: "active", parentProjectId: "datapass-studio", category: "Transformation", progress: 54, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["dbt", "lineage"] },
+	{ id: "powertoy", name: "PowerToy", summary: "Compact desktop cockpit for projects, services and daily actions.", status: "active", category: "Desktop tooling", progress: 58, activeItems: 6, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["desktop", "control-plane"], mongoContextKey: "powertoy", mongoNamespaces: ["powertoy.projects", "powertoy.work_items"] },
+	{ id: "foil", name: "FOIL", summary: "Wind-energy simulation, telemetry and analytics platform.", status: "active", category: "IoT / Data platform", progress: 46, activeItems: 8, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["wind", "iot", "streaming"], githubRepo: "julian-passebecq/foil", mongoContextKey: "foil", mongoNamespaces: ["foil.projects", "foil.telemetry", "foil.alerts", "foil.agent_context"] },
+	{ id: "foil-runtime", name: "Runtime", summary: "Oracle VM and simulation services.", status: "active", parentProjectId: "foil", category: "Runtime", progress: 42, activeItems: 2, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["oracle-vm", "simulation"] },
+	{ id: "foil-stream", name: "Streaming", summary: "Kafka and realtime event movement.", status: "active", parentProjectId: "foil", category: "Streaming", progress: 39, activeItems: 2, kanbanStatus: "todo", statusQueryId: "project-work-status-summary", tags: ["kafka", "events"] },
+	{ id: "foil-data", name: "Data Platform", summary: "MongoDB, Fabric and Databricks integration.", status: "active", parentProjectId: "foil", category: "Data", progress: 48, activeItems: 4, kanbanStatus: "in_progress", statusQueryId: "project-work-status-summary", tags: ["mongodb", "fabric", "databricks"] },
+	{ id: "contoso", name: "Contoso Data Studio", summary: "DuckLake, dbt and lightweight analytics laboratory.", status: "active", category: "Analytics lab", progress: 64, activeItems: 5, kanbanStatus: "blocked", statusQueryId: "project-work-status-summary", tags: ["ducklake", "dbt", "contoso"], githubRepo: "julian-passebecq/contoso-data-studio", mongoContextKey: "contoso", mongoNamespaces: ["contoso.projects", "contoso.datasets", "contoso.work_items"] }
 ];
 
 export const workItems: WorkItem[] = [
@@ -106,6 +125,52 @@ export const agentNodes: AgentNode[] = [
 	{ id: "foil-streaming", projectId: "foil", label: "Streaming", role: "Kafka specialist", parentId: "foil-data-agent", responsibilities: ["topics", "consumers", "event contracts"], mongoScope: ["foil.stream_contracts"], tags: ["kafka", "streaming"] },
 	{ id: "foil-analytics", projectId: "foil", label: "Analytics", role: "Fabric / Databricks specialist", parentId: "foil-data-agent", responsibilities: ["realtime analytics", "engineering", "ML"], mongoScope: ["foil.analytics_context"], tags: ["fabric", "databricks"] },
 	{ id: "foil-runtime-agent", projectId: "foil", label: "Runtime", role: "VM specialist", parentId: "foil-ops", responsibilities: ["Oracle VM", "process health"], mongoScope: ["foil.runtime_state"], tags: ["oracle-vm", "runtime"] }
+];
+
+
+export const savedQueries: SavedMongoQuery[] = [
+	{
+		id: "project-portfolio-board",
+		name: "Project portfolio board",
+		description: "Returns project and subproject records for the portfolio Kanban. The UI groups results by kanbanStatus.",
+		collection: "projects",
+		operation: "find",
+		filter: { status: { $ne: "done" } },
+		sort: { name: 1 },
+		parameters: [],
+		presentation: "project-board",
+		readOnly: true,
+		tags: ["projects", "kanban", "portfolio"]
+	},
+	{
+		id: "project-work-status-summary",
+		name: "Project work status summary",
+		description: "Counts work items by status for a selected project and all selected child project ids.",
+		collection: "work_items",
+		operation: "aggregate",
+		pipeline: [
+			{ $match: { projectId: { $in: "{{projectIds}}" } } },
+			{ $group: { _id: "$status", count: { $sum: 1 } } },
+			{ $sort: { _id: 1 } }
+		],
+		parameters: [{ name: "projectIds", type: "string[]", source: "project-tree" }],
+		presentation: "status-summary",
+		readOnly: true,
+		tags: ["projects", "status", "work-items"]
+	},
+	{
+		id: "project-open-work",
+		name: "Open work by project",
+		description: "Returns non-done work items for one project scope.",
+		collection: "work_items",
+		operation: "find",
+		filter: { projectId: { $in: "{{projectIds}}" }, status: { $ne: "done" } },
+		sort: { priority: -1 },
+		parameters: [{ name: "projectIds", type: "string[]", source: "project-tree" }],
+		presentation: "table",
+		readOnly: true,
+		tags: ["projects", "work-items"]
+	}
 ];
 
 export const foilNodes: SystemNode[] = [
