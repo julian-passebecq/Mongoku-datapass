@@ -89,12 +89,12 @@
 						</summary>
 						<div class="border-t border-[var(--border-color)] px-2 py-2">
 							<a
-								href={architectureHref(project.id)}
+								href={resolve(architectureHref(project.id))}
 								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 								>Architecture</a
 							>
 							<a
-								href={workHref(project.id)}
+								href={resolve(workHref(project.id))}
 								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 								>{project.id === "foil" ? "Authoritative backlog" : "Tasks"}</a
 							>
@@ -115,9 +115,11 @@
 							{/if}
 							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
 								<a
-									href={project.id === "foil"
-										? resolve("/foil/report/FOIL_PROJECTS")
-										: resolve("/architecture") + "?project=" + child.id}
+									href={resolve(
+										project.id === "foil"
+											? "/foil/report/FOIL_PROJECTS"
+											: "/architecture?project=" + child.id,
+									)}
 									class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline"
 								>
 									<span class="font-medium">{child.name}</span>
