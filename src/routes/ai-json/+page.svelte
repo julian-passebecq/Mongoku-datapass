@@ -167,7 +167,7 @@
 		></textarea>
 
 		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-color)] px-4 py-3">
-			<div class:text-red-500={isError} class="text-xs text-[var(--text-muted)]">{message || "Merge is the default AI write path. Replace deletes control collections before importing."}</div>
+			<div class:text-red-500={isError} class="text-xs text-[var(--text-muted)]">{message || "Reviewed ChangeSets are the default AI path. Direct JSON commit is for trusted manual administration."}</div>
 			<div class="flex gap-2">
 				<button type="button" onclick={() => saveWorkspace("merge")} disabled={saving || loading || !jsonText || !data.controlWritesEnabled} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black">
 					{saving ? "Saving…" : "Direct JSON commit"}
