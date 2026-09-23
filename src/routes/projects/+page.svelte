@@ -19,7 +19,9 @@
 	const tags = $derived(Array.from(new Set(workItems.flatMap((item) => item.tags))).sort());
 
 	const projectScope = $derived.by(() => {
-		if (selectedProject === "all") return projects.map((project) => project.id);
+		if (selectedProject === "all") {
+			return projects.map((project) => project.id);
+		}
 
 		const collect = (projectId: string): string[] => {
 			const childIds = projects.filter((project) => project.parentProjectId === projectId).map((project) => project.id);
