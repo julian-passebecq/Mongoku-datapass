@@ -12,8 +12,9 @@
 	}
 
 	function storageStatus(row: Record<string, unknown>): string {
-		if (text(row, "durableExternalCopy")) return "EXTERNAL_OBJECT";
-		if (text(row, "binaryPersistence")) return "LOCAL_REF_ONLY";
+		if (text(row, "storageStatus")) return text(row, "storageStatus");
+		if (text(row, "objectKey") || text(row, "durableExternalCopy")) return "EXTERNAL_OBJECT";
+		if (text(row, "binaryPersistence") || text(row, "downloadRef")) return "LOCAL_REF_ONLY";
 		return "NOT_CONFIGURED";
 	}
 
@@ -56,9 +57,22 @@
 					<div class="rounded bg-[var(--hover-background)] p-2"><span class="text-[var(--text-muted)]">Created</span><p class="mt-1">{text(row, "createdAt") || "—"}</p></div>
 					<div class="rounded bg-[var(--hover-background)] p-2"><span class="text-[var(--text-muted)]">Status</span><p class="mt-1">{text(row, "status") || "—"}</p></div>
 				</div>
+				{#if text(row, "storageProvider") || text(row, "bucket") || text(row, "objectKey")}
+					<div class="mt-3 rounded-lg bg-[var(--hover-background)] p-3 text-[10px]">
+						<p>Storage: {text(row, "storageProvider") || "S3-compatible / provider neutral"}</p>
+						<p class="mt-1">{text(row, "bucket") || "—"} / {text(row, "objectKey") || "—"}</p>
+						{#if text(row, "versionId")}<p class="mt-1">Version: {text(row, "versionId")}</p>{/if}
+					</div>
+				{/if}
 				{#if text(row, "repository")}
 					<p class="mt-3 text-[10px] text-[var(--text-muted)]">{text(row, "repository")} · {text(row, "branch")} · {text(row, "commit")}</p>
 				{/if}
+				<div class="mt-3 text-[10px] text-[var(--text-muted)]">
+					<p>Authority: {text(row, "authority") || "FOIL Work Archive"}</p>
+					{#if text(row, "downloadRef")}<p>Download ref: {text(row, "downloadRef")}</p>{/if}
+					{#if text(row, "previewRef")}<p>Preview ref: {text(row, "previewRef")}</p>{/if}
+					{#if text(row, "textExtractionRef")}<p>Text extraction: {text(row, "textExtractionRef")}</p>{/if}
+				</div>
 				{#if text(row, "sha256")}
 					<p class="mt-2 break-all font-mono text-[9px] text-[var(--text-muted)]">sha256 {text(row, "sha256")}</p>
 				{/if}
