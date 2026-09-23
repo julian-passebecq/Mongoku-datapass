@@ -4,7 +4,7 @@ import { executeSavedControlQuery } from "$lib/server/datapassControl";
 import type { RequestHandler } from "./$types";
 
 const requestSchema = z.object({
-	parameters: z.record(z.string(), z.unknown()).default({})
+	parameters: z.record(z.string(), z.unknown()).default({}),
 });
 
 export const POST: RequestHandler = async ({ params, request }) => {
@@ -27,9 +27,9 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		return json(
 			{
 				ok: false,
-				error: error instanceof Error ? error.message : "Saved control query failed"
+				error: error instanceof Error ? error.message : "Saved control query failed",
 			},
-			{ status: 400 }
+			{ status: 400 },
 		);
 	}
 };

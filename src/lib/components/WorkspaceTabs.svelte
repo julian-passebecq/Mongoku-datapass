@@ -119,7 +119,8 @@
 
 		{#each instance?.tabs ?? [] as tab}
 			<div
-				class={"flex shrink-0 items-center rounded-t-md border border-b-0 border-[var(--border-color)] text-[11px] " + (tab.href === href ? "bg-[var(--hover-background)] font-semibold" : "")}
+				class={"flex shrink-0 items-center rounded-t-md border border-b-0 border-[var(--border-color)] text-[11px] " +
+					(tab.href === href ? "bg-[var(--hover-background)] font-semibold" : "")}
 			>
 				<button type="button" onclick={() => navigate(tab.href)} class="max-w-40 truncate px-2.5 py-1.5">
 					{tab.title}

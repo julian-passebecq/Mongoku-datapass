@@ -15,7 +15,7 @@ const collections = {
 	reports: "report_catalog",
 	workspacePresets: "workspace_presets",
 	systemNodes: "system_nodes",
-	systemEdges: "system_edges"
+	systemEdges: "system_edges",
 } as const;
 
 const allowedQueryCollections = new Set<string>(Object.values(collections));
@@ -33,7 +33,7 @@ const allowedAggregationStages = new Set([
 	"$set",
 	"$unset",
 	"$replaceWith",
-	"$replaceRoot"
+	"$replaceRoot",
 ]);
 
 function withoutMongoId(doc: Document): Record<string, unknown> {
@@ -57,7 +57,7 @@ export async function getControlDb(): Promise<Db> {
 	const requested = env.DATAPASS_CONTROL_SERVER;
 	if (!requested || !env.DATAPASS_CONTROL_DATABASE) {
 		throw new Error(
-			"App-owned control persistence requires explicit DATAPASS_CONTROL_SERVER and DATAPASS_CONTROL_DATABASE. No control database is created implicitly."
+			"App-owned control persistence requires explicit DATAPASS_CONTROL_SERVER and DATAPASS_CONTROL_DATABASE. No control database is created implicitly.",
 		);
 	}
 	const selected = clients.find((entry) => entry.name === requested || entry._id === requested);
@@ -91,13 +91,23 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 				metadata: {
 					...seed.metadata,
 					source: "seed",
-					controlDatabase: db.databaseName
-				}
+					controlDatabase: db.databaseName,
+				},
 			};
 		}
 
 		const seed = buildSeedWorkspace();
-		const [workItems, agentNodes, instructionProfiles, savedQueries, sources, reports, workspacePresets, systemNodes, systemEdges] = await Promise.all([
+		const [
+			workItems,
+			agentNodes,
+			instructionProfiles,
+			savedQueries,
+			sources,
+			reports,
+			workspacePresets,
+			systemNodes,
+			systemEdges,
+		] = await Promise.all([
 			readCollection(db, collections.workItems),
 			readCollection(db, collections.agentNodes),
 			readCollection(db, collections.instructionProfiles),
@@ -106,7 +116,7 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			readCollection(db, collections.reports),
 			readCollection(db, collections.workspacePresets),
 			readCollection(db, collections.systemNodes),
-			readCollection(db, collections.systemEdges)
+			readCollection(db, collections.systemEdges),
 		]);
 
 		return workspaceExportSchema.parse({
@@ -115,7 +125,7 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 				name: "Datapass Mongo Control",
 				source: "mongo",
 				exportedAt: new Date().toISOString(),
-				controlDatabase: db.databaseName
+				controlDatabase: db.databaseName,
 			},
 			projects: projectDocs,
 			workItems,
@@ -126,7 +136,7 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			reports: reports.length > 0 ? reports : seed.reports,
 			workspacePresets,
 			systemNodes,
-			systemEdges
+			systemEdges,
 		});
 	} catch {
 		return buildSeedWorkspace();
@@ -143,9 +153,9 @@ async function upsertMany(db: Db, collectionName: string, docs: Array<{ id: stri
 			replaceOne: {
 				filter: { id: doc.id },
 				replacement: doc,
-				upsert: true
-			}
-		}))
+				upsert: true,
+			},
+		})),
 	);
 }
 
@@ -182,9 +192,9 @@ export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "me
 			collections.systemEdges,
 			parsed.systemEdges.map((edge, index) => ({
 				id: edge.from + "::" + edge.to + "::" + index,
-				...edge
-			}))
-		)
+				...edge,
+			})),
+		),
 	]);
 }
 
@@ -207,7 +217,7 @@ function substituteParameters(value: unknown, parameters: Record<string, unknown
 
 	if (value && typeof value === "object") {
 		return Object.fromEntries(
-			Object.entries(value).map(([key, nested]) => [key, substituteParameters(nested, parameters)])
+			Object.entries(value).map(([key, nested]) => [key, substituteParameters(nested, parameters)]),
 		);
 	}
 
@@ -253,7 +263,7 @@ function assertAllowedPipeline(pipeline: unknown): asserts pipeline is Document[
 
 export async function executeSavedControlQuery(
 	queryId: string,
-	parameters: Record<string, unknown> = {}
+	parameters: Record<string, unknown> = {},
 ): Promise<Record<string, unknown>[]> {
 	const workspace = await loadControlWorkspace();
 	const query = workspace.savedQueries.find((candidate) => candidate.id === queryId);

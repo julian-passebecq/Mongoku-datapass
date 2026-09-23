@@ -76,7 +76,7 @@ function fromPreset(preset: WorkspacePreset, instanceName?: string): WorkspaceIn
 		bookmarks: preset.bookmarks.map((bookmark) => ({ ...bookmark })),
 		leftPanelCollapsed: preset.leftPanelCollapsed,
 		rightPanelOpen: preset.rightPanelOpen,
-		rightPanelMode: preset.rightPanelMode
+		rightPanelMode: preset.rightPanelMode,
 	};
 }
 
@@ -124,7 +124,7 @@ class WorkspaceUiState {
 					bookmarks: [],
 					leftPanelCollapsed: false,
 					rightPanelOpen: true,
-					rightPanelMode: "context"
+					rightPanelMode: "context",
 				};
 				this.instances = [instance];
 				this.activeInstanceId = instance.id;
@@ -144,7 +144,7 @@ class WorkspaceUiState {
 		const snapshot: WorkspaceUiSnapshot = {
 			version: 1,
 			activeInstanceId: this.activeInstanceId,
-			instances: this.instances
+			instances: this.instances,
 		};
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
 	}
@@ -164,7 +164,7 @@ class WorkspaceUiState {
 			id: makeId("tab"),
 			title,
 			href,
-			projectId
+			projectId,
 		});
 		this.persist();
 	}
@@ -200,7 +200,7 @@ class WorkspaceUiState {
 				bookmarks: current?.bookmarks.map((bookmark) => ({ ...bookmark, id: makeId("bookmark") })) ?? [],
 				leftPanelCollapsed: current?.leftPanelCollapsed ?? false,
 				rightPanelOpen: current?.rightPanelOpen ?? true,
-				rightPanelMode: current?.rightPanelMode ?? "context"
+				rightPanelMode: current?.rightPanelMode ?? "context",
 			};
 		}
 		this.instances.push(instance);
@@ -267,12 +267,11 @@ class WorkspaceUiState {
 		this.persist();
 	}
 
-
 	private snapshot(): WorkspaceUiSnapshot {
 		return structuredClone({
 			version: 1,
 			activeInstanceId: this.activeInstanceId,
-			instances: this.instances
+			instances: this.instances,
 		});
 	}
 
@@ -291,9 +290,7 @@ class WorkspaceUiState {
 			}
 			this.checkpoints = parsed.entries.slice(0, CHECKPOINT_LIMIT);
 			this.checkpointUndo = parsed.undo;
-			this.checkpointHistory = Array.isArray(parsed.history)
-				? parsed.history.slice(0, CHECKPOINT_HISTORY_LIMIT)
-				: [];
+			this.checkpointHistory = Array.isArray(parsed.history) ? parsed.history.slice(0, CHECKPOINT_HISTORY_LIMIT) : [];
 		} catch {
 			// Invalid checkpoint state is ignored without touching current UI state.
 		}
@@ -307,22 +304,18 @@ class WorkspaceUiState {
 			version: 1,
 			entries: this.checkpoints.slice(0, CHECKPOINT_LIMIT),
 			undo: this.checkpointUndo,
-			history: this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT)
+			history: this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT),
 		};
 		localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify(data));
 	}
 
-	private checkpointEvent(
-		action: WorkspaceCheckpointEvent["action"],
-		checkpointId: string,
-		title: string
-	) {
+	private checkpointEvent(action: WorkspaceCheckpointEvent["action"], checkpointId: string, title: string) {
 		this.checkpointHistory.unshift({
 			id: makeId("checkpoint-event"),
 			action,
 			checkpointId,
 			title,
-			createdAt: new Date().toISOString()
+			createdAt: new Date().toISOString(),
 		});
 		this.checkpointHistory = this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT);
 	}
@@ -340,7 +333,7 @@ class WorkspaceUiState {
 			title: cleanTitle.slice(0, 120),
 			note: note.trim().slice(0, 500),
 			createdAt: new Date().toISOString(),
-			snapshot: this.snapshot()
+			snapshot: this.snapshot(),
 		};
 		this.checkpoints.unshift(checkpoint);
 		this.checkpointEvent("save", checkpoint.id, checkpoint.title);
@@ -359,7 +352,7 @@ class WorkspaceUiState {
 			title: "Before last restore",
 			note: "Automatic undo point",
 			createdAt: new Date().toISOString(),
-			snapshot: this.snapshot()
+			snapshot: this.snapshot(),
 		};
 
 		this.instances = structuredClone(checkpoint.snapshot.instances);
@@ -397,10 +390,10 @@ class WorkspaceUiState {
 			{
 				version: 1,
 				activeInstanceId: this.activeInstanceId,
-				instances: this.instances
+				instances: this.instances,
 			} satisfies WorkspaceUiSnapshot,
 			null,
-			2
+			2,
 		);
 	}
 

@@ -15,7 +15,7 @@ const requiredFoilReports = [
 	"FOIL_PROJECTS",
 	"FOIL_RESOURCE_INVENTORY",
 	"FOIL_DOCUMENTS_RECENT",
-	"FOIL_INSTRUCTION_DRIFT"
+	"FOIL_INSTRUCTION_DRIFT",
 ] as const;
 
 const forbiddenStages = new Set(["$out", "$merge"]);
@@ -59,9 +59,7 @@ describe("FOIL report catalog", () => {
 	});
 
 	it("routes FOIL domain sources through Project Management registry metadata", () => {
-		const foilSources = sourceCatalog.filter(
-			(source) => source.id.startsWith("FOIL_") && source.id !== "FOIL_PM"
-		);
+		const foilSources = sourceCatalog.filter((source) => source.id.startsWith("FOIL_") && source.id !== "FOIL_PM");
 		expect(foilSources.length).toBeGreaterThan(0);
 		for (const source of foilSources) {
 			expect(source.registryAuthority, source.id).toBe("FOIL_PM");

@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { reportCatalog } from "$lib/datapass/reporting";
-import {
-	applyReportSemantics,
-	normalizeReportLimit
-} from "$lib/datapass/reportSemantics";
+import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/reportSemantics";
 
 function report(id: string) {
 	const value = reportCatalog.find((candidate) => candidate.id === id);
@@ -48,17 +45,15 @@ function matchCondition(value: unknown, condition: unknown): boolean {
 					!!item &&
 					typeof item === "object" &&
 					!Array.isArray(item) &&
-					matches(item as Record<string, unknown>, record.$elemMatch as Record<string, unknown>)
+					matches(item as Record<string, unknown>, record.$elemMatch as Record<string, unknown>),
 			)
 		);
 	}
 	return Object.entries(record).every(([key, nested]) =>
 		matchCondition(
-			value && typeof value === "object" && !Array.isArray(value)
-				? (value as Record<string, unknown>)[key]
-				: undefined,
-			nested
-		)
+			value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>)[key] : undefined,
+			nested,
+		),
 	);
 }
 
@@ -67,9 +62,7 @@ function matches(row: Record<string, unknown>, filter: Record<string, unknown>):
 		if (key === "$or") {
 			if (
 				!Array.isArray(condition) ||
-				!condition.some((candidate) =>
-					matches(row, candidate as Record<string, unknown>)
-				)
+				!condition.some((candidate) => matches(row, candidate as Record<string, unknown>))
 			) {
 				return false;
 			}
@@ -101,12 +94,12 @@ describe("FOIL V4.1 report regressions", () => {
 		const pendingEvent = {
 			_id: "EVT-PENDING",
 			propagationStatus: "DEPENDENT_TARGETS_DIRTY",
-			impactTargets: [{ target: "investor-app", state: "DIRTY" }]
+			impactTargets: [{ target: "investor-app", state: "DIRTY" }],
 		};
 		const legacyEvent = {
 			_id: "EVT-LEGACY",
 			eventType: "SCIENTIST_ENGINEERING_CORRECTION",
-			status: "CURRENT"
+			status: "CURRENT",
 		};
 
 		expect(matches(pendingEvent, pending!.filter!)).toBe(true);
@@ -124,7 +117,7 @@ describe("FOIL V4.1 report regressions", () => {
 			kind: "conflict",
 			area: "Wind farm density / wake",
 			priority: "P0",
-			status: "OPEN_VALIDATION"
+			status: "OPEN_VALIDATION",
 		};
 		expect(matches(fixture, core!.filter!)).toBe(true);
 		expect(definition.steps.some((step) => step.sourceId === "FOIL_STUDY")).toBe(true);
@@ -144,10 +137,10 @@ describe("FOIL V4.1 report regressions", () => {
 						priority: "P0",
 						status: "BLOCKED_USER_PROJECT_UI_SYNC",
 						label: "Blocked V4.1 UI sync",
-						ownerAuthority: "FOIL Project Management"
-					}
-				]
-			}
+						ownerAuthority: "FOIL Project Management",
+					},
+				],
+			},
 		]);
 		expect(rows).toHaveLength(1);
 		expect(rows[0].subtaskId).toBe("EA3");
@@ -163,9 +156,9 @@ describe("FOIL V4.1 report regressions", () => {
 				status: "QUALIFIED_AWAITING_USER_REVIEW",
 				tasks: [
 					{ id: "T1", status: "QUALIFIED_COMPLETE", label: "Already qualified" },
-					{ id: "T9", status: "PENDING", label: "CAD backend" }
-				]
-			}
+					{ id: "T9", status: "PENDING", label: "CAD backend" },
+				],
+			},
 		]);
 		expect(rows.some((row) => row.subtaskId === "T1")).toBe(false);
 		expect(rows.some((row) => row.subtaskId === "T9")).toBe(true);
@@ -180,8 +173,8 @@ describe("FOIL V4.1 report regressions", () => {
 				cadence: "WEEKLY",
 				timing: "FLEXIBLE",
 				nextDueAt: null,
-				requiresSchedulingDecision: true
-			}
+				requiresSchedulingDecision: true,
+			},
 		};
 		const roundTrip = JSON.parse(JSON.stringify(fixture)) as typeof fixture;
 		expect(roundTrip.schedule.type).toBe("RECURRING");
@@ -197,7 +190,7 @@ describe("FOIL V4.1 report regressions", () => {
 		expect(() => normalizeReportLimit(-1)).toThrow(/positive integer/);
 		expect(normalizeReportLimit(5000, 500, 500)).toEqual({
 			requestedLimit: 5000,
-			effectiveLimit: 500
+			effectiveLimit: 500,
 		});
 	});
 });

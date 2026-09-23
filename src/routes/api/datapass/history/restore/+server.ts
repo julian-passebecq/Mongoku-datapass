@@ -6,7 +6,7 @@ import type { RequestHandler } from "./$types";
 const requestSchema = z.object({
 	revision: z.number().int().nonnegative(),
 	expectedRevision: z.number().int().nonnegative(),
-	expectedFingerprint: z.string().min(1)
+	expectedFingerprint: z.string().min(1),
 });
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -15,13 +15,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		const result = await restoreControlRevision(body.revision, {
 			revision: body.expectedRevision,
 			fingerprint: body.expectedFingerprint,
-			updatedAt: ""
+			updatedAt: "",
 		});
 		return json({ ok: true, result });
 	} catch (error) {
-		return json({
-			ok: false,
-			error: error instanceof Error ? error.message : "Restore failed"
-		}, { status: 400 });
+		return json(
+			{
+				ok: false,
+				error: error instanceof Error ? error.message : "Restore failed",
+			},
+			{ status: 400 },
+		);
 	}
 };

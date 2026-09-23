@@ -9,7 +9,7 @@ import {
 	type ReportSectionMeta,
 	type ReportSourceTrace,
 	type ResourceRegistryTrace,
-	type SourceDescriptor
+	type SourceDescriptor,
 } from "$lib/datapass/reporting";
 import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/reportSemantics";
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
@@ -60,7 +60,7 @@ const allowedAggregationStages = new Set([
 	"$set",
 	"$unset",
 	"$replaceWith",
-	"$replaceRoot"
+	"$replaceRoot",
 ]);
 const forbiddenQueryKeys = new Set(["$out", "$merge", "$where", "$function", "$accumulator"]);
 
@@ -82,7 +82,7 @@ async function createExecutionContext(): Promise<ExecutionContext> {
 		sourceBindings: parseBindings(env.DATAPASS_SOURCE_BINDINGS),
 		resourceBindings: parseBindings(env.DATAPASS_RESOURCE_BINDINGS),
 		registryCache: new Map(),
-		sourceCache: new Map()
+		sourceCache: new Map(),
 	};
 }
 
@@ -93,11 +93,7 @@ function envBinding(sourceId: string): SourceBinding | undefined {
 }
 
 function configuredBinding(source: SourceDescriptor, context: ExecutionContext): SourceBinding | undefined {
-	return (
-		context.resourceBindings[source.resourceRef] ??
-		context.sourceBindings[source.id] ??
-		envBinding(source.id)
-	);
+	return context.resourceBindings[source.resourceRef] ?? context.sourceBindings[source.id] ?? envBinding(source.id);
 }
 
 function substituteParameters(value: unknown, parameters: Record<string, unknown>): unknown {
@@ -117,7 +113,7 @@ function substituteParameters(value: unknown, parameters: Record<string, unknown
 	}
 	if (value && typeof value === "object") {
 		return Object.fromEntries(
-			Object.entries(value).map(([key, nested]) => [key, substituteParameters(nested, parameters)])
+			Object.entries(value).map(([key, nested]) => [key, substituteParameters(nested, parameters)]),
 		);
 	}
 	return value;
@@ -169,7 +165,7 @@ function finalizeRows(
 	step: ReportQueryStep,
 	rawRows: Record<string, unknown>[],
 	requestedLimit: number,
-	effectiveLimit: number
+	effectiveLimit: number,
 ): { rows: Record<string, unknown>[]; meta: ReportSectionMeta } {
 	const semanticRows = applyReportSemantics(reportId, step.id, step.collection, rawRows);
 	const rows: Record<string, unknown>[] = [];
@@ -198,8 +194,8 @@ function finalizeRows(
 			effectiveLimit,
 			returnedRows: rows.length,
 			responseBytes,
-			truncated
-		}
+			truncated,
+		},
 	};
 }
 
@@ -208,7 +204,7 @@ function emptyMeta(state: ReportSectionMeta["state"]): ReportSectionMeta {
 		state,
 		returnedRows: 0,
 		responseBytes: 0,
-		truncated: false
+		truncated: false,
 	};
 }
 
@@ -219,7 +215,7 @@ function traceFor(
 	database: string | undefined,
 	resolved: boolean,
 	message?: string,
-	resourceRegistry?: ResourceRegistryTrace
+	resourceRegistry?: ResourceRegistryTrace,
 ): ReportSourceTrace {
 	return {
 		reportId,
@@ -234,7 +230,7 @@ function traceFor(
 		readOnly: true,
 		resolved,
 		resourceRegistry,
-		message
+		message,
 	};
 }
 
@@ -262,7 +258,7 @@ function kindMatches(row: Record<string, unknown> | undefined, token: string): b
 
 async function registryParent(
 	collection: Collection<Document>,
-	row: Record<string, unknown> | undefined
+	row: Record<string, unknown> | undefined,
 ): Promise<Record<string, unknown> | undefined> {
 	const parentId = stringValue(row, "parentResourceId");
 	if (!parentId) {
@@ -274,7 +270,7 @@ async function registryParent(
 
 async function resolveRegistryRecord(
 	source: SourceDescriptor,
-	context: ExecutionContext
+	context: ExecutionContext,
 ): Promise<RegistryResolution | undefined> {
 	if (!source.registryAuthority || source.id === "FOIL_PM") {
 		return undefined;
@@ -287,8 +283,7 @@ async function resolveRegistryRecord(
 
 	const promise = (async (): Promise<RegistryResolution> => {
 		const pmSource =
-			context.workspace.sources.find((candidate) => candidate.id === "FOIL_PM") ??
-			getSourceDescriptor("FOIL_PM");
+			context.workspace.sources.find((candidate) => candidate.id === "FOIL_PM") ?? getSourceDescriptor("FOIL_PM");
 		if (!pmSource) {
 			return { trace: { found: false, registryAuthority: source.registryAuthority! } };
 		}
@@ -321,7 +316,7 @@ async function resolveRegistryRecord(
 				.find({
 					provider: source.provider,
 					kind: { $regex: "DATABASE", $options: "i" },
-					name: source.database
+					name: source.database,
 				})
 				.limit(3)
 				.toArray();
@@ -338,17 +333,15 @@ async function resolveRegistryRecord(
 						{ canonicalName: { $in: names } },
 						{ recommendedDisplayName: { $in: names } },
 						{ name: { $in: names } },
-						{ aliases: { $in: names } }
-					]
+						{ aliases: { $in: names } },
+					],
 				})
 				.limit(3)
 				.toArray();
 		}
 
 		if (matches.length > 1) {
-			throw new Error(
-				"REGISTRY_AMBIGUOUS: multiple FOIL PM resource_registry records match " + source.id
-			);
+			throw new Error("REGISTRY_AMBIGUOUS: multiple FOIL PM resource_registry records match " + source.id);
 		}
 		if (matches.length === 0) {
 			return { trace: { found: false, registryAuthority: source.registryAuthority! } };
@@ -359,7 +352,7 @@ async function resolveRegistryRecord(
 		const parent2 = await registryParent(registry, parent1);
 		const parent3 = await registryParent(registry, parent2);
 		const lineage = [row, parent1, parent2, parent3].filter(
-			(candidate): candidate is Record<string, unknown> => !!candidate
+			(candidate): candidate is Record<string, unknown> => !!candidate,
 		);
 
 		const databaseRow = lineage.find((candidate) => kindMatches(candidate, "DATABASE"));
@@ -376,16 +369,15 @@ async function resolveRegistryRecord(
 		const projectId =
 			stringValue(projectRow, "projectId", "externalId") ??
 			(rowKind.includes("PROJECT") || rowKind.includes("REASONING_AUTHORITY")
-				? stringValue(row, "projectId") ?? rowExternalId
+				? (stringValue(row, "projectId") ?? rowExternalId)
 				: undefined);
 
 		const clusterId =
 			stringValue(clusterRow, "clusterId", "externalId") ??
-			(rowKind.includes("CLUSTER") ? stringValue(row, "clusterId") ?? rowExternalId : undefined);
+			(rowKind.includes("CLUSTER") ? (stringValue(row, "clusterId") ?? rowExternalId) : undefined);
 
 		const repositoryId =
-			stringValue(repositoryRow, "externalId") ??
-			(rowKind.includes("REPOSITORY") ? rowExternalId : undefined);
+			stringValue(repositoryRow, "externalId") ?? (rowKind.includes("REPOSITORY") ? rowExternalId : undefined);
 
 		return {
 			database,
@@ -397,9 +389,7 @@ async function resolveRegistryRecord(
 					stringValue(row, "canonicalAuthorityName", "recommendedDisplayName", "canonicalName") ??
 					(kindMatches(row, "DATABASE") ? source.authority : stringValue(row, "name")) ??
 					source.authority,
-				providerName:
-					stringValue(row, "providerName", "atlasProjectName", "displayName", "name") ??
-					source.authority,
+				providerName: stringValue(row, "providerName", "atlasProjectName", "displayName", "name") ?? source.authority,
 				aliases: Array.from(new Set([...(source.aliases ?? []), ...stringList(row, "aliases")])),
 				resourceKind: stringValue(row, "kind", "resourceKind"),
 				authorityRole: stringValue(row, "role", "authorityRole", "scope"),
@@ -413,8 +403,8 @@ async function resolveRegistryRecord(
 				providerResourceId: rowExternalId,
 				status: stringValue(row, "status"),
 				defaultRoute: typeof row.defaultRoute === "boolean" ? row.defaultRoute : undefined,
-				lastVerifiedAt: stringValue(row, "verifiedAt", "lastVerifiedAt", "lastVerified")
-			}
+				lastVerifiedAt: stringValue(row, "verifiedAt", "lastVerifiedAt", "lastVerified"),
+			},
 		};
 	})();
 
@@ -424,7 +414,7 @@ async function resolveRegistryRecord(
 
 async function resolveMongoSource(
 	source: SourceDescriptor,
-	context: ExecutionContext
+	context: ExecutionContext,
 ): Promise<ResolvedMongoSource | null> {
 	const cached = context.sourceCache.get(source.id);
 	if (cached) {
@@ -434,9 +424,7 @@ async function resolveMongoSource(
 	const promise = (async (): Promise<ResolvedMongoSource | null> => {
 		const registry = await resolveRegistryRecord(source, context);
 		if (source.registryAuthority && source.id !== "FOIL_PM" && !registry?.trace.found) {
-			throw new Error(
-				"REGISTRY_UNAVAILABLE: FOIL PM resource_registry did not resolve canonical source " + source.id
-			);
+			throw new Error("REGISTRY_UNAVAILABLE: FOIL PM resource_registry did not resolve canonical source " + source.id);
 		}
 
 		const binding = configuredBinding(source, context);
@@ -445,9 +433,7 @@ async function resolveMongoSource(
 		}
 
 		const mongo = await getMongo();
-		const selected = mongo
-			.listClients()
-			.find((entry) => entry.name === binding.server || entry._id === binding.server);
+		const selected = mongo.listClients().find((entry) => entry.name === binding.server || entry._id === binding.server);
 		if (!selected) {
 			throw new Error("SOURCE_UNAVAILABLE: configured source server was not found for " + source.id);
 		}
@@ -458,7 +444,7 @@ async function resolveMongoSource(
 				"NAMESPACE_MISMATCH: source catalog expects " +
 					source.database +
 					" but FOIL PM registered " +
-					registeredDatabase
+					registeredDatabase,
 			);
 		}
 
@@ -468,7 +454,7 @@ async function resolveMongoSource(
 				"NAMESPACE_MISMATCH: private binding points to " +
 					binding.database +
 					" but canonical namespace is " +
-					expectedDatabase
+					expectedDatabase,
 			);
 		}
 
@@ -482,7 +468,7 @@ async function resolveMongoSource(
 			client: selected.client,
 			database,
 			server: selected.name,
-			resourceRegistry: registry?.trace
+			resourceRegistry: registry?.trace,
 		};
 	})();
 
@@ -507,11 +493,10 @@ async function executeStep(
 	context: ExecutionContext,
 	reportId: string,
 	step: ReportQueryStep,
-	parameters: Record<string, unknown>
+	parameters: Record<string, unknown>,
 ): Promise<ReportSection> {
 	const source =
-		context.workspace.sources.find((candidate) => candidate.id === step.sourceId) ??
-		getSourceDescriptor(step.sourceId);
+		context.workspace.sources.find((candidate) => candidate.id === step.sourceId) ?? getSourceDescriptor(step.sourceId);
 	if (!source) {
 		throw new Error("Unknown source: " + step.sourceId);
 	}
@@ -536,7 +521,7 @@ async function executeStep(
 			sourceId: step.sourceId,
 			rows: [],
 			trace: traceFor(reportId, step, source, source.database, false, message, registry?.trace),
-			meta: emptyMeta(errorState(message, registry?.trace))
+			meta: emptyMeta(errorState(message, registry?.trace)),
 		};
 	}
 
@@ -556,7 +541,7 @@ async function executeStep(
 			sourceId: step.sourceId,
 			rows: [],
 			trace: traceFor(reportId, step, source, source.database, false, message, registry?.trace),
-			meta: emptyMeta(registered ? "REGISTERED_UNBOUND" : "SOURCE_UNBOUND")
+			meta: emptyMeta(registered ? "REGISTERED_UNBOUND" : "SOURCE_UNBOUND"),
 		};
 	}
 
@@ -578,9 +563,7 @@ async function executeStep(
 				cursor = cursor.sort(step.sort as Sort);
 			}
 			cursor = cursor.limit(effectiveLimit + 1);
-			const rawRows = (await cursor.toArray()).map(
-				(row) => ({ ...row }) as Record<string, unknown>
-			);
+			const rawRows = (await cursor.toArray()).map((row) => ({ ...row }) as Record<string, unknown>);
 			const finalized = finalizeRows(reportId, step, rawRows, requestedLimit, effectiveLimit);
 			return {
 				id: step.id,
@@ -588,16 +571,8 @@ async function executeStep(
 				authority: step.authority,
 				sourceId: step.sourceId,
 				rows: finalized.rows,
-				trace: traceFor(
-					reportId,
-					step,
-					source,
-					resolved.database,
-					true,
-					undefined,
-					resolved.resourceRegistry
-				),
-				meta: finalized.meta
+				trace: traceFor(reportId, step, source, resolved.database, true, undefined, resolved.resourceRegistry),
+				meta: finalized.meta,
 			};
 		}
 
@@ -605,10 +580,9 @@ async function executeStep(
 		assertReadOnlyQuery(pipeline);
 		assertAllowedPipeline(pipeline);
 		const stages = [...pipeline, { $limit: effectiveLimit + 1 }];
-		const rawRows = (await collection
-			.aggregate(stages, { maxTimeMS: QUERY_TIMEOUT_MS })
-			.toArray())
-			.map((row) => ({ ...row }) as Record<string, unknown>);
+		const rawRows = (await collection.aggregate(stages, { maxTimeMS: QUERY_TIMEOUT_MS }).toArray()).map(
+			(row) => ({ ...row }) as Record<string, unknown>,
+		);
 		const finalized = finalizeRows(reportId, step, rawRows, requestedLimit, effectiveLimit);
 
 		return {
@@ -617,16 +591,8 @@ async function executeStep(
 			authority: step.authority,
 			sourceId: step.sourceId,
 			rows: finalized.rows,
-			trace: traceFor(
-				reportId,
-				step,
-				source,
-				resolved.database,
-				true,
-				undefined,
-				resolved.resourceRegistry
-			),
-			meta: finalized.meta
+			trace: traceFor(reportId, step, source, resolved.database, true, undefined, resolved.resourceRegistry),
+			meta: finalized.meta,
 		};
 	} catch (error) {
 		const message = error instanceof Error ? error.message : "Report query failed";
@@ -637,16 +603,8 @@ async function executeStep(
 				authority: step.authority,
 				sourceId: step.sourceId,
 				rows: [],
-				trace: traceFor(
-					reportId,
-					step,
-					source,
-					resolved.database,
-					false,
-					message,
-					resolved.resourceRegistry
-				),
-				meta: emptyMeta("SOURCE_ERROR")
+				trace: traceFor(reportId, step, source, resolved.database, false, message, resolved.resourceRegistry),
+				meta: emptyMeta("SOURCE_ERROR"),
 			};
 		}
 		throw error;
@@ -656,17 +614,16 @@ async function executeStep(
 async function executeReportWithContext(
 	context: ExecutionContext,
 	reportId: string,
-	parameters: Record<string, unknown> = {}
+	parameters: Record<string, unknown> = {},
 ): Promise<ReportResult> {
 	const current = new Date();
 	const runtimeParameters: Record<string, unknown> = {
 		today: current.toISOString().slice(0, 10),
 		now: current.toISOString(),
-		...parameters
+		...parameters,
 	};
 	const report: ReportDefinition | undefined =
-		context.workspace.reports.find((candidate) => candidate.id === reportId) ??
-		getReportDefinition(reportId);
+		context.workspace.reports.find((candidate) => candidate.id === reportId) ?? getReportDefinition(reportId);
 	if (!report) {
 		throw new Error("Unknown report: " + reportId);
 	}
@@ -683,30 +640,27 @@ async function executeReportWithContext(
 		presentation: report.presentation,
 		generatedAt: new Date().toISOString(),
 		readOnly: true,
-		sections
+		sections,
 	};
 }
 
 export async function executeSourceQuery(
 	step: ReportQueryStep,
 	parameters: Record<string, unknown> = {},
-	reportId = "AD_HOC"
+	reportId = "AD_HOC",
 ): Promise<ReportSection> {
 	const context = await createExecutionContext();
 	return executeStep(context, reportId, step, parameters);
 }
 
-export async function executeReport(
-	reportId: string,
-	parameters: Record<string, unknown> = {}
-): Promise<ReportResult> {
+export async function executeReport(reportId: string, parameters: Record<string, unknown> = {}): Promise<ReportResult> {
 	const context = await createExecutionContext();
 	return executeReportWithContext(context, reportId, parameters);
 }
 
 export async function executeReports(
 	reportIds: string[],
-	parameters: Record<string, unknown> = {}
+	parameters: Record<string, unknown> = {},
 ): Promise<ReportResult[]> {
 	const context = await createExecutionContext();
 	const results: ReportResult[] = [];
@@ -715,8 +669,7 @@ export async function executeReports(
 			results.push(await executeReportWithContext(context, reportId, parameters));
 		} catch (error) {
 			const report =
-				context.workspace.reports.find((candidate) => candidate.id === reportId) ??
-				getReportDefinition(reportId);
+				context.workspace.reports.find((candidate) => candidate.id === reportId) ?? getReportDefinition(reportId);
 			if (!report) {
 				continue;
 			}
@@ -746,11 +699,11 @@ export async function executeReports(
 							operation: "find",
 							readOnly: true,
 							resolved: false,
-							message
+							message,
 						},
-						meta: emptyMeta("SOURCE_ERROR")
-					}
-				]
+						meta: emptyMeta("SOURCE_ERROR"),
+					},
+				],
 			});
 		}
 	}

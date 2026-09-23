@@ -19,7 +19,9 @@
 
 	{#each report.sections as section}
 		<section class="rounded-xl border border-[var(--border-color)]">
-			<div class="flex flex-col gap-2 border-b border-[var(--border-color)] px-4 py-3 md:flex-row md:items-center md:justify-between">
+			<div
+				class="flex flex-col gap-2 border-b border-[var(--border-color)] px-4 py-3 md:flex-row md:items-center md:justify-between"
+			>
 				<div>
 					<h2 class="text-sm font-semibold">{section.label}</h2>
 					<p class="text-[10px] text-[var(--text-muted)]">Authority: {section.authority}</p>
@@ -33,11 +35,20 @@
 				<div class="divide-y divide-[var(--border-color)]">
 					{#each section.rows as row}
 						<div class="px-4 py-3">
-							<p class="text-sm font-medium">{text(row, "title") || text(row, "name") || text(row, "_id") || "Record"}</p>
-							<p class="mt-1 text-xs text-[var(--text-muted)]">{text(row, "summary") || text(row, "nextAction") || text(row, "status")}</p>
+							<p class="text-sm font-medium">
+								{text(row, "title") || text(row, "name") || text(row, "_id") || "Record"}
+							</p>
+							<p class="mt-1 text-xs text-[var(--text-muted)]">
+								{text(row, "summary") || text(row, "nextAction") || text(row, "status")}
+							</p>
 							<details class="mt-2">
 								<summary class="cursor-pointer text-[10px] text-[var(--text-muted)]">Raw source record</summary>
-								<pre class="mt-2 max-h-80 overflow-auto rounded-lg bg-[var(--hover-background)] p-3 text-[10px] leading-5">{JSON.stringify(row, null, 2)}</pre>
+								<pre
+									class="mt-2 max-h-80 overflow-auto rounded-lg bg-[var(--hover-background)] p-3 text-[10px] leading-5">{JSON.stringify(
+										row,
+										null,
+										2,
+									)}</pre>
 							</details>
 						</div>
 					{:else}
@@ -51,8 +62,13 @@
 				</div>
 			{/if}
 
-			<div class="border-t border-[var(--border-color)] bg-[var(--hover-background)] px-4 py-3 text-[10px] text-[var(--text-muted)]">
-				<p>{section.trace.sourceId} · {section.trace.resourceRef} · {section.trace.database || "database from server binding"} · {section.trace.collection} · {section.trace.operation} · READ ONLY</p>
+			<div
+				class="border-t border-[var(--border-color)] bg-[var(--hover-background)] px-4 py-3 text-[10px] text-[var(--text-muted)]"
+			>
+				<p>
+					{section.trace.sourceId} · {section.trace.resourceRef} · {section.trace.database ||
+						"database from server binding"} · {section.trace.collection} · {section.trace.operation} · READ ONLY
+				</p>
 				{#if section.trace.resourceRegistry?.found}
 					<p class="mt-1">
 						PM registry: {section.trace.resourceRegistry.canonicalName || section.trace.resourceRegistry.resourceId}

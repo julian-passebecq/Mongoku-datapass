@@ -1,14 +1,11 @@
 import { json } from "@sveltejs/kit";
 import { z } from "zod";
-import {
-	acceptControlChangeSet,
-	rejectControlChangeSet
-} from "$lib/server/datapassHistory";
+import { acceptControlChangeSet, rejectControlChangeSet } from "$lib/server/datapassHistory";
 import type { RequestHandler } from "./$types";
 
 const requestSchema = z.object({
 	action: z.enum(["accept", "reject"]),
-	selectedOperationIds: z.array(z.string()).optional()
+	selectedOperationIds: z.array(z.string()).optional(),
 });
 
 export const POST: RequestHandler = async ({ params, request }) => {
@@ -20,15 +17,15 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return json({ ok: true, result });
 		}
 
-		const result = await acceptControlChangeSet(
-			params.id,
-			body.selectedOperationIds
-		);
+		const result = await acceptControlChangeSet(params.id, body.selectedOperationIds);
 		return json({ ok: true, result });
 	} catch (error) {
-		return json({
-			ok: false,
-			error: error instanceof Error ? error.message : "ChangeSet decision failed"
-		}, { status: 400 });
+		return json(
+			{
+				ok: false,
+				error: error instanceof Error ? error.message : "ChangeSet decision failed",
+			},
+			{ status: 400 },
+		);
 	}
 };

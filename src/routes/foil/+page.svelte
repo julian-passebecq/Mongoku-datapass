@@ -6,8 +6,8 @@
 
 	const report = (id: string) => reports.find((item) => item.reportId === id);
 	const rows = (id: string, sectionId?: string) =>
-		report(id)?.sections
-			.filter((section) => !sectionId || section.id === sectionId)
+		report(id)
+			?.sections.filter((section) => !sectionId || section.id === sectionId)
 			.flatMap((section) => section.rows) ?? [];
 
 	const nextRows = $derived(rows("FOIL_NEXT"));
@@ -61,7 +61,7 @@
 		{ label: "Architecture", href: "/foil/architecture" },
 		{ label: "Documents", href: "/foil/documents" },
 		{ label: "Resources", href: "/foil/resources" },
-		{ label: "Audit status", href: "/foil/report/FOIL_MAINTENANCE_DUE" }
+		{ label: "Audit status", href: "/foil/report/FOIL_MAINTENANCE_DUE" },
 	];
 </script>
 
@@ -71,26 +71,49 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">FOIL control cockpit</p>
 			<h1 class="mt-2 text-3xl font-semibold tracking-tight">What needs attention now?</h1>
 			<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-				Read-only control surface over FOIL authorities. Project Management routes work; Core Truth, STUDY, AI Reasoning, IT DEV, FRONT, Work Archive and runtime systems remain authoritative for their domains.
+				Read-only control surface over FOIL authorities. Project Management routes work; Core Truth, STUDY, AI
+				Reasoning, IT DEV, FRONT, Work Archive and runtime systems remain authoritative for their domains.
 			</p>
 		</div>
-		<a href="/foil/resources" class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]">
+		<a
+			href="/foil/resources"
+			class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
+		>
 			Authority & resource map
 		</a>
 	</div>
 
 	<div class="flex flex-wrap gap-2">
 		{#each quickActions as action}
-			<a href={action.href} class="rounded-full border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium no-underline hover:bg-[var(--hover-background)]">{action.label}</a>
+			<a
+				href={action.href}
+				class="rounded-full border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
+				>{action.label}</a
+			>
 		{/each}
 	</div>
 
 	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-		<div class="rounded-xl border border-[var(--border-color)] p-4"><p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">P0 / NOW</p><p class="mt-2 text-2xl font-semibold">{p0.length}</p></div>
-		<div class="rounded-xl border border-[var(--border-color)] p-4"><p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Actionable</p><p class="mt-2 text-2xl font-semibold">{actionable.length}</p></div>
-		<div class="rounded-xl border border-[var(--border-color)] p-4"><p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Blocked</p><p class="mt-2 text-2xl font-semibold">{blocked.length}</p></div>
-		<div class="rounded-xl border border-[var(--border-color)] p-4"><p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Waiting external</p><p class="mt-2 text-2xl font-semibold">{waiting.length}</p></div>
-		<div class="rounded-xl border border-[var(--border-color)] p-4"><p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Verify</p><p class="mt-2 text-2xl font-semibold">{verify.length}</p></div>
+		<div class="rounded-xl border border-[var(--border-color)] p-4">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">P0 / NOW</p>
+			<p class="mt-2 text-2xl font-semibold">{p0.length}</p>
+		</div>
+		<div class="rounded-xl border border-[var(--border-color)] p-4">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Actionable</p>
+			<p class="mt-2 text-2xl font-semibold">{actionable.length}</p>
+		</div>
+		<div class="rounded-xl border border-[var(--border-color)] p-4">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Blocked</p>
+			<p class="mt-2 text-2xl font-semibold">{blocked.length}</p>
+		</div>
+		<div class="rounded-xl border border-[var(--border-color)] p-4">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Waiting external</p>
+			<p class="mt-2 text-2xl font-semibold">{waiting.length}</p>
+		</div>
+		<div class="rounded-xl border border-[var(--border-color)] p-4">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Verify</p>
+			<p class="mt-2 text-2xl font-semibold">{verify.length}</p>
+		</div>
 	</div>
 
 	<div class="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
@@ -109,12 +132,18 @@
 						<span class="text-[10px] text-[var(--text-muted)]">{bucket(item)}</span>
 						<div>
 							<p class="text-sm font-medium">{text(item, "title") || text(item, "_id")}</p>
-							<p class="mt-1 text-[11px] text-[var(--text-muted)]">{text(item, "nextAction") || text(item, "currentStep")}</p>
-							<p class="mt-1 text-[10px] text-[var(--text-muted)]">Authority: FOIL Project Management · Ref: {text(item, "_id")}</p>
+							<p class="mt-1 text-[11px] text-[var(--text-muted)]">
+								{text(item, "nextAction") || text(item, "currentStep")}
+							</p>
+							<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+								Authority: FOIL Project Management · Ref: {text(item, "_id")}
+							</p>
 						</div>
 					</div>
 				{:else}
-					<p class="p-5 text-sm text-[var(--text-muted)]">FOIL PM source is not bound in this runtime or returned no open backlog.</p>
+					<p class="p-5 text-sm text-[var(--text-muted)]">
+						FOIL PM source is not bound in this runtime or returned no open backlog.
+					</p>
 				{/each}
 			</div>
 		</section>
@@ -122,23 +151,33 @@
 		<section class="space-y-4">
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
 				<h2 class="font-semibold">Pending propagation</h2>
-				<p class="mt-1 text-xs text-[var(--text-muted)]">Dirty dependent products are tracked; opening this page performs no synchronization.</p>
+				<p class="mt-1 text-xs text-[var(--text-muted)]">
+					Dirty dependent products are tracked; opening this page performs no synchronization.
+				</p>
 				<p class="mt-4 text-3xl font-semibold">{propagation.length}</p>
 				{#if propagationUnassessed.length > 0}
-					<p class="mt-1 text-[10px] text-[var(--text-muted)]">{propagationUnassessed.length} event(s) have unassessed/legacy propagation metadata.</p>
+					<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+						{propagationUnassessed.length} event(s) have unassessed/legacy propagation metadata.
+					</p>
 				{/if}
-				<a href="/foil/propagation" class="mt-3 inline-block text-xs no-underline hover:underline">Open propagation queue</a>
+				<a href="/foil/propagation" class="mt-3 inline-block text-xs no-underline hover:underline"
+					>Open propagation queue</a
+				>
 			</div>
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
 				<h2 class="font-semibold">Maintenance due</h2>
-				<p class="mt-1 text-xs text-[var(--text-muted)]">Reviews/audits/backups/checks only. No audit is executed automatically.</p>
+				<p class="mt-1 text-xs text-[var(--text-muted)]">
+					Reviews/audits/backups/checks only. No audit is executed automatically.
+				</p>
 				<p class="mt-4 text-3xl font-semibold">{maintenance.length}</p>
 				<a href="/foil/calendar" class="mt-3 inline-block text-xs no-underline hover:underline">Open calendar</a>
 			</div>
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
 				<h2 class="font-semibold">Instruction drift</h2>
 				<p class="mt-4 text-3xl font-semibold">{drift.length}</p>
-				<a href="/foil/report/FOIL_INSTRUCTION_DRIFT" class="mt-3 inline-block text-xs no-underline hover:underline">Inspect versions</a>
+				<a href="/foil/report/FOIL_INSTRUCTION_DRIFT" class="mt-3 inline-block text-xs no-underline hover:underline"
+					>Inspect versions</a
+				>
 			</div>
 		</section>
 	</div>
@@ -175,7 +214,9 @@
 				{#each recent as item}
 					<div class="px-5 py-3">
 						<p class="text-sm font-medium">{text(item, "title") || text(item, "summary") || text(item, "eventType")}</p>
-						<p class="mt-1 text-[11px] text-[var(--text-muted)]">{text(item, "occurredAt") || text(item, "updatedAt")}</p>
+						<p class="mt-1 text-[11px] text-[var(--text-muted)]">
+							{text(item, "occurredAt") || text(item, "updatedAt")}
+						</p>
 					</div>
 				{:else}
 					<p class="p-5 text-sm text-[var(--text-muted)]">No recent source rows available.</p>
@@ -185,6 +226,7 @@
 	</div>
 
 	<div class="rounded-xl border border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
-		Mongoku does not own FOIL backlog, facts, reasoning, artifacts or code. Every report row remains traceable to its source authority. Missing optional FOIL collections are shown as unconfigured rather than created automatically.
+		Mongoku does not own FOIL backlog, facts, reasoning, artifacts or code. Every report row remains traceable to its
+		source authority. Missing optional FOIL collections are shown as unconfigured rather than created automatically.
 	</div>
 </section>

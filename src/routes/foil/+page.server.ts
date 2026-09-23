@@ -9,7 +9,7 @@ export const load: PageServerLoad = async () => {
 		"FOIL_PROPAGATION_PENDING",
 		"FOIL_MAINTENANCE_DUE",
 		"FOIL_INSTRUCTION_DRIFT",
-		"FOIL_GLOBAL_REFERENCES"
+		"FOIL_GLOBAL_REFERENCES",
 	]);
 
 	return { reports };

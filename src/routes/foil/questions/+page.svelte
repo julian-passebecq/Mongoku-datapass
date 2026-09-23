@@ -18,19 +18,22 @@
 	}
 
 	const visible = $derived(
-		rows.filter((row) => showResolved || !/RESOLVED|SUPERSEDED/.test(text(row, "status").toUpperCase()))
+		rows.filter((row) => showResolved || !/RESOLVED|SUPERSEDED/.test(text(row, "status").toUpperCase())),
 	);
 
-	const topics = $derived(
-		Array.from(new Set(visible.map((row) => text(row, "topic") || "Other"))).sort()
-	);
+	const topics = $derived(Array.from(new Set(visible.map((row) => text(row, "topic") || "Other"))).sort());
 
 	function packageFr(): string {
 		const lines = ["Questions FOIL pour Francis", ""];
 		for (const topic of topics) {
 			lines.push(topic.toUpperCase());
 			for (const row of visible.filter((item) => (text(item, "topic") || "Other") === topic)) {
-				lines.push("- [" + (text(row, "priority") || "P?") + "] " + (text(row, "questionFr") || text(row, "title") || text(row, "_id")));
+				lines.push(
+					"- [" +
+						(text(row, "priority") || "P?") +
+						"] " +
+						(text(row, "questionFr") || text(row, "title") || text(row, "_id")),
+				);
 			}
 			lines.push("");
 		}
@@ -45,7 +48,9 @@
 <section class="space-y-6">
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
 		<div>
-			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">FOIL stakeholder workflow</p>
+			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">
+				FOIL stakeholder workflow
+			</p>
 			<h1 class="mt-2 text-3xl font-semibold tracking-tight">Questions for Francis</h1>
 			<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
 				The outgoing French question stays separate from internal technical justification, sources and impact routing.
@@ -55,7 +60,13 @@
 			<label class="flex items-center gap-2 rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs">
 				<input type="checkbox" bind:checked={showResolved} /> Show resolved
 			</label>
-			<button type="button" onclick={copyPackage} disabled={visible.length === 0} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-40 dark:bg-white dark:text-black">Copy French package</button>
+			<button
+				type="button"
+				onclick={copyPackage}
+				disabled={visible.length === 0}
+				class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-40 dark:bg-white dark:text-black"
+				>Copy French package</button
+			>
 		</div>
 	</div>
 
@@ -63,7 +74,10 @@
 		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-5">
 			<h2 class="text-sm font-semibold">Questions collection not configured yet</h2>
 			<p class="mt-2 text-xs leading-5 text-[var(--text-muted)]">{section.trace.message}</p>
-			<p class="mt-2 text-xs text-[var(--text-muted)]">Mongoku will not create it automatically. The report contract is ready for the FOIL PM authority when that workflow is materialized.</p>
+			<p class="mt-2 text-xs text-[var(--text-muted)]">
+				Mongoku will not create it automatically. The report contract is ready for the FOIL PM authority when that
+				workflow is materialized.
+			</p>
 		</div>
 	{/if}
 
@@ -76,7 +90,9 @@
 				{#each visible.filter((row) => (text(row, "topic") || "Other") === topic) as row}
 					<article class="px-4 py-4">
 						<div class="flex flex-wrap items-center gap-2">
-							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">{text(row, "priority")}</span>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]"
+								>{text(row, "priority")}</span
+							>
 							<span class="text-[10px] text-[var(--text-muted)]">{text(row, "status")}</span>
 							<span class="text-[10px] text-[var(--text-muted)]">{text(row, "questionId") || text(row, "_id")}</span>
 						</div>

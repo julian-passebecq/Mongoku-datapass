@@ -1,7 +1,7 @@
 export function normalizeReportLimit(
 	requested: number | undefined,
 	defaultLimit = 500,
-	maxLimit = 500
+	maxLimit = 500,
 ): { requestedLimit: number; effectiveLimit: number } {
 	const requestedLimit = requested ?? defaultLimit;
 	if (!Number.isInteger(requestedLimit) || requestedLimit <= 0) {
@@ -9,7 +9,7 @@ export function normalizeReportLimit(
 	}
 	return {
 		requestedLimit,
-		effectiveLimit: Math.min(requestedLimit, maxLimit)
+		effectiveLimit: Math.min(requestedLimit, maxLimit),
 	};
 }
 
@@ -68,7 +68,7 @@ function withStatus(row: Record<string, unknown>): Record<string, unknown> {
 	return {
 		...row,
 		rawStatus,
-		displayStatus: normalizeWorkStatus(rawStatus)
+		displayStatus: normalizeWorkStatus(rawStatus),
 	};
 }
 
@@ -95,7 +95,7 @@ function taskRows(parent: Record<string, unknown>): Record<string, unknown>[] {
 				rawStatus: rawStatus || parent.status,
 				priority: task.priority ?? parent.priority,
 				ownerAuthority: task.ownerAuthority ?? parent.ownerAuthority,
-				completedAt: task.completedAt
+				completedAt: task.completedAt,
 			});
 		});
 }
@@ -129,7 +129,7 @@ export function applyReportSemantics(
 	reportId: string,
 	stepId: string,
 	collection: string,
-	rows: Record<string, unknown>[]
+	rows: Record<string, unknown>[],
 ): Record<string, unknown>[] {
 	const normalized = rows.map(withStatus);
 	if (collection !== "backlog") {

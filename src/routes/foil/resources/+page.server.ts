@@ -5,6 +5,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const parentData = await parent();
 	return {
 		report: await executeReport("FOIL_RESOURCE_INVENTORY"),
-		sources: parentData.controlWorkspace.sources
+		sources: parentData.controlWorkspace.sources,
 	};
 };

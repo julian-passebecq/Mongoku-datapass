@@ -7,11 +7,7 @@ function projectScope(projectId: string, projects: Array<{ id: string; parentPro
 	return [projectId, ...children.flatMap((child) => projectScope(child.id, projects))];
 }
 
-function seedRows(
-	queryId: string,
-	projectId: string | null,
-	workspace: WorkspaceExport
-): unknown[] {
+function seedRows(queryId: string, projectId: string | null, workspace: WorkspaceExport): unknown[] {
 	const projectIds = projectId ? projectScope(projectId, workspace.projects) : [];
 
 	switch (queryId) {
@@ -20,11 +16,15 @@ function seedRows(
 		case "project-open-work":
 			return workspace.workItems.filter((item) => projectIds.includes(item.projectId) && item.status !== "done");
 		case "project-calendar":
-			return workspace.workItems.filter((item) => projectIds.includes(item.projectId) && item.status !== "done" && item.dueDate);
+			return workspace.workItems.filter(
+				(item) => projectIds.includes(item.projectId) && item.status !== "done" && item.dueDate,
+			);
 		case "calendar-upcoming":
 			return workspace.workItems.filter((item) => item.status !== "done" && item.dueDate);
 		case "project-notes":
-			return workspace.workItems.filter((item) => projectIds.includes(item.projectId) && ["note", "decision", "research"].includes(item.type));
+			return workspace.workItems.filter(
+				(item) => projectIds.includes(item.projectId) && ["note", "decision", "research"].includes(item.type),
+			);
 		case "notes-recent":
 			return workspace.workItems.filter((item) => ["note", "decision", "research"].includes(item.type));
 		case "project-detail":

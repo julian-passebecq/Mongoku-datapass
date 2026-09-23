@@ -16,17 +16,17 @@ export const GET: RequestHandler = async ({ params, url }) => {
 		const report = await executeReport(params.reportId, queryParameters(url));
 		return json(report, {
 			headers: {
-				"cache-control": "no-store"
-			}
+				"cache-control": "no-store",
+			},
 		});
 	} catch (error) {
 		return json(
 			{
 				ok: false,
 				reportId: params.reportId,
-				error: error instanceof Error ? error.message : "Report execution failed"
+				error: error instanceof Error ? error.message : "Report execution failed",
 			},
-			{ status: 400 }
+			{ status: 400 },
 		);
 	}
 };

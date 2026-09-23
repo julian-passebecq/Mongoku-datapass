@@ -24,12 +24,12 @@ export const GET: RequestHandler = async () => {
 			readOnly,
 			writesEnabled,
 			commit: env.VERCEL_GIT_COMMIT_SHA || null,
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
 		},
 		{
 			headers: {
-				"cache-control": "no-store"
-			}
-		}
+				"cache-control": "no-store",
+			},
+		},
 	);
 };

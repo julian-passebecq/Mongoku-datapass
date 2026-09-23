@@ -2,7 +2,7 @@ import {
 	compareControlRevisions,
 	getWorkspaceIdentity,
 	listControlActivity,
-	listControlRevisions
+	listControlRevisions,
 } from "$lib/server/datapassHistory";
 import type { PageServerLoad } from "./$types";
 
@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const [identity, revisions, activity] = await Promise.all([
 		getWorkspaceIdentity(),
 		listControlRevisions(100),
-		listControlActivity(100)
+		listControlActivity(100),
 	]);
 
 	const leftParam = url.searchParams.get("left");
@@ -49,6 +49,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		left,
 		right,
 		comparison,
-		controlWritesEnabled: parentData.controlWritesEnabled
+		controlWritesEnabled: parentData.controlWritesEnabled,
 	};
 };

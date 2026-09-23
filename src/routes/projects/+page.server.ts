@@ -47,9 +47,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			if (workspace.metadata.source === "mongo" && project.statusQueryId) {
 				try {
 					const rows = await executeSavedQuery(project.statusQueryId, { projectIds: ids });
-					const summary = Object.fromEntries(
-						rows.map((row) => [String(row._id), Number(row.count ?? 0)])
-					);
+					const summary = Object.fromEntries(rows.map((row) => [String(row._id), Number(row.count ?? 0)]));
 					return [project.id, summary] as const;
 				} catch {
 					// Fall through to local summary.
@@ -57,12 +55,12 @@ export const load: PageServerLoad = async ({ parent }) => {
 			}
 
 			return [project.id, localSummary(ids, workspace.workItems)] as const;
-		})
+		}),
 	);
 
 	return {
 		workspace,
 		portfolioProjects,
-		projectSummaries: Object.fromEntries(entries)
+		projectSummaries: Object.fromEntries(entries),
 	};
 };

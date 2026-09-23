@@ -49,7 +49,8 @@
 		<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Workspace States</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight">Saved workspace checkpoints</h1>
 		<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-			Checkpoint tabs, workspace instances, bookmarks and panel state without rolling back Mongo project data. Each restore creates one automatic undo point.
+			Checkpoint tabs, workspace instances, bookmarks and panel state without rolling back Mongo project data. Each
+			restore creates one automatic undo point.
 		</p>
 	</div>
 
@@ -57,11 +58,28 @@
 		<section class="rounded-xl border border-[var(--border-color)] p-5">
 			<h2 class="text-sm font-semibold">Save current state</h2>
 			<div class="mt-4 grid gap-3">
-				<input bind:value={title} maxlength="120" placeholder="Checkpoint title" class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm" />
-				<textarea bind:value={note} maxlength="500" rows="3" placeholder="Progress / next step (optional)" class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"></textarea>
+				<input
+					bind:value={title}
+					maxlength="120"
+					placeholder="Checkpoint title"
+					class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
+				/>
+				<textarea
+					bind:value={note}
+					maxlength="500"
+					rows="3"
+					placeholder="Progress / next step (optional)"
+					class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-sm"
+				></textarea>
 				<div class="flex items-center justify-between gap-3">
 					<p class="text-xs text-[var(--text-muted)]">{workspaceUi.checkpoints.length} / 20 saved · {message}</p>
-					<button type="button" onclick={save} disabled={!title.trim()} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black">Save state</button>
+					<button
+						type="button"
+						onclick={save}
+						disabled={!title.trim()}
+						class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black"
+						>Save state</button
+					>
 				</div>
 			</div>
 		</section>
@@ -71,16 +89,24 @@
 			{#if workspaceUi.checkpointUndo}
 				<p class="mt-3 text-xs font-medium">Before last restore</p>
 				<p class="mt-1 text-[11px] text-[var(--text-muted)]">{workspaceUi.checkpointUndo.createdAt}</p>
-				<button type="button" onclick={undo} class="mt-4 rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs">Undo last restore</button>
+				<button
+					type="button"
+					onclick={undo}
+					class="mt-4 rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs">Undo last restore</button
+				>
 			{:else}
-				<p class="mt-3 text-xs leading-5 text-[var(--text-muted)]">No restore undo point yet. Restoring a checkpoint creates one automatically.</p>
+				<p class="mt-3 text-xs leading-5 text-[var(--text-muted)]">
+					No restore undo point yet. Restoring a checkpoint creates one automatically.
+				</p>
 			{/if}
 		</section>
 	</div>
 
 	<div class="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
 		<section class="rounded-xl border border-[var(--border-color)]">
-			<div class="border-b border-[var(--border-color)] px-4 py-3"><h2 class="text-sm font-semibold">Saved states</h2></div>
+			<div class="border-b border-[var(--border-color)] px-4 py-3">
+				<h2 class="text-sm font-semibold">Saved states</h2>
+			</div>
 			<div class="divide-y divide-[var(--border-color)]">
 				{#each workspaceUi.checkpoints as checkpoint}
 					<div class="flex items-start justify-between gap-4 px-4 py-4">
@@ -88,11 +114,21 @@
 							<p class="text-sm font-semibold">{checkpoint.title}</p>
 							<p class="mt-1 text-[10px] text-[var(--text-muted)]">{checkpoint.createdAt}</p>
 							{#if checkpoint.note}<p class="mt-2 text-xs">{checkpoint.note}</p>{/if}
-							<p class="mt-2 text-[10px] text-[var(--text-muted)]">{checkpoint.snapshot.instances.length} workspace instance(s)</p>
+							<p class="mt-2 text-[10px] text-[var(--text-muted)]">
+								{checkpoint.snapshot.instances.length} workspace instance(s)
+							</p>
 						</div>
 						<div class="flex shrink-0 gap-2">
-							<button type="button" onclick={() => restore(checkpoint.id)} class="rounded-md border border-[var(--border-color)] px-2 py-1 text-[10px]">Restore</button>
-							<button type="button" onclick={() => workspaceUi.deleteCheckpoint(checkpoint.id)} class="rounded-md border border-[var(--border-color)] px-2 py-1 text-[10px]">Delete</button>
+							<button
+								type="button"
+								onclick={() => restore(checkpoint.id)}
+								class="rounded-md border border-[var(--border-color)] px-2 py-1 text-[10px]">Restore</button
+							>
+							<button
+								type="button"
+								onclick={() => workspaceUi.deleteCheckpoint(checkpoint.id)}
+								class="rounded-md border border-[var(--border-color)] px-2 py-1 text-[10px]">Delete</button
+							>
 						</div>
 					</div>
 				{:else}
@@ -102,7 +138,9 @@
 		</section>
 
 		<section class="rounded-xl border border-[var(--border-color)]">
-			<div class="border-b border-[var(--border-color)] px-4 py-3"><h2 class="text-sm font-semibold">Recent activity</h2></div>
+			<div class="border-b border-[var(--border-color)] px-4 py-3">
+				<h2 class="text-sm font-semibold">Recent activity</h2>
+			</div>
 			<div class="divide-y divide-[var(--border-color)]">
 				{#each workspaceUi.checkpointHistory as event}
 					<div class="px-4 py-3">

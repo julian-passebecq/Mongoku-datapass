@@ -6,16 +6,7 @@
 	const rows = $derived(report.sections.flatMap((section) => section.rows));
 	const trace = $derived(report.sections[0]?.trace);
 
-	const columns = [
-		"BACKLOG",
-		"READY",
-		"ACTIVE",
-		"BLOCKED",
-		"WAITING_EXTERNAL",
-		"VERIFY",
-		"DEFERRED",
-		"DONE"
-	] as const;
+	const columns = ["BACKLOG", "READY", "ACTIVE", "BLOCKED", "WAITING_EXTERNAL", "VERIFY", "DEFERRED", "DONE"] as const;
 
 	function text(row: Record<string, unknown>, key: string): string {
 		const value = row[key];
@@ -48,7 +39,8 @@
 		<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">FOIL · Project Management</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight">Authoritative backlog Kanban</h1>
 		<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-			This board is a read-only view over <code>foil_project_management.backlog</code>. Cards are not copied into Mongoku work_items.
+			This board is a read-only view over <code>foil_project_management.backlog</code>. Cards are not copied into
+			Mongoku work_items.
 		</p>
 	</div>
 
@@ -64,7 +56,9 @@
 				<section class="rounded-xl border border-[var(--border-color)]">
 					<div class="flex items-center justify-between border-b border-[var(--border-color)] px-3 py-3">
 						<h2 class="text-[11px] font-semibold">{status}</h2>
-						<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">{rows.filter((row) => column(row) === status).length}</span>
+						<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]"
+							>{rows.filter((row) => column(row) === status).length}</span
+						>
 					</div>
 					<div class="min-h-72 space-y-2 p-2">
 						{#each rows.filter((row) => column(row) === status) as item}
@@ -74,25 +68,40 @@
 									<span class="text-[9px] text-[var(--text-muted)]">{text(item, "projectId")}</span>
 								</div>
 								<h3 class="mt-2 text-xs font-semibold leading-5">{text(item, "title") || text(item, "_id")}</h3>
-								{#if text(item, "category")}<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(item, "category")}</p>{/if}
+								{#if text(item, "category")}<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+										{text(item, "category")}
+									</p>{/if}
 
 								{#if text(item, "currentStep")}
-									<div class="mt-3"><p class="text-[9px] uppercase text-[var(--text-muted)]">Current</p><p class="mt-1 text-[10px] leading-4">{text(item, "currentStep")}</p></div>
+									<div class="mt-3">
+										<p class="text-[9px] uppercase text-[var(--text-muted)]">Current</p>
+										<p class="mt-1 text-[10px] leading-4">{text(item, "currentStep")}</p>
+									</div>
 								{/if}
 								{#if text(item, "nextAction")}
-									<div class="mt-3"><p class="text-[9px] uppercase text-[var(--text-muted)]">Next action</p><p class="mt-1 text-[10px] leading-4">{text(item, "nextAction")}</p></div>
+									<div class="mt-3">
+										<p class="text-[9px] uppercase text-[var(--text-muted)]">Next action</p>
+										<p class="mt-1 text-[10px] leading-4">{text(item, "nextAction")}</p>
+									</div>
 								{/if}
 
 								{#if text(item, "blocker") || list(item, "blockers").length > 0}
 									<div class="mt-3 rounded-md border border-[var(--border-color)] p-2">
 										<p class="text-[9px] uppercase text-[var(--text-muted)]">Blocker</p>
-										<p class="mt-1 text-[10px] leading-4">{text(item, "blocker") || list(item, "blockers").join(", ")}</p>
+										<p class="mt-1 text-[10px] leading-4">
+											{text(item, "blocker") || list(item, "blockers").join(", ")}
+										</p>
 									</div>
 								{/if}
 
 								<div class="mt-3 grid grid-cols-2 gap-1 text-[9px] text-[var(--text-muted)]">
 									<span>Impact {impactCount(item)}</span>
-									<span>{text(item, "nextDueAt") || text(item, "dueDate") || text(item, "targetReviewDate") || text(item, "nextReviewAt")}</span>
+									<span
+										>{text(item, "nextDueAt") ||
+											text(item, "dueDate") ||
+											text(item, "targetReviewDate") ||
+											text(item, "nextReviewAt")}</span
+									>
 									<span>{text(item, "authority") || "FOIL Project Management"}</span>
 									<span>{text(item, "propagationStatus") || "—"}</span>
 								</div>

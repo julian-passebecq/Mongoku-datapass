@@ -13,14 +13,14 @@ import {
 	workspacePresetSchema,
 	workItemSchema,
 	type ControlChangeSetInput,
-	type WorkspaceExport
+	type WorkspaceExport,
 } from "$lib/datapass/workspaceSchema";
 import type { ControlChangeOperation, ControlResourceType } from "$lib/datapass/controlPlane";
 import {
 	controlWritesEnabled,
 	getControlDb,
 	loadControlWorkspace,
-	saveControlWorkspace
+	saveControlWorkspace,
 } from "$lib/server/datapassControl";
 
 const META_ID = "workspace";
@@ -87,12 +87,14 @@ function workspacePayload(workspace: WorkspaceExport) {
 		reports: workspace.reports,
 		workspacePresets: workspace.workspacePresets,
 		systemNodes: workspace.systemNodes,
-		systemEdges: workspace.systemEdges
+		systemEdges: workspace.systemEdges,
 	};
 }
 
 export function fingerprintWorkspace(workspace: WorkspaceExport): string {
-	return createHash("sha256").update(stable(workspacePayload(workspace))).digest("hex");
+	return createHash("sha256")
+		.update(stable(workspacePayload(workspace)))
+		.digest("hex");
 }
 
 async function ensureIdentity(workspace: WorkspaceExport): Promise<WorkspaceIdentity> {
@@ -104,21 +106,19 @@ async function ensureIdentity(workspace: WorkspaceExport): Promise<WorkspaceIden
 		return {
 			revision: current.revision,
 			fingerprint,
-			updatedAt: String(current.updatedAt ?? new Date().toISOString())
+			updatedAt: String(current.updatedAt ?? new Date().toISOString()),
 		};
 	}
 
 	const identity: WorkspaceIdentity = {
 		revision: 0,
 		fingerprint,
-		updatedAt: new Date().toISOString()
+		updatedAt: new Date().toISOString(),
 	};
 	if (controlWritesEnabled()) {
-		await db.collection("control_meta").updateOne(
-			{ id: META_ID },
-			{ $set: { id: META_ID, ...identity } },
-			{ upsert: true }
-		);
+		await db
+			.collection("control_meta")
+			.updateOne({ id: META_ID }, { $set: { id: META_ID, ...identity } }, { upsert: true });
 	}
 	return identity;
 }
@@ -131,7 +131,7 @@ export async function getWorkspaceIdentity(): Promise<WorkspaceIdentity> {
 		return {
 			revision: 0,
 			fingerprint: fingerprintWorkspace(workspace),
-			updatedAt: workspace.metadata.exportedAt
+			updatedAt: workspace.metadata.exportedAt,
 		};
 	}
 }
@@ -198,9 +198,7 @@ function parseResource(resourceType: ControlResourceType, value: unknown): unkno
 }
 
 function findResource(workspace: WorkspaceExport, resourceType: ControlResourceType, resourceId: string): unknown {
-	return collectionFor(workspace, resourceType).find(
-		(value) => resourceKey(resourceType, value) === resourceId
-	);
+	return collectionFor(workspace, resourceType).find((value) => resourceKey(resourceType, value) === resourceId);
 }
 
 function applyOperation(workspace: WorkspaceExport, operation: ControlChangeOperation): ChangePreview {
@@ -208,9 +206,7 @@ function applyOperation(workspace: WorkspaceExport, operation: ControlChangeOper
 	const before = findResource(workspace, operation.resourceType, operation.resourceId);
 
 	if (operation.kind === "delete") {
-		const index = collection.findIndex(
-			(value) => resourceKey(operation.resourceType, value) === operation.resourceId
-		);
+		const index = collection.findIndex((value) => resourceKey(operation.resourceType, value) === operation.resourceId);
 		if (index >= 0) {
 			collection.splice(index, 1);
 		}
@@ -222,7 +218,7 @@ function applyOperation(workspace: WorkspaceExport, operation: ControlChangeOper
 			before: structuredClone(before),
 			after: undefined,
 			changed: before !== undefined,
-			rationale: operation.rationale
+			rationale: operation.rationale,
 		};
 	}
 
@@ -230,16 +226,11 @@ function applyOperation(workspace: WorkspaceExport, operation: ControlChangeOper
 	const actualId = resourceKey(operation.resourceType, parsed);
 	if (actualId !== operation.resourceId) {
 		throw new Error(
-			"Operation resourceId does not match payload identity: " +
-				operation.resourceId +
-				" != " +
-				actualId
+			"Operation resourceId does not match payload identity: " + operation.resourceId + " != " + actualId,
 		);
 	}
 
-	const index = collection.findIndex(
-		(value) => resourceKey(operation.resourceType, value) === operation.resourceId
-	);
+	const index = collection.findIndex((value) => resourceKey(operation.resourceType, value) === operation.resourceId);
 	if (index >= 0) {
 		collection[index] = parsed;
 	} else {
@@ -254,7 +245,7 @@ function applyOperation(workspace: WorkspaceExport, operation: ControlChangeOper
 		before: structuredClone(before),
 		after: structuredClone(parsed),
 		changed: stable(before) !== stable(parsed),
-		rationale: operation.rationale
+		rationale: operation.rationale,
 	};
 }
 
@@ -276,18 +267,15 @@ export async function previewControlChangeSet(input: unknown, selectedIds?: stri
 	const workspace = await loadControlWorkspace();
 	const identity = await getWorkspaceIdentity();
 
-	if (
-		changeSet.baseRevision !== identity.revision ||
-		changeSet.baseFingerprint !== identity.fingerprint
-	) {
+	if (changeSet.baseRevision !== identity.revision || changeSet.baseFingerprint !== identity.fingerprint) {
 		return {
 			ok: false as const,
 			stale: true as const,
 			expected: {
 				revision: changeSet.baseRevision,
-				fingerprint: changeSet.baseFingerprint
+				fingerprint: changeSet.baseFingerprint,
 			},
-			current: identity
+			current: identity,
 		};
 	}
 
@@ -302,7 +290,7 @@ export async function previewControlChangeSet(input: unknown, selectedIds?: stri
 		changeSet,
 		identity,
 		preview,
-		resultFingerprint: fingerprintWorkspace(candidate)
+		resultFingerprint: fingerprintWorkspace(candidate),
 	};
 }
 
@@ -313,9 +301,7 @@ export async function stageControlChangeSet(input: unknown): Promise<StoredChang
 
 	const preview = await previewControlChangeSet(input);
 	if (!preview.ok) {
-		throw new Error(
-			"ChangeSet is stale. Re-read the workspace and preview against the current revision."
-		);
+		throw new Error("ChangeSet is stale. Re-read the workspace and preview against the current revision.");
 	}
 
 	const db = await getControlDb();
@@ -333,7 +319,7 @@ export async function stageControlChangeSet(input: unknown): Promise<StoredChang
 		baseRevision: preview.changeSet.baseRevision,
 		baseFingerprint: preview.changeSet.baseFingerprint,
 		operations: preview.changeSet.operations,
-		preview: preview.preview
+		preview: preview.preview,
 	};
 
 	await db.collection("control_changesets").insertOne(row);
@@ -343,7 +329,7 @@ export async function stageControlChangeSet(input: unknown): Promise<StoredChang
 		source: row.source,
 		summary: row.summary,
 		changeSetId: row.id,
-		revision: row.baseRevision
+		revision: row.baseRevision,
 	});
 	return row;
 }
@@ -377,7 +363,7 @@ async function appendActivity(input: {
 	await db.collection("control_activity").insertOne({
 		id: randomUUID(),
 		createdAt: new Date().toISOString(),
-		...input
+		...input,
 	});
 	await trimCollection("control_activity", MAX_ACTIVITY);
 }
@@ -408,7 +394,7 @@ async function commitWorkspace(input: {
 		changeSetId: input.changeSetId,
 		selectedOperationIds: input.selectedOperationIds,
 		fingerprint,
-		workspace: workspacePayload(input.workspace)
+		workspace: workspacePayload(input.workspace),
 	});
 	await trimCollection("control_revisions", MAX_REVISIONS);
 
@@ -419,10 +405,10 @@ async function commitWorkspace(input: {
 				id: META_ID,
 				revision: nextRevision,
 				fingerprint,
-				updatedAt: createdAt
-			}
+				updatedAt: createdAt,
+			},
 		},
-		{ upsert: true }
+		{ upsert: true },
 	);
 
 	await appendActivity({
@@ -430,17 +416,13 @@ async function commitWorkspace(input: {
 		source: input.source,
 		summary: input.summary,
 		changeSetId: input.changeSetId,
-		revision: nextRevision
+		revision: nextRevision,
 	});
 
 	return { revision: nextRevision, fingerprint, updatedAt: createdAt };
 }
 
-function mergeByKey<T>(
-	current: T[],
-	incoming: T[],
-	keyOf: (value: T) => string
-): T[] {
+function mergeByKey<T>(current: T[], incoming: T[], keyOf: (value: T) => string): T[] {
 	const merged = new Map(current.map((value) => [keyOf(value), value]));
 	for (const value of incoming) {
 		merged.set(keyOf(value), value);
@@ -456,23 +438,11 @@ function mergeWorkspace(current: WorkspaceExport, incoming: WorkspaceExport): Wo
 		projects: mergeByKey(current.projects, incoming.projects, (value) => value.id),
 		workItems: mergeByKey(current.workItems, incoming.workItems, (value) => value.id),
 		agentNodes: mergeByKey(current.agentNodes, incoming.agentNodes, (value) => value.id),
-		instructionProfiles: mergeByKey(
-			current.instructionProfiles,
-			incoming.instructionProfiles,
-			(value) => value.id
-		),
+		instructionProfiles: mergeByKey(current.instructionProfiles, incoming.instructionProfiles, (value) => value.id),
 		savedQueries: mergeByKey(current.savedQueries, incoming.savedQueries, (value) => value.id),
-		workspacePresets: mergeByKey(
-			current.workspacePresets,
-			incoming.workspacePresets,
-			(value) => value.id
-		),
+		workspacePresets: mergeByKey(current.workspacePresets, incoming.workspacePresets, (value) => value.id),
 		systemNodes: mergeByKey(current.systemNodes, incoming.systemNodes, (value) => value.id),
-		systemEdges: mergeByKey(
-			current.systemEdges,
-			incoming.systemEdges,
-			(value) => value.from + "::" + value.to
-		)
+		systemEdges: mergeByKey(current.systemEdges, incoming.systemEdges, (value) => value.from + "::" + value.to),
 	});
 }
 
@@ -480,16 +450,13 @@ export async function commitDirectWorkspace(
 	workspace: WorkspaceExport,
 	source: string,
 	summary: string,
-	mode: "merge" | "replace" = "merge"
+	mode: "merge" | "replace" = "merge",
 ) {
 	if (!controlWritesEnabled()) {
 		throw new Error("Datapass control writes are disabled");
 	}
 	const parsed = workspaceExportSchema.parse(workspace);
-	const candidate =
-		mode === "merge"
-			? mergeWorkspace(await loadControlWorkspace(), parsed)
-			: parsed;
+	const candidate = mode === "merge" ? mergeWorkspace(await loadControlWorkspace(), parsed) : parsed;
 	return commitWorkspace({ workspace: candidate, source, summary });
 }
 
@@ -512,7 +479,7 @@ export async function acceptControlChangeSet(id: string, selectedIds?: string[])
 		createdAt: row.createdAt,
 		baseRevision: row.baseRevision,
 		baseFingerprint: row.baseFingerprint,
-		operations: row.operations
+		operations: row.operations,
 	};
 
 	const preview = await previewControlChangeSet(input, selectedIds);
@@ -523,16 +490,16 @@ export async function acceptControlChangeSet(id: string, selectedIds?: string[])
 				$set: {
 					status: "stale",
 					decidedAt: new Date().toISOString(),
-					reason: "Workspace changed since this proposal was staged"
-				}
-			}
+					reason: "Workspace changed since this proposal was staged",
+				},
+			},
 		);
 		await appendActivity({
 			action: "changeset.stale",
 			source: row.source,
 			summary: row.summary,
 			changeSetId: row.id,
-			revision: preview.current.revision
+			revision: preview.current.revision,
 		});
 		throw new Error("ChangeSet is stale and must be re-previewed");
 	}
@@ -550,7 +517,7 @@ export async function acceptControlChangeSet(id: string, selectedIds?: string[])
 		source: row.source,
 		summary: row.summary,
 		changeSetId: row.id,
-		selectedOperationIds: operations.map((operation) => operation.id)
+		selectedOperationIds: operations.map((operation) => operation.id),
 	});
 
 	await db.collection("control_changesets").updateOne(
@@ -561,9 +528,9 @@ export async function acceptControlChangeSet(id: string, selectedIds?: string[])
 				decidedAt: identity.updatedAt,
 				selectedOperationIds: operations.map((operation) => operation.id),
 				resultRevision: identity.revision,
-				resultFingerprint: identity.fingerprint
-			}
-		}
+				resultFingerprint: identity.fingerprint,
+			},
+		},
 	);
 
 	return identity;
@@ -579,16 +546,13 @@ export async function rejectControlChangeSet(id: string) {
 		throw new Error("Only staged or stale ChangeSets can be rejected");
 	}
 	const decidedAt = new Date().toISOString();
-	await db.collection("control_changesets").updateOne(
-		{ id },
-		{ $set: { status: "rejected", decidedAt } }
-	);
+	await db.collection("control_changesets").updateOne({ id }, { $set: { status: "rejected", decidedAt } });
 	await appendActivity({
 		action: "changeset.rejected",
 		source: row.source,
 		summary: row.summary,
 		changeSetId: row.id,
-		revision: (await getWorkspaceIdentity()).revision
+		revision: (await getWorkspaceIdentity()).revision,
 	});
 	return { ok: true, decidedAt };
 }
@@ -641,9 +605,7 @@ export async function listControlRevisions(limit = 100) {
 export async function getControlRevision(revision: number) {
 	try {
 		const db = await getControlDb();
-		const row = await db
-			.collection("control_revisions")
-			.findOne({ revision }, { projection: { _id: 0 } });
+		const row = await db.collection("control_revisions").findOne({ revision }, { projection: { _id: 0 } });
 		return row ?? null;
 	} catch {
 		return null;
@@ -655,10 +617,7 @@ export async function restoreControlRevision(revision: number, expected: Workspa
 		throw new Error("Datapass control writes are disabled");
 	}
 	const current = await getWorkspaceIdentity();
-	if (
-		current.revision !== expected.revision ||
-		current.fingerprint !== expected.fingerprint
-	) {
+	if (current.revision !== expected.revision || current.fingerprint !== expected.fingerprint) {
 		throw new Error("Workspace changed before restore. Refresh history first.");
 	}
 
@@ -671,13 +630,13 @@ export async function restoreControlRevision(revision: number, expected: Workspa
 	const restored = workspaceExportSchema.parse({
 		...currentWorkspace,
 		...(row.workspace as object),
-		metadata: currentWorkspace.metadata
+		metadata: currentWorkspace.metadata,
 	});
 
 	return commitWorkspace({
 		workspace: restored,
 		source: "restore",
-		summary: "Restore revision " + revision + " as new revision"
+		summary: "Restore revision " + revision + " as new revision",
 	});
 }
 
@@ -703,13 +662,13 @@ export async function compareControlRevisions(leftRevision: number, rightRevisio
 		) {
 			const keys = new Set([
 				...Object.keys(before as Record<string, unknown>),
-				...Object.keys(after as Record<string, unknown>)
+				...Object.keys(after as Record<string, unknown>),
 			]);
 			for (const key of keys) {
 				walk(
 					(before as Record<string, unknown>)[key],
 					(after as Record<string, unknown>)[key],
-					path ? path + "." + key : key
+					path ? path + "." + key : key,
 				);
 			}
 			return;

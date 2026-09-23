@@ -33,7 +33,7 @@
 		{ href: "/topology", label: "Systems" },
 		{ href: "/instructions", label: "Instructions" },
 		{ href: "/ai-json", label: "AI JSON" },
-		{ href: "/servers", label: "Mongo Explorer" }
+		{ href: "/servers", label: "Mongo Explorer" },
 	];
 </script>
 
@@ -46,15 +46,24 @@
 		<div class="mx-auto max-w-[110rem] px-4 sm:px-6 lg:px-8">
 			<div class="flex min-h-14 items-center gap-3">
 				<a href={resolve("/")} class="inline-flex items-center gap-2 no-underline hover:no-underline">
-					<span class="inline-flex h-7 w-7 select-none items-center justify-center rounded-md bg-black text-sm font-semibold text-white dark:bg-white dark:text-black">D</span>
-					<span class="hidden text-base font-semibold tracking-tight sm:inline" style="color: var(--text);">Mongo Control</span>
+					<span
+						class="inline-flex h-7 w-7 select-none items-center justify-center rounded-md bg-black text-sm font-semibold text-white dark:bg-white dark:text-black"
+						>D</span
+					>
+					<span class="hidden text-base font-semibold tracking-tight sm:inline" style="color: var(--text);"
+						>Mongo Control</span
+					>
 				</a>
 
 				<div class="hidden h-5 w-px bg-[var(--border-color)] md:block"></div>
 
 				<nav class="hidden items-center gap-1 xl:flex">
 					{#each nav as item}
-						<a href={resolve(item.href)} class="rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]">{item.label}</a>
+						<a
+							href={resolve(item.href)}
+							class="rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
+							>{item.label}</a
+						>
 					{/each}
 				</nav>
 
@@ -68,9 +77,15 @@
 					{#if data.oauthEnabled && data.user}
 						<div class="hidden h-5 w-px bg-[var(--border-color)] md:block"></div>
 						<div class="flex items-center gap-1.5">
-							<span class="hidden max-w-32 truncate text-xs text-[var(--text-muted)] md:inline" title={data.user.email}>{data.user.name || data.user.email || "User"}</span>
+							<span class="hidden max-w-32 truncate text-xs text-[var(--text-muted)] md:inline" title={data.user.email}
+								>{data.user.name || data.user.email || "User"}</span
+							>
 							<form method="POST" action={resolve("/auth/logout")}>
-								<button type="submit" class="inline-flex cursor-pointer items-center justify-center rounded-md px-2 py-1 text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]">Log out</button>
+								<button
+									type="submit"
+									class="inline-flex cursor-pointer items-center justify-center rounded-md px-2 py-1 text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
+									>Log out</button
+								>
 							</form>
 						</div>
 					{/if}
@@ -79,7 +94,11 @@
 
 			<nav class="flex gap-1 overflow-x-auto pb-2 xl:hidden">
 				{#each nav as item}
-					<a href={resolve(item.href)} class="whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline hover:bg-[var(--hover-background)] hover:text-[var(--text)]">{item.label}</a>
+					<a
+						href={resolve(item.href)}
+						class="whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
+						>{item.label}</a
+					>
 				{/each}
 			</nav>
 		</div>

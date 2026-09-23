@@ -12,6 +12,6 @@ export const load: LayoutServerLoad = async (event) => {
 		oauthEnabled: !!(await getOAuthConfig()),
 		user: event.locals.user,
 		controlWritesEnabled: controlWritesEnabled(),
-		controlWorkspace
+		controlWorkspace,
 	};
 };

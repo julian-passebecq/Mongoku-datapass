@@ -31,6 +31,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		workspace,
 		projectId,
 		queryId,
-		items
+		items,
 	};
 };

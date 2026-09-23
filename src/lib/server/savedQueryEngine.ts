@@ -3,7 +3,7 @@ import { executeSourceQuery } from "$lib/server/reportEngine";
 
 export async function executeSavedQuery(
 	queryId: string,
-	parameters: Record<string, unknown> = {}
+	parameters: Record<string, unknown> = {},
 ): Promise<Record<string, unknown>[]> {
 	const workspace = await loadControlWorkspace();
 	const query = workspace.savedQueries.find((candidate) => candidate.id === queryId);
@@ -35,12 +35,12 @@ export async function executeSavedQuery(
 			parameters: query.parameters.map((parameter) => ({
 				name: parameter.name,
 				type: parameter.type,
-				required: true
+				required: true,
 			})),
-			label: query.name
+			label: query.name,
 		},
 		parameters,
-		query.routeId ?? query.id
+		query.routeId ?? query.id,
 	);
 
 	if (!section.trace.resolved) {

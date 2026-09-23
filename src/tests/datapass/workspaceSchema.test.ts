@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	buildSeedWorkspace,
-	workspaceExportSchema,
-	type WorkspaceExport
-} from "$lib/datapass/workspaceSchema";
+import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from "$lib/datapass/workspaceSchema";
 
 function seed(): WorkspaceExport {
 	return structuredClone(buildSeedWorkspace());
@@ -73,13 +69,15 @@ describe("Datapass workspace schema", () => {
 			parentId: "foil-leader",
 			responsibilities: [],
 			mongoScope: [],
-			tags: []
+			tags: [],
 		});
 
 		const result = workspaceExportSchema.safeParse(workspace);
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.issues.some((issue) => issue.message.includes("parent belongs to another project"))).toBe(true);
+			expect(result.error.issues.some((issue) => issue.message.includes("parent belongs to another project"))).toBe(
+				true,
+			);
 		}
 	});
 
@@ -88,7 +86,7 @@ describe("Datapass workspace schema", () => {
 		workspace.systemEdges.push({
 			from: "missing-node",
 			to: "mongo",
-			label: "invalid"
+			label: "invalid",
 		});
 
 		const result = workspaceExportSchema.safeParse(workspace);

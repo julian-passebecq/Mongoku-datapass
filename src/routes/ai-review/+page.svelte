@@ -50,14 +50,14 @@
 								resourceType: "project",
 								resourceId: exampleProject.id,
 								value: exampleProject,
-								rationale: "No-op example that validates the ChangeSet review path."
-							}
+								rationale: "No-op example that validates the ChangeSet review path.",
+							},
 						]
-					: []
+					: [],
 			},
 			null,
-			2
-		)
+			2,
+		),
 	);
 	let previewResult = $state<unknown>(null);
 	let message = $state("");
@@ -81,7 +81,7 @@
 			const response = await fetch("/api/datapass/changesets/preview", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ changeSet: JSON.parse(proposalText) })
+				body: JSON.stringify({ changeSet: JSON.parse(proposalText) }),
 			});
 			const result = (await response.json()) as { error?: string };
 			previewResult = result;
@@ -102,7 +102,7 @@
 			const response = await fetch("/api/datapass/changesets", {
 				method: "POST",
 				headers: { "content-type": "application/json" },
-				body: JSON.stringify({ changeSet: JSON.parse(proposalText) })
+				body: JSON.stringify({ changeSet: JSON.parse(proposalText) }),
 			});
 			const result = await response.json();
 			if (!response.ok) {
@@ -126,8 +126,8 @@
 				headers: { "content-type": "application/json" },
 				body: JSON.stringify({
 					action,
-					...(action === "accept" ? { selectedOperationIds: selectedIds(row) } : {})
-				})
+					...(action === "accept" ? { selectedOperationIds: selectedIds(row) } : {}),
+				}),
 			});
 			const result = await response.json();
 			if (!response.ok) {
@@ -148,7 +148,8 @@
 		<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">AI Review</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight">Reviewed ChangeSets</h1>
 		<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-			AI proposals are validated against an exact workspace revision and fingerprint. Preview is read-only; Stage records the proposal; Accept recomputes it against the current workspace before committing.
+			AI proposals are validated against an exact workspace revision and fingerprint. Preview is read-only; Stage
+			records the proposal; Accept recomputes it against the current workspace before committing.
 		</p>
 	</div>
 
@@ -166,18 +167,42 @@
 	<section class="rounded-xl border border-[var(--border-color)]">
 		<div class="border-b border-[var(--border-color)] px-4 py-3">
 			<h2 class="text-sm font-semibold">Preview or stage JSON proposal</h2>
-			<p class="text-[11px] text-[var(--text-muted)]">Use the capabilities endpoint to discover supported resource types and operations.</p>
+			<p class="text-[11px] text-[var(--text-muted)]">
+				Use the capabilities endpoint to discover supported resource types and operations.
+			</p>
 		</div>
-		<textarea bind:value={proposalText} rows="18" spellcheck="false" class="w-full resize-y bg-transparent p-4 font-mono text-xs leading-5 outline-none"></textarea>
+		<textarea
+			bind:value={proposalText}
+			rows="18"
+			spellcheck="false"
+			class="w-full resize-y bg-transparent p-4 font-mono text-xs leading-5 outline-none"
+		></textarea>
 		<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-color)] px-4 py-3">
 			<p class="text-xs text-[var(--text-muted)]">{message}</p>
 			<div class="flex gap-2">
-				<button type="button" onclick={preview} disabled={busy} class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium disabled:opacity-50">Preview</button>
-				<button type="button" onclick={stage} disabled={busy || !data.controlWritesEnabled} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black">Stage for review</button>
+				<button
+					type="button"
+					onclick={preview}
+					disabled={busy}
+					class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium disabled:opacity-50"
+					>Preview</button
+				>
+				<button
+					type="button"
+					onclick={stage}
+					disabled={busy || !data.controlWritesEnabled}
+					class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black"
+					>Stage for review</button
+				>
 			</div>
 		</div>
 		{#if previewResult}
-			<pre class="max-h-96 overflow-auto border-t border-[var(--border-color)] p-4 text-[11px] leading-5">{JSON.stringify(previewResult, null, 2)}</pre>
+			<pre
+				class="max-h-96 overflow-auto border-t border-[var(--border-color)] p-4 text-[11px] leading-5">{JSON.stringify(
+					previewResult,
+					null,
+					2,
+				)}</pre>
 		{/if}
 	</section>
 
@@ -187,7 +212,9 @@
 				<div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 					<div>
 						<div class="flex flex-wrap items-center gap-2">
-							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px] uppercase">{row.status}</span>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px] uppercase"
+								>{row.status}</span
+							>
 							<span class="text-[10px] text-[var(--text-muted)]">base r{row.baseRevision}</span>
 						</div>
 						<h2 class="mt-2 text-lg font-semibold">{row.summary}</h2>
@@ -195,8 +222,20 @@
 					</div>
 					{#if row.status === "staged"}
 						<div class="flex gap-2">
-							<button type="button" onclick={() => decide(row, "reject")} disabled={busy || !data.controlWritesEnabled} class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs disabled:opacity-50">Reject</button>
-							<button type="button" onclick={() => decide(row, "accept")} disabled={busy || !data.controlWritesEnabled} class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black">Accept selected</button>
+							<button
+								type="button"
+								onclick={() => decide(row, "reject")}
+								disabled={busy || !data.controlWritesEnabled}
+								class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs disabled:opacity-50"
+								>Reject</button
+							>
+							<button
+								type="button"
+								onclick={() => decide(row, "accept")}
+								disabled={busy || !data.controlWritesEnabled}
+								class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-black"
+								>Accept selected</button
+							>
 						</div>
 					{/if}
 				</div>
@@ -209,20 +248,34 @@
 									type="checkbox"
 									checked={selected[operationKey(row.id, change.operationId)] !== false}
 									onchange={(event) => {
-										selected[operationKey(row.id, change.operationId)] = (event.currentTarget as HTMLInputElement).checked;
+										selected[operationKey(row.id, change.operationId)] = (
+											event.currentTarget as HTMLInputElement
+										).checked;
 									}}
 									class="mt-0.5"
 								/>
 							{/if}
 							<div class="min-w-0 flex-1">
 								<p class="text-xs font-semibold">{change.kind} {change.resourceType} · {change.resourceId}</p>
-								<p class="mt-1 text-[10px] text-[var(--text-muted)]">{change.changed ? "Changes current state" : "No semantic change"}</p>
+								<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+									{change.changed ? "Changes current state" : "No semantic change"}
+								</p>
 								{#if change.rationale}<p class="mt-1 text-[11px]">{change.rationale}</p>{/if}
 								<details class="mt-2">
 									<summary class="cursor-pointer text-[10px] text-[var(--text-muted)]">Before / after</summary>
 									<div class="mt-2 grid gap-2 xl:grid-cols-2">
-										<pre class="overflow-auto rounded border border-[var(--border-color)] p-2 text-[10px]">{JSON.stringify(change.before, null, 2)}</pre>
-										<pre class="overflow-auto rounded border border-[var(--border-color)] p-2 text-[10px]">{JSON.stringify(change.after, null, 2)}</pre>
+										<pre
+											class="overflow-auto rounded border border-[var(--border-color)] p-2 text-[10px]">{JSON.stringify(
+												change.before,
+												null,
+												2,
+											)}</pre>
+										<pre
+											class="overflow-auto rounded border border-[var(--border-color)] p-2 text-[10px]">{JSON.stringify(
+												change.after,
+												null,
+												2,
+											)}</pre>
 									</div>
 								</details>
 							</div>
@@ -231,7 +284,9 @@
 				</div>
 			</article>
 		{:else}
-			<div class="rounded-xl border border-dashed border-[var(--border-color)] p-8 text-sm text-[var(--text-muted)]">No reviewed AI ChangeSets yet.</div>
+			<div class="rounded-xl border border-dashed border-[var(--border-color)] p-8 text-sm text-[var(--text-muted)]">
+				No reviewed AI ChangeSets yet.
+			</div>
 		{/each}
 	</div>
 </section>

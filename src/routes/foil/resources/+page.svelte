@@ -27,7 +27,12 @@
 	}
 
 	function canonicalName(row: Record<string, unknown>): string {
-		return text(row, "recommendedDisplayName") || sourceFor(row)?.authority || text(row, "canonicalName") || text(row, "name");
+		return (
+			text(row, "recommendedDisplayName") ||
+			sourceFor(row)?.authority ||
+			text(row, "canonicalName") ||
+			text(row, "name")
+		);
 	}
 
 	function providerName(row: Record<string, unknown>): string {
@@ -48,7 +53,8 @@
 			<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">FOIL canonical inventory</p>
 			<h1 class="mt-2 text-3xl font-semibold tracking-tight">Resource registry</h1>
 			<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-				FOIL Project Management <code>resource_registry</code> is consulted before provider enumeration. Provider APIs are discovery/verification, not existence authority.
+				FOIL Project Management <code>resource_registry</code> is consulted before provider enumeration. Provider APIs are
+				discovery/verification, not existence authority.
 			</p>
 		</div>
 		<select bind:value={kind} class="rounded-lg border border-[var(--border-color)] bg-transparent px-3 py-2 text-xs">
@@ -58,7 +64,9 @@
 	</div>
 
 	{#if section && !section.trace.resolved}
-		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-5 text-sm text-[var(--text-muted)]">{section.trace.message}</div>
+		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-5 text-sm text-[var(--text-muted)]">
+			{section.trace.message}
+		</div>
 	{/if}
 
 	<div class="overflow-x-auto rounded-xl border border-[var(--border-color)]">
@@ -101,7 +109,8 @@
 
 	{#if section}
 		<p class="text-[10px] text-[var(--text-muted)]">
-			Source: {section.trace.authority} · {section.trace.resourceRef} · {section.trace.database}.{section.trace.collection} · READ ONLY
+			Source: {section.trace.authority} · {section.trace.resourceRef} · {section.trace.database}.{section.trace
+				.collection} · READ ONLY
 		</p>
 	{/if}
 </section>

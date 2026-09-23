@@ -1,9 +1,6 @@
 import { json } from "@sveltejs/kit";
 import { z } from "zod";
-import {
-	listControlChangeSets,
-	stageControlChangeSet
-} from "$lib/server/datapassHistory";
+import { listControlChangeSets, stageControlChangeSet } from "$lib/server/datapassHistory";
 import type { RequestHandler } from "./$types";
 
 const requestSchema = z.object({ changeSet: z.unknown() });
@@ -20,9 +17,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		const row = await stageControlChangeSet(parsed.changeSet);
 		return json({ ok: true, row }, { status: 201 });
 	} catch (error) {
-		return json({
-			ok: false,
-			error: error instanceof Error ? error.message : "ChangeSet staging failed"
-		}, { status: 400 });
+		return json(
+			{
+				ok: false,
+				error: error instanceof Error ? error.message : "ChangeSet staging failed",
+			},
+			{ status: 400 },
+		);
 	}
 };

@@ -7,7 +7,7 @@ import {
 	projects,
 	savedQueries,
 	workspacePresets,
-	workItems
+	workItems,
 } from "./controlPlane";
 import { reportCatalog, sourceCatalog } from "./reporting";
 
@@ -28,7 +28,7 @@ export const projectSchema = z.object({
 	tags: z.array(z.string()),
 	githubRepo: z.string().optional(),
 	mongoContextKey: z.string().optional(),
-	mongoNamespaces: z.array(z.string()).optional()
+	mongoNamespaces: z.array(z.string()).optional(),
 });
 
 export const workItemSchema = z.object({
@@ -44,7 +44,7 @@ export const workItemSchema = z.object({
 	classification: z.enum(["GLOBAL_PORTFOLIO_WORK", "FOIL_REFERENCE_MIRROR"]).optional(),
 	externalAuthority: z.string().optional(),
 	externalProjectRef: z.string().optional(),
-	externalBacklogRef: z.string().optional()
+	externalBacklogRef: z.string().optional(),
 });
 
 export const instructionProfileSchema = z.object({
@@ -54,7 +54,7 @@ export const instructionProfileSchema = z.object({
 	version: z.number().int().positive(),
 	summary: z.string(),
 	body: z.string(),
-	tags: z.array(z.string())
+	tags: z.array(z.string()),
 });
 
 export const agentNodeSchema = z.object({
@@ -67,7 +67,7 @@ export const agentNodeSchema = z.object({
 	mongoScope: z.array(z.string()),
 	tags: z.array(z.string()),
 	instructionProfileId: z.string().min(1).optional(),
-	githubRepo: z.string().optional()
+	githubRepo: z.string().optional(),
 });
 
 const jsonRecord = z.record(z.string(), z.unknown());
@@ -91,20 +91,30 @@ export const savedMongoQuerySchema = z.object({
 		z.object({
 			name: z.string().min(1),
 			type: z.enum(["string", "string[]"]),
-			source: z.enum(["project", "project-tree", "manual"]).optional()
-		})
+			source: z.enum(["project", "project-tree", "manual"]).optional(),
+		}),
 	),
-	presentation: z.enum(["project-board", "status-summary", "table", "count", "calendar", "notes", "detail", "dashboard"]),
+	presentation: z.enum([
+		"project-board",
+		"status-summary",
+		"table",
+		"count",
+		"calendar",
+		"notes",
+		"detail",
+		"dashboard",
+	]),
 	readOnly: z.literal(true),
 	routeId: z.string().optional(),
 	resultSchema: jsonRecord.optional(),
-	refreshPolicy: z.object({
-		mode: z.enum(["manual", "on-open", "ttl"]),
-		ttlSeconds: z.number().int().positive().optional()
-	}).optional(),
-	tags: z.array(z.string())
+	refreshPolicy: z
+		.object({
+			mode: z.enum(["manual", "on-open", "ttl"]),
+			ttlSeconds: z.number().int().positive().optional(),
+		})
+		.optional(),
+	tags: z.array(z.string()),
 });
-
 
 export const sourceDescriptorSchema = z.object({
 	id: z.string().min(1),
@@ -117,13 +127,13 @@ export const sourceDescriptorSchema = z.object({
 	defaultRoute: z.boolean(),
 	description: z.string(),
 	aliases: z.array(z.string()).optional(),
-	registryAuthority: z.string().optional()
+	registryAuthority: z.string().optional(),
 });
 
 const reportParameterSchema = z.object({
 	name: z.string().min(1),
 	type: z.enum(["string", "string[]", "date", "boolean"]),
-	required: z.boolean().optional()
+	required: z.boolean().optional(),
 });
 
 const reportStepSchema = z.object({
@@ -139,7 +149,7 @@ const reportStepSchema = z.object({
 	limit: z.number().int().positive().max(5000).optional(),
 	parameters: z.array(reportParameterSchema).optional(),
 	optional: z.boolean().optional(),
-	label: z.string().min(1)
+	label: z.string().min(1),
 });
 
 export const reportDefinitionSchema = z.object({
@@ -149,14 +159,26 @@ export const reportDefinitionSchema = z.object({
 	scope: z.enum(["GLOBAL", "FOIL"]),
 	routeId: z.string().min(1),
 	readOnly: z.literal(true),
-	presentation: z.enum(["dashboard", "kanban", "table", "timeline", "calendar", "questions", "propagation", "resources", "documents", "architecture", "status"]),
+	presentation: z.enum([
+		"dashboard",
+		"kanban",
+		"table",
+		"timeline",
+		"calendar",
+		"questions",
+		"propagation",
+		"resources",
+		"documents",
+		"architecture",
+		"status",
+	]),
 	refreshPolicy: z.object({
 		mode: z.enum(["manual", "on-open", "ttl"]),
-		ttlSeconds: z.number().int().positive().optional()
+		ttlSeconds: z.number().int().positive().optional(),
 	}),
 	parameters: z.array(reportParameterSchema).optional(),
 	steps: z.array(reportStepSchema).min(1),
-	tags: z.array(z.string())
+	tags: z.array(z.string()),
 });
 
 export const workspacePresetSchema = z.object({
@@ -169,20 +191,20 @@ export const workspacePresetSchema = z.object({
 			id: z.string().min(1),
 			title: z.string().min(1),
 			href: z.string().min(1),
-			projectId: z.string().optional()
-		})
+			projectId: z.string().optional(),
+		}),
 	),
 	bookmarks: z.array(
 		z.object({
 			id: z.string().min(1),
 			title: z.string().min(1),
-			href: z.string().min(1)
-		})
+			href: z.string().min(1),
+		}),
 	),
 	leftPanelCollapsed: z.boolean(),
 	rightPanelOpen: z.boolean(),
 	rightPanelMode: z.enum(["context", "bookmarks", "queries", "settings"]),
-	tags: z.array(z.string())
+	tags: z.array(z.string()),
 });
 
 export const systemNodeSchema = z.object({
@@ -190,13 +212,13 @@ export const systemNodeSchema = z.object({
 	label: z.string().min(1),
 	kind: z.enum(["source", "runtime", "stream", "database", "analytics"]),
 	state: z.enum(["healthy", "warning", "offline"]),
-	detail: z.string()
+	detail: z.string(),
 });
 
 export const systemEdgeSchema = z.object({
 	from: z.string().min(1),
 	to: z.string().min(1),
-	label: z.string()
+	label: z.string(),
 });
 
 function duplicateIds(values: Array<{ id: string }>): string[] {
@@ -211,10 +233,7 @@ function duplicateIds(values: Array<{ id: string }>): string[] {
 	return Array.from(duplicates);
 }
 
-function findParentCycle(
-	ids: string[],
-	parentOf: (id: string) => string | undefined
-): string[] | null {
+function findParentCycle(ids: string[], parentOf: (id: string) => string | undefined): string[] | null {
 	const globallyDone = new Set<string>();
 
 	for (const start of ids) {
@@ -247,194 +266,195 @@ function findParentCycle(
 	return null;
 }
 
-export const workspaceExportSchema = z.object({
-	schemaVersion: z.literal(1),
-	metadata: z.object({
-		name: z.string(),
-		source: z.enum(["seed", "mongo", "import"]),
-		exportedAt: z.string(),
-		controlDatabase: z.string().optional()
-	}),
-	projects: z.array(projectSchema),
-	workItems: z.array(workItemSchema),
-	agentNodes: z.array(agentNodeSchema),
-	instructionProfiles: z.array(instructionProfileSchema),
-	savedQueries: z.array(savedMongoQuerySchema),
-	sources: z.array(sourceDescriptorSchema),
-	reports: z.array(reportDefinitionSchema),
-	workspacePresets: z.array(workspacePresetSchema),
-	systemNodes: z.array(systemNodeSchema),
-	systemEdges: z.array(systemEdgeSchema)
-}).superRefine((workspace, context) => {
-	const uniqueGroups: Array<[string, Array<{ id: string }>]> = [
-		["projects", workspace.projects],
-		["workItems", workspace.workItems],
-		["agentNodes", workspace.agentNodes],
-		["instructionProfiles", workspace.instructionProfiles],
-		["savedQueries", workspace.savedQueries],
-		["sources", workspace.sources],
-		["reports", workspace.reports],
-		["workspacePresets", workspace.workspacePresets],
-		["systemNodes", workspace.systemNodes]
-	];
+export const workspaceExportSchema = z
+	.object({
+		schemaVersion: z.literal(1),
+		metadata: z.object({
+			name: z.string(),
+			source: z.enum(["seed", "mongo", "import"]),
+			exportedAt: z.string(),
+			controlDatabase: z.string().optional(),
+		}),
+		projects: z.array(projectSchema),
+		workItems: z.array(workItemSchema),
+		agentNodes: z.array(agentNodeSchema),
+		instructionProfiles: z.array(instructionProfileSchema),
+		savedQueries: z.array(savedMongoQuerySchema),
+		sources: z.array(sourceDescriptorSchema),
+		reports: z.array(reportDefinitionSchema),
+		workspacePresets: z.array(workspacePresetSchema),
+		systemNodes: z.array(systemNodeSchema),
+		systemEdges: z.array(systemEdgeSchema),
+	})
+	.superRefine((workspace, context) => {
+		const uniqueGroups: Array<[string, Array<{ id: string }>]> = [
+			["projects", workspace.projects],
+			["workItems", workspace.workItems],
+			["agentNodes", workspace.agentNodes],
+			["instructionProfiles", workspace.instructionProfiles],
+			["savedQueries", workspace.savedQueries],
+			["sources", workspace.sources],
+			["reports", workspace.reports],
+			["workspacePresets", workspace.workspacePresets],
+			["systemNodes", workspace.systemNodes],
+		];
 
-	for (const [name, values] of uniqueGroups) {
-		for (const id of duplicateIds(values)) {
-			context.addIssue({
-				code: "custom",
-				message: "Duplicate " + name + " id: " + id
-			});
-		}
-	}
-
-	const projectById = new Map(workspace.projects.map((project) => [project.id, project]));
-	const queryIds = new Set(workspace.savedQueries.map((query) => query.id));
-	const sourceIds = new Set(workspace.sources.map((source) => source.id));
-	const instructionById = new Map(
-		workspace.instructionProfiles.map((profile) => [profile.id, profile])
-	);
-	const agentById = new Map(workspace.agentNodes.map((agent) => [agent.id, agent]));
-	const systemNodeIds = new Set(workspace.systemNodes.map((node) => node.id));
-
-	for (const project of workspace.projects) {
-		if (project.parentProjectId && !projectById.has(project.parentProjectId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Project " + project.id + " references missing parent " + project.parentProjectId
-			});
-		}
-		if (project.statusQueryId && !queryIds.has(project.statusQueryId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Project " + project.id + " references missing status query " + project.statusQueryId
-			});
-		}
-	}
-
-	const projectCycle = findParentCycle(
-		workspace.projects.map((project) => project.id),
-		(id) => projectById.get(id)?.parentProjectId
-	);
-	if (projectCycle) {
-		context.addIssue({
-			code: "custom",
-			message: "Project hierarchy cycle: " + projectCycle.join(" -> ")
-		});
-	}
-
-	for (const item of workspace.workItems) {
-		if (!projectById.has(item.projectId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Work item " + item.id + " references missing project " + item.projectId
-			});
-		}
-	}
-
-	for (const profile of workspace.instructionProfiles) {
-		if (!projectById.has(profile.projectId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Instruction profile " + profile.id + " references missing project " + profile.projectId
-			});
-		}
-	}
-
-	for (const agent of workspace.agentNodes) {
-		if (!projectById.has(agent.projectId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Agent " + agent.id + " references missing project " + agent.projectId
-			});
-		}
-		if (agent.parentId) {
-			const parent = agentById.get(agent.parentId);
-			if (!parent) {
+		for (const [name, values] of uniqueGroups) {
+			for (const id of duplicateIds(values)) {
 				context.addIssue({
 					code: "custom",
-					message: "Agent " + agent.id + " references missing parent " + agent.parentId
-				});
-			} else if (parent.projectId !== agent.projectId) {
-				context.addIssue({
-					code: "custom",
-					message: "Agent " + agent.id + " parent belongs to another project"
+					message: "Duplicate " + name + " id: " + id,
 				});
 			}
 		}
-		if (agent.instructionProfileId) {
-			const profile = instructionById.get(agent.instructionProfileId);
-			if (!profile) {
+
+		const projectById = new Map(workspace.projects.map((project) => [project.id, project]));
+		const queryIds = new Set(workspace.savedQueries.map((query) => query.id));
+		const sourceIds = new Set(workspace.sources.map((source) => source.id));
+		const instructionById = new Map(workspace.instructionProfiles.map((profile) => [profile.id, profile]));
+		const agentById = new Map(workspace.agentNodes.map((agent) => [agent.id, agent]));
+		const systemNodeIds = new Set(workspace.systemNodes.map((node) => node.id));
+
+		for (const project of workspace.projects) {
+			if (project.parentProjectId && !projectById.has(project.parentProjectId)) {
 				context.addIssue({
 					code: "custom",
-					message: "Agent " + agent.id + " references missing instruction profile " + agent.instructionProfileId
+					message: "Project " + project.id + " references missing parent " + project.parentProjectId,
 				});
-			} else if (profile.projectId !== agent.projectId) {
+			}
+			if (project.statusQueryId && !queryIds.has(project.statusQueryId)) {
 				context.addIssue({
 					code: "custom",
-					message: "Agent " + agent.id + " instruction profile belongs to another project"
+					message: "Project " + project.id + " references missing status query " + project.statusQueryId,
 				});
 			}
 		}
-	}
 
-	const agentCycle = findParentCycle(
-		workspace.agentNodes.map((agent) => agent.id),
-		(id) => agentById.get(id)?.parentId
-	);
-	if (agentCycle) {
-		context.addIssue({
-			code: "custom",
-			message: "Agent hierarchy cycle: " + agentCycle.join(" -> ")
-		});
-	}
+		const projectCycle = findParentCycle(
+			workspace.projects.map((project) => project.id),
+			(id) => projectById.get(id)?.parentProjectId,
+		);
+		if (projectCycle) {
+			context.addIssue({
+				code: "custom",
+				message: "Project hierarchy cycle: " + projectCycle.join(" -> "),
+			});
+		}
 
-	for (const report of workspace.reports) {
-		for (const step of report.steps) {
-			if (!sourceIds.has(step.sourceId)) {
+		for (const item of workspace.workItems) {
+			if (!projectById.has(item.projectId)) {
 				context.addIssue({
 					code: "custom",
-					message: "Report " + report.id + " references missing source " + step.sourceId
+					message: "Work item " + item.id + " references missing project " + item.projectId,
 				});
 			}
 		}
-	}
 
-	for (const preset of workspace.workspacePresets) {
-		if (preset.defaultProjectId && !projectById.has(preset.defaultProjectId)) {
-			context.addIssue({
-				code: "custom",
-				message: "Workspace preset " + preset.id + " references missing default project " + preset.defaultProjectId
-			});
-		}
-		for (const tab of preset.tabs) {
-			if (tab.projectId && !projectById.has(tab.projectId)) {
+		for (const profile of workspace.instructionProfiles) {
+			if (!projectById.has(profile.projectId)) {
 				context.addIssue({
 					code: "custom",
-					message: "Workspace preset " + preset.id + " tab " + tab.id + " references missing project " + tab.projectId
+					message: "Instruction profile " + profile.id + " references missing project " + profile.projectId,
 				});
 			}
 		}
-	}
 
-	const edgeKeys = new Set<string>();
-	for (const edge of workspace.systemEdges) {
-		const key = edge.from + "::" + edge.to;
-		if (edgeKeys.has(key)) {
+		for (const agent of workspace.agentNodes) {
+			if (!projectById.has(agent.projectId)) {
+				context.addIssue({
+					code: "custom",
+					message: "Agent " + agent.id + " references missing project " + agent.projectId,
+				});
+			}
+			if (agent.parentId) {
+				const parent = agentById.get(agent.parentId);
+				if (!parent) {
+					context.addIssue({
+						code: "custom",
+						message: "Agent " + agent.id + " references missing parent " + agent.parentId,
+					});
+				} else if (parent.projectId !== agent.projectId) {
+					context.addIssue({
+						code: "custom",
+						message: "Agent " + agent.id + " parent belongs to another project",
+					});
+				}
+			}
+			if (agent.instructionProfileId) {
+				const profile = instructionById.get(agent.instructionProfileId);
+				if (!profile) {
+					context.addIssue({
+						code: "custom",
+						message: "Agent " + agent.id + " references missing instruction profile " + agent.instructionProfileId,
+					});
+				} else if (profile.projectId !== agent.projectId) {
+					context.addIssue({
+						code: "custom",
+						message: "Agent " + agent.id + " instruction profile belongs to another project",
+					});
+				}
+			}
+		}
+
+		const agentCycle = findParentCycle(
+			workspace.agentNodes.map((agent) => agent.id),
+			(id) => agentById.get(id)?.parentId,
+		);
+		if (agentCycle) {
 			context.addIssue({
 				code: "custom",
-				message: "Duplicate system edge: " + key
+				message: "Agent hierarchy cycle: " + agentCycle.join(" -> "),
 			});
 		}
-		edgeKeys.add(key);
 
-		if (!systemNodeIds.has(edge.from) || !systemNodeIds.has(edge.to)) {
-			context.addIssue({
-				code: "custom",
-				message: "System edge " + key + " references a missing node"
-			});
+		for (const report of workspace.reports) {
+			for (const step of report.steps) {
+				if (!sourceIds.has(step.sourceId)) {
+					context.addIssue({
+						code: "custom",
+						message: "Report " + report.id + " references missing source " + step.sourceId,
+					});
+				}
+			}
 		}
-	}
-});
+
+		for (const preset of workspace.workspacePresets) {
+			if (preset.defaultProjectId && !projectById.has(preset.defaultProjectId)) {
+				context.addIssue({
+					code: "custom",
+					message: "Workspace preset " + preset.id + " references missing default project " + preset.defaultProjectId,
+				});
+			}
+			for (const tab of preset.tabs) {
+				if (tab.projectId && !projectById.has(tab.projectId)) {
+					context.addIssue({
+						code: "custom",
+						message:
+							"Workspace preset " + preset.id + " tab " + tab.id + " references missing project " + tab.projectId,
+					});
+				}
+			}
+		}
+
+		const edgeKeys = new Set<string>();
+		for (const edge of workspace.systemEdges) {
+			const key = edge.from + "::" + edge.to;
+			if (edgeKeys.has(key)) {
+				context.addIssue({
+					code: "custom",
+					message: "Duplicate system edge: " + key,
+				});
+			}
+			edgeKeys.add(key);
+
+			if (!systemNodeIds.has(edge.from) || !systemNodeIds.has(edge.to)) {
+				context.addIssue({
+					code: "custom",
+					message: "System edge " + key + " references a missing node",
+				});
+			}
+		}
+	});
 
 export type WorkspaceExport = z.infer<typeof workspaceExportSchema>;
 
@@ -444,7 +464,7 @@ export function buildSeedWorkspace(source: "seed" | "import" = "seed"): Workspac
 		metadata: {
 			name: "Datapass Mongo Control",
 			source,
-			exportedAt: new Date().toISOString()
+			exportedAt: new Date().toISOString(),
 		},
 		projects,
 		workItems,
@@ -455,10 +475,9 @@ export function buildSeedWorkspace(source: "seed" | "import" = "seed"): Workspac
 		reports: reportCatalog,
 		workspacePresets,
 		systemNodes: foilNodes,
-		systemEdges: foilEdges
+		systemEdges: foilEdges,
 	};
 }
-
 
 export const controlResourceTypeSchema = z.enum([
 	"project",
@@ -470,30 +489,32 @@ export const controlResourceTypeSchema = z.enum([
 	"reportDefinition",
 	"workspacePreset",
 	"systemNode",
-	"systemEdge"
+	"systemEdge",
 ]);
 
-export const controlChangeOperationSchema = z.object({
-	id: z.string().min(1).max(120),
-	kind: z.enum(["upsert", "delete"]),
-	resourceType: controlResourceTypeSchema,
-	resourceId: z.string().min(1).max(200),
-	value: jsonRecord.optional(),
-	rationale: z.string().max(2000).optional()
-}).superRefine((operation, context) => {
-	if (operation.kind === "upsert" && !operation.value) {
-		context.addIssue({
-			code: "custom",
-			message: "Upsert operations require value"
-		});
-	}
-	if (operation.kind === "delete" && operation.value) {
-		context.addIssue({
-			code: "custom",
-			message: "Delete operations must not include value"
-		});
-	}
-});
+export const controlChangeOperationSchema = z
+	.object({
+		id: z.string().min(1).max(120),
+		kind: z.enum(["upsert", "delete"]),
+		resourceType: controlResourceTypeSchema,
+		resourceId: z.string().min(1).max(200),
+		value: jsonRecord.optional(),
+		rationale: z.string().max(2000).optional(),
+	})
+	.superRefine((operation, context) => {
+		if (operation.kind === "upsert" && !operation.value) {
+			context.addIssue({
+				code: "custom",
+				message: "Upsert operations require value",
+			});
+		}
+		if (operation.kind === "delete" && operation.value) {
+			context.addIssue({
+				code: "custom",
+				message: "Delete operations must not include value",
+			});
+		}
+	});
 
 export const controlChangeSetSchema = z.object({
 	schemaVersion: z.literal(1),
@@ -503,7 +524,7 @@ export const controlChangeSetSchema = z.object({
 	createdAt: z.string(),
 	baseRevision: z.number().int().nonnegative(),
 	baseFingerprint: z.string().min(1).max(128),
-	operations: z.array(controlChangeOperationSchema).min(1).max(50)
+	operations: z.array(controlChangeOperationSchema).min(1).max(50),
 });
 
 export type ControlChangeSetInput = z.infer<typeof controlChangeSetSchema>;
