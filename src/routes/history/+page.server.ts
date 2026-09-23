@@ -14,20 +14,24 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		listControlActivity(100)
 	]);
 
-	const requestedLeft = Number(url.searchParams.get("left"));
-	const requestedRight = Number(url.searchParams.get("right"));
+	const leftParam = url.searchParams.get("left");
+	const rightParam = url.searchParams.get("right");
+	const requestedLeft = leftParam === null ? null : Number(leftParam);
+	const requestedRight = rightParam === null ? null : Number(rightParam);
 	const fallbackLeft = revisions[1]?.revision ?? revisions[0]?.revision;
 	const fallbackRight = revisions[0]?.revision;
-	const left = Number.isInteger(requestedLeft)
-		? requestedLeft
-		: typeof fallbackLeft === "number"
-			? fallbackLeft
-			: null;
-	const right = Number.isInteger(requestedRight)
-		? requestedRight
-		: typeof fallbackRight === "number"
-			? fallbackRight
-			: null;
+	const left =
+		requestedLeft !== null && Number.isInteger(requestedLeft)
+			? requestedLeft
+			: typeof fallbackLeft === "number"
+				? fallbackLeft
+				: null;
+	const right =
+		requestedRight !== null && Number.isInteger(requestedRight)
+			? requestedRight
+			: typeof fallbackRight === "number"
+				? fallbackRight
+				: null;
 
 	let comparison = null;
 	if (typeof left === "number" && typeof right === "number") {
