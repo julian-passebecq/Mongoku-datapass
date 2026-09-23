@@ -1,4 +1,4 @@
-import { executeSavedControlQuery } from "$lib/server/datapassControl";
+import { executeSavedQuery } from "$lib/server/savedQueryEngine";
 import type { PageServerLoad } from "./$types";
 
 type StatusSummary = Record<string, number>;
@@ -33,7 +33,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	if (workspace.metadata.source === "mongo") {
 		try {
-			const rows = await executeSavedControlQuery("project-portfolio-board");
+			const rows = await executeSavedQuery("project-portfolio-board");
 			portfolioProjects = rows as typeof workspace.projects;
 		} catch {
 			portfolioProjects = workspace.projects;
@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 			if (workspace.metadata.source === "mongo" && project.statusQueryId) {
 				try {
-					const rows = await executeSavedControlQuery(project.statusQueryId, { projectIds: ids });
+					const rows = await executeSavedQuery(project.statusQueryId, { projectIds: ids });
 					const summary = Object.fromEntries(
 						rows.map((row) => [String(row._id), Number(row.count ?? 0)])
 					);
