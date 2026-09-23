@@ -42,6 +42,10 @@ function withoutMongoId(doc: Document): Record<string, unknown> {
 }
 
 export async function getControlDb(): Promise<Db> {
+	if (env.DATAPASS_CONTROL_DISABLED === "true") {
+		throw new Error("Datapass control database is disabled");
+	}
+
 	const mongo = await getMongo();
 	const clients = mongo.listClients();
 
@@ -68,6 +72,10 @@ async function readCollection(db: Db, name: string): Promise<Record<string, unkn
 }
 
 export async function loadControlWorkspace(): Promise<WorkspaceExport> {
+	if (env.DATAPASS_CONTROL_DISABLED === "true") {
+		return buildSeedWorkspace();
+	}
+
 	try {
 		const db = await getControlDb();
 		const projectDocs = await readCollection(db, collections.projects);
@@ -133,7 +141,11 @@ async function upsertMany(db: Db, collectionName: string, docs: Array<{ id: stri
 }
 
 export function controlWritesEnabled(): boolean {
-	return env.DATAPASS_CONTROL_WRITE_ENABLED === "true" && env.MONGOKU_READ_ONLY_MODE !== "true";
+	return (
+		env.DATAPASS_CONTROL_DISABLED !== "true" &&
+		env.DATAPASS_CONTROL_WRITE_ENABLED === "true" &&
+		env.MONGOKU_READ_ONLY_MODE !== "true"
+	);
 }
 
 export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "merge" | "replace"): Promise<void> {
