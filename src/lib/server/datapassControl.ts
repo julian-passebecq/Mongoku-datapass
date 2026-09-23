@@ -12,6 +12,7 @@ const collections = {
 	agentNodes: "agent_nodes",
 	instructionProfiles: "instruction_profiles",
 	savedQueries: "saved_queries",
+	workspacePresets: "workspace_presets",
 	systemNodes: "system_nodes",
 	systemEdges: "system_edges"
 } as const;
@@ -68,11 +69,12 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			};
 		}
 
-		const [workItems, agentNodes, instructionProfiles, savedQueries, systemNodes, systemEdges] = await Promise.all([
+		const [workItems, agentNodes, instructionProfiles, savedQueries, workspacePresets, systemNodes, systemEdges] = await Promise.all([
 			readCollection(db, collections.workItems),
 			readCollection(db, collections.agentNodes),
 			readCollection(db, collections.instructionProfiles),
 			readCollection(db, collections.savedQueries),
+			readCollection(db, collections.workspacePresets),
 			readCollection(db, collections.systemNodes),
 			readCollection(db, collections.systemEdges)
 		]);
@@ -90,6 +92,7 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			agentNodes,
 			instructionProfiles,
 			savedQueries,
+			workspacePresets,
 			systemNodes,
 			systemEdges
 		});
@@ -130,6 +133,7 @@ export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "me
 		upsertMany(db, collections.agentNodes, parsed.agentNodes),
 		upsertMany(db, collections.instructionProfiles, parsed.instructionProfiles),
 		upsertMany(db, collections.savedQueries, parsed.savedQueries),
+		upsertMany(db, collections.workspacePresets, parsed.workspacePresets),
 		upsertMany(db, collections.systemNodes, parsed.systemNodes),
 		upsertMany(
 			db,
