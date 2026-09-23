@@ -108,6 +108,49 @@ Named workspace presets are part of the canonical Mongo/JSON workspace and can b
 
 **History** is different: it versions canonical Mongo control-plane data. Accepted ChangeSets, direct JSON commits and restore-as-new operations create immutable revision snapshots that can be compared A/B.
 
+### Vercel deployment
+
+The repository is Vercel-ready through `@sveltejs/adapter-vercel`. `svelte.config.js` selects the Vercel adapter when `VERCEL=1`.
+
+The committed `vercel.json` uses:
+
+- framework: SvelteKit
+- install: `pnpm install --no-frozen-lockfile`
+- build: `pnpm build:app`
+- Node.js 22 Vercel runtime
+- seed-only/read-only control mode by default
+
+The non-frozen Vercel install is temporary because the current branch adds `@sveltejs/adapter-vercel` in `package.json` while the upstream lockfile has not yet been regenerated on a normal development machine.
+
+#### Safe public preview
+
+The committed defaults intentionally do not connect to Mongo:
+
+```text
+DATAPASS_CONTROL_DISABLED=true
+DATAPASS_CONTROL_WRITE_ENABLED=false
+MONGOKU_READ_ONLY_MODE=true
+MONGOKU_DISABLE_DEFAULT_HOSTS=true
+MONGOKU_DATABASE_FILE=/tmp/.mongoku.db
+```
+
+This renders the full Mongo Control workspace using typed seed data without exposing an Atlas connection.
+
+#### Private Mongo-connected deployment
+
+For a private deployment, configure Vercel environment variables instead of committing credentials:
+
+```text
+DATAPASS_CONTROL_DISABLED=false
+DATAPASS_CONTROL_WRITE_ENABLED=true
+DATAPASS_CONTROL_DATABASE=datapass_control
+DATAPASS_CONTROL_SERVER=<configured-host-name-or-id>
+MONGOKU_DEFAULT_HOST=mongodb+srv://...
+MONGOKU_DATABASE_FILE=/tmp/.mongoku.db
+```
+
+Keep the deployment protected when writes are enabled. Mongo credentials are never part of the workspace JSON export.
+
 ### Demo
 
 https://github.com/user-attachments/assets/f37bee71-64f2-454a-a5d6-1697ba8aa070
