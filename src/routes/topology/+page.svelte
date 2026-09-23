@@ -19,7 +19,7 @@
 		</div>
 		<div class="inline-flex rounded-lg border border-[var(--border-color)] p-1">
 			{#each modes as option}
-				<button type="button" onclick={() => (mode = option.id)} class="rounded-md px-3 py-1.5 text-xs font-medium" class:bg-[var(--hover-background)]={mode === option.id}>{option.label}</button>
+				<button type="button" onclick={() => (mode = option.id)} class={"rounded-md px-3 py-1.5 text-xs font-medium " + (mode === option.id ? "bg-[var(--hover-background)]" : "")}>{option.label}</button>
 			{/each}
 		</div>
 	</div>
