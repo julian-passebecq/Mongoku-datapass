@@ -52,7 +52,21 @@
 			{/if}
 
 			<div class="border-t border-[var(--border-color)] bg-[var(--hover-background)] px-4 py-3 text-[10px] text-[var(--text-muted)]">
-				{section.trace.sourceId} · {section.trace.resourceRef} · {section.trace.database || "database from server binding"} · {section.trace.collection} · {section.trace.operation} · READ ONLY
+				<p>{section.trace.sourceId} · {section.trace.resourceRef} · {section.trace.database || "database from server binding"} · {section.trace.collection} · {section.trace.operation} · READ ONLY</p>
+				{#if section.trace.resourceRegistry?.found}
+					<p class="mt-1">
+						PM registry: {section.trace.resourceRegistry.canonicalName || section.trace.resourceRegistry.resourceId}
+						{#if section.trace.resourceRegistry.providerName && section.trace.resourceRegistry.providerName !== section.trace.resourceRegistry.canonicalName}
+							· provider {section.trace.resourceRegistry.providerName}
+						{/if}
+						{#if section.trace.resourceRegistry.aliases?.length}
+							· aliases {section.trace.resourceRegistry.aliases.join(", ")}
+						{/if}
+						{#if section.trace.resourceRegistry.lastVerifiedAt}
+							· verified {section.trace.resourceRegistry.lastVerifiedAt}
+						{/if}
+					</p>
+				{/if}
 			</div>
 		</section>
 	{/each}
