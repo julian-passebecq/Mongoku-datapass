@@ -1,5 +1,5 @@
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
-import { executeSavedControlQuery } from "$lib/server/datapassControl";
+import { executeSavedQuery } from "$lib/server/savedQueryEngine";
 import type { PageServerLoad } from "./$types";
 
 function projectScope(projectId: string, projects: Array<{ id: string; parentProjectId?: string }>): string[] {
@@ -64,7 +64,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 					}
 				}
 				if (!query.parameters.some((parameter) => parameter.source === "manual")) {
-					rows = await executeSavedControlQuery(query.id, parameters);
+					rows = await executeSavedQuery(query.id, parameters);
 				}
 			} catch (caught) {
 				error = caught instanceof Error ? caught.message : "Query failed";
