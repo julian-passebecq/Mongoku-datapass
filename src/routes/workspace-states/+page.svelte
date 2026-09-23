@@ -23,7 +23,7 @@
 			message = "Workspace restored. Undo is available.";
 			const first = workspaceUi.current()?.tabs[0];
 			if (first) {
-				goto(first.href);
+				goto(resolve(first.href));
 			}
 		} catch (error) {
 			message = error instanceof Error ? error.message : "Restore failed";
@@ -36,7 +36,7 @@
 			message = "Restore undone.";
 			const first = workspaceUi.current()?.tabs[0];
 			if (first) {
-				goto(first.href);
+				goto(resolve(first.href));
 			}
 		} catch (error) {
 			message = error instanceof Error ? error.message : "Undo failed";
