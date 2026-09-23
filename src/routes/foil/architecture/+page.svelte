@@ -13,7 +13,8 @@
 	const routingRows = $derived(architecture?.sections.find((section) => section.id === "routing")?.rows ?? []);
 	const resourceRows = $derived(architecture?.sections.find((section) => section.id === "resources")?.rows ?? []);
 	const projectRows = $derived(portfolio?.sections.flatMap((section) => section.rows) ?? []);
-	const propagationRows = $derived(propagation?.sections.flatMap((section) => section.rows) ?? []);
+	const propagationRows = $derived(propagation?.sections.find((section) => section.id === "pending")?.rows ?? []);
+	const propagationUnassessed = $derived(propagation?.sections.find((section) => section.id === "unassessed")?.rows ?? []);
 
 	const modes = [
 		{ id: "projects", label: "Project hierarchy" },
@@ -219,6 +220,9 @@
 		<div class="space-y-4">
 			<div class="rounded-xl border border-[var(--border-color)] p-5 text-xs text-[var(--text-muted)]">
 				New source → primary authority → impact analysis → dependent targets DIRTY → reviewed propagation → verification. No source is synchronized merely because this view is opened.
+				{#if propagationUnassessed.length > 0}
+					<p class="mt-2 font-medium">{propagationUnassessed.length} PM event(s) currently have no propagation assessment metadata; this is coverage debt, not NO_IMPACT.</p>
+				{/if}
 			</div>
 			{#each propagationRows as row}
 				<article class="rounded-xl border border-[var(--border-color)] p-5">
