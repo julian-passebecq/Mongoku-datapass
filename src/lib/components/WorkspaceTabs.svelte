@@ -9,7 +9,9 @@
 
 	const href = $derived(page.url.pathname + page.url.search);
 	const routeTitle = $derived.by(() => {
-		if (page.url.pathname === "/") return "Dashboard";
+		if (page.url.pathname === "/") {
+			return "Dashboard";
+		}
 		const segment = page.url.pathname.split("/").filter(Boolean).at(-1) || "Dashboard";
 		return segment
 			.split("-")
@@ -43,7 +45,9 @@
 		workspaceUi.closeTab(tabId);
 		if (wasActive) {
 			const next = workspaceUi.current()?.tabs.at(-1);
-			if (next) navigate(next.href);
+			if (next) {
+				navigate(next.href);
+			}
 		}
 	}
 
@@ -51,16 +55,22 @@
 		const preset = presets.find((candidate) => candidate.id === instance?.presetId) || presets[0];
 		const created = workspaceUi.newInstance(preset);
 		const first = created?.tabs[0];
-		if (first) navigate(first.href);
+		if (first) {
+			navigate(first.href);
+		}
 	}
 
 	function applyPreset(event: Event) {
 		const presetId = (event.currentTarget as HTMLSelectElement).value;
 		const preset = presets.find((candidate) => candidate.id === presetId);
-		if (!preset) return;
+		if (!preset) {
+			return;
+		}
 		workspaceUi.applyPreset(preset);
 		const first = workspaceUi.current()?.tabs[0];
-		if (first) navigate(first.href);
+		if (first) {
+			navigate(first.href);
+		}
 	}
 </script>
 
@@ -83,7 +93,9 @@
 			onchange={(event) => {
 				workspaceUi.setActiveInstance((event.currentTarget as HTMLSelectElement).value);
 				const first = workspaceUi.current()?.tabs[0];
-				if (first) navigate(first.href);
+				if (first) {
+			navigate(first.href);
+		}
 			}}
 			class="shrink-0 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-1 text-[11px]"
 			title="Workspace instance"
@@ -109,7 +121,9 @@
 					tabindex="0"
 					onclick={(event) => closeTab(event, tab.id, tab.href)}
 					onkeydown={(event) => {
-						if (event.key === "Enter" || event.key === " ") closeTab(event as unknown as MouseEvent, tab.id, tab.href);
+						if (event.key === "Enter" || event.key === " ") {
+							closeTab(event as unknown as MouseEvent, tab.id, tab.href);
+						}
 					}}
 					class="opacity-50 hover:opacity-100"
 					aria-label={"Close " + tab.title}
