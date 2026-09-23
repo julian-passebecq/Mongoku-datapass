@@ -180,6 +180,7 @@ export const sourceCatalog: SourceDescriptor[] = [
 		provider: "MONGODB_ATLAS",
 		adapter: "MONGODB",
 		resourceRef: "RES-MONGODB-FOIL-AI-REASONING",
+		database: "foil_ai_reasoning",
 		readOnly: true,
 		defaultRoute: true,
 		aliases: ["FOIL AI Thinkink"],
@@ -451,7 +452,22 @@ export const reportCatalog: ReportDefinition[] = [
 			authority: "FOIL Project Management",
 			collection: "backlog",
 			operation: "find",
-			filter: { priority: "P0", status: { $regex: "BLOCK|WAIT|HOLD", $options: "i" } },
+			filter: {
+				$or: [
+					{
+						priority: { $regex: "^P0", $options: "i" },
+						status: { $regex: "BLOCK|WAIT|HOLD", $options: "i" }
+					},
+					{
+						tasks: {
+							$elemMatch: {
+								priority: { $regex: "^P0", $options: "i" },
+								status: { $regex: "BLOCK|WAIT|HOLD", $options: "i" }
+							}
+						}
+					}
+				]
+			},
 			projection: pmBacklogProjection,
 			sort: { updatedAt: -1 },
 			limit: 100,
