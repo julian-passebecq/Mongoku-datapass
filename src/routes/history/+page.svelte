@@ -97,7 +97,7 @@
 						<pre class="overflow-auto text-[10px]">{JSON.stringify(change.after, null, 2)}</pre>
 					</div>
 				{:else}
-					<p class="p-4 text-xs text-[var(--text-muted)]">No canonical revisions yet. Initialize the control database or accept a reviewed ChangeSet first.</p>
+					<p class="p-4 text-xs text-[var(--text-muted)]">No semantic differences between these revisions.</p>
 				{/each}
 			</div>
 		</section>
@@ -116,6 +116,8 @@
 						</div>
 						<button type="button" onclick={() => restore(revision.revision)} disabled={busy || !data.controlWritesEnabled || revision.revision === data.identity.revision} class="shrink-0 rounded-md border border-[var(--border-color)] px-2 py-1 text-[10px] disabled:opacity-40">Restore as new</button>
 					</div>
+				{:else}
+					<p class="p-4 text-xs text-[var(--text-muted)]">No canonical revisions yet. Initialize the control database or accept a reviewed ChangeSet first.</p>
 				{/each}
 			</div>
 		</section>
