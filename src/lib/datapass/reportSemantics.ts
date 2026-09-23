@@ -1,3 +1,18 @@
+export function normalizeReportLimit(
+	requested: number | undefined,
+	defaultLimit = 500,
+	maxLimit = 500
+): { requestedLimit: number; effectiveLimit: number } {
+	const requestedLimit = requested ?? defaultLimit;
+	if (!Number.isInteger(requestedLimit) || requestedLimit <= 0) {
+		throw new Error("Report query limit must be a positive integer");
+	}
+	return {
+		requestedLimit,
+		effectiveLimit: Math.min(requestedLimit, maxLimit)
+	};
+}
+
 export type DisplayStatus =
 	| "BACKLOG"
 	| "READY"
