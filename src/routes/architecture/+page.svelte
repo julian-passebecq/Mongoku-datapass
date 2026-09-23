@@ -13,7 +13,9 @@
 
 	const depthOf = (nodeId: string): number => {
 		const node = selectedNodes.find((candidate) => candidate.id === nodeId);
-		if (!node?.parentId) return 0;
+		if (!node?.parentId) {
+			return 0;
+		}
 		return 1 + depthOf(node.parentId);
 	};
 
