@@ -184,13 +184,16 @@
 					Reviews/audits/backups/checks only. No audit is executed automatically.
 				</p>
 				<p class="mt-4 text-3xl font-semibold">{maintenance.length}</p>
-				<a href={resolve("/foil/calendar")} class="mt-3 inline-block text-xs no-underline hover:underline">Open calendar</a>
+				<a href={resolve("/foil/calendar")} class="mt-3 inline-block text-xs no-underline hover:underline"
+					>Open calendar</a
+				>
 			</div>
 			<div class="rounded-xl border border-[var(--border-color)] p-5">
 				<h2 class="font-semibold">Instruction drift</h2>
 				<p class="mt-4 text-3xl font-semibold">{drift.length}</p>
-				<a href={resolve("/foil/report/FOIL_INSTRUCTION_DRIFT")} class="mt-3 inline-block text-xs no-underline hover:underline"
-					>Inspect versions</a
+				<a
+					href={resolve("/foil/report/FOIL_INSTRUCTION_DRIFT")}
+					class="mt-3 inline-block text-xs no-underline hover:underline">Inspect versions</a
 				>
 			</div>
 		</section>

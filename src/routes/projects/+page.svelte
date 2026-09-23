@@ -141,7 +141,9 @@
 
 									<div class="mt-2 flex gap-3 text-[11px]">
 										<a
-											href={resolve(project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id)}
+											href={resolve(
+												project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id,
+											)}
 											class="no-underline hover:underline">Graph</a
 										>
 										{#if project.id === "foil"}

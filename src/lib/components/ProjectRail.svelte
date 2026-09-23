@@ -116,9 +116,7 @@
 							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
 								<a
 									href={resolve(
-										project.id === "foil"
-											? "/foil/report/FOIL_PROJECTS"
-											: "/architecture?project=" + child.id,
+										project.id === "foil" ? "/foil/report/FOIL_PROJECTS" : "/architecture?project=" + child.id,
 									)}
 									class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline"
 								>
