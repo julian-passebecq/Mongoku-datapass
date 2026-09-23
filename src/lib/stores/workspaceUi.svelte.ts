@@ -181,7 +181,9 @@ class WorkspaceUiState {
 
 	applyPreset(preset: WorkspacePreset) {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		instance.name = preset.name;
 		instance.presetId = preset.id;
 		instance.defaultProjectId = preset.defaultProjectId;
@@ -195,21 +197,27 @@ class WorkspaceUiState {
 
 	toggleLeftPanel() {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		instance.leftPanelCollapsed = !instance.leftPanelCollapsed;
 		this.persist();
 	}
 
 	toggleRightPanel() {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		instance.rightPanelOpen = !instance.rightPanelOpen;
 		this.persist();
 	}
 
 	setRightPanelMode(mode: RightPanelMode) {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		instance.rightPanelMode = mode;
 		instance.rightPanelOpen = true;
 		this.persist();
@@ -217,7 +225,9 @@ class WorkspaceUiState {
 
 	toggleBookmark(href: string, title: string) {
 		const instance = this.current();
-		if (!instance) return;
+		if (!instance) {
+			return;
+		}
 		const existing = instance.bookmarks.find((bookmark) => bookmark.href === href);
 		if (existing) {
 			instance.bookmarks = instance.bookmarks.filter((bookmark) => bookmark.href !== href);
