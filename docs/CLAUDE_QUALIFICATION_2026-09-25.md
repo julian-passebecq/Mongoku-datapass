@@ -79,16 +79,18 @@ Observed:
 ## Remaining gate: connected smoke
 
 1. Put a **read-only** ClusterDP URI in a local `.env` using the MODE B+ block of `.env.example`.
-2. Run `pnpm dev` and open `/`. Expect `Control source: legacy-adapter`, rail `Live · legacy-adapter`, and Home `Source: live · … 30 entities … 2 organizations · read-only`.
-3. Open `/?org=foil`, `/?org=datapass` and `/?project=mongoku_datapass`, then check that the reconciliation panel lists the three findings above.
+2. Run `pnpm dev` and open `/`. Expect `Control source: legacy-adapter`, rail `Live · legacy-adapter`, and Home `Source: live · … 31 entities … 2 organizations · read-only` (30 + `datapass_portfolio` from the applied batch).
+3. Open `/?org=foil`, `/?org=datapass` and `/?project=mongoku_datapass`. Since the applied batch, the reconciliation panel should list two review findings: `foil` / `foil_project` duplicate roots (now with no children under `foil`), and the `datapass` default project that is a product. The `TEST-MONGOKU` gate conflict should be gone, because the item is now `ready`.
 4. Confirm that `PUT /api/datapass/workspace` returns 403 and that `dataprojects_control` still has exactly its 7 collections.
 5. If all of this holds, mark PR #1 ready and merge.
 
-## Proposed DATAPASSCONTROL batch (not applied)
+## DATAPASSCONTROL batch — applied 2026-09-25
 
-No Mongo writes were made in this pass. Suggested reviewed updates:
+This batch was approved by the user and applied through the MongoDB MCP, then verified by reading every record back. It is recorded as event `GLOBAL-PORTFOLIO-RECONCILIATION-2026-09-25`, whose `details.rollback` holds before-images of every changed field. Nothing was deleted, and FOIL Core Truth was not touched.
 
-1. `work_items.TEST-MONGOKU-20260924`: its status (`blocked`, "rerun CI") is stale. After the connected smoke, set `ready` → `done` with evidence (heads and run IDs above).
-2. `entities.mongoku_datapass` / `repositories.julian-passebecq/Mongoku-datapass`: update `current_head`/`active_head`, `ci_evidence`, `stop_point` and `next_action` to this handoff.
-3. FOIL cartography: re-parent `foil_wind` and `foil_hydro` to `foil_project` and keep `foil` as legacy/alias. This is a reviewed batch only after dependency checks; the Mongoku presets already tolerate the change.
-4. Datapass cartography: optional `datapass_portfolio` macro node. Keep the legacy `datapass` IDs until impact is reviewed.
+1. `work_items.TEST-MONGOKU-20260924`: `blocked` → **`ready`** (not `done`), with CI and handoff evidence. Mark it `done` only after the connected smoke passes.
+2. `entities.mongoku_datapass` and `repositories.julian-passebecq/Mongoku-datapass`: head `daa857e`, code head `78a42b2`, CI runs 36066516884 / 36066525144, status `pr_open_ci_green_replica_smoke_passed_connected_smoke_pending`, plus the new stop point and next action.
+3. `foil_wind` and `foil_hydro` now have `parent_entity_id` = `foil_project` (`previous_parent_entity_id: foil` is kept). Relationship `FOIL-NAV-005` (`foil_project` contains Wind) was added. `foil` is retained, because relationships, `T004`/`B010`, 2 events and 4 repositories still reference it.
+4. Entity `datapass_portfolio` was added, with relationships `DP-PORT-001..009` (`contains_product`) to the 9 Datapass-organization entities. This change is additive only: product parents and `organizations.datapass.default_project_id` (still `datapass`) are unchanged until their consumers are reviewed.
+
+Still open: the switch of `default_project_id`, and retiring or aliasing the legacy `foil` node.
