@@ -34,11 +34,15 @@ export type WorkspaceUiSnapshot = {
 	instances: WorkspaceInstance[];
 };
 
+export type WorkspaceCheckpointScope = "workspace" | "all";
+
 export type WorkspaceCheckpoint = {
 	id: string;
 	title: string;
 	note: string;
 	createdAt: string;
+	scope?: WorkspaceCheckpointScope;
+	workspaceName?: string;
 	snapshot: WorkspaceUiSnapshot;
 };
 
@@ -280,7 +284,15 @@ class WorkspaceUiState {
 		this.persist();
 	}
 
-	private snapshot(): WorkspaceUiSnapshot {
+	private snapshot(scope: WorkspaceCheckpointScope = "all"): WorkspaceUiSnapshot {
+		const current = this.current();
+		if (scope === "workspace" && current) {
+			return structuredClone({
+				version: 1,
+				activeInstanceId: current.id,
+				instances: [current],
+			});
+		}
 		return structuredClone({
 			version: 1,
 			activeInstanceId: this.activeInstanceId,
@@ -333,7 +345,7 @@ class WorkspaceUiState {
 		this.checkpointHistory = this.checkpointHistory.slice(0, CHECKPOINT_HISTORY_LIMIT);
 	}
 
-	saveCheckpoint(title: string, note = "") {
+	saveCheckpoint(title: string, note = "", scope: WorkspaceCheckpointScope = "workspace") {
 		const cleanTitle = title.trim();
 		if (!cleanTitle) {
 			throw new Error("Checkpoint title is required");
@@ -346,7 +358,9 @@ class WorkspaceUiState {
 			title: cleanTitle.slice(0, 120),
 			note: note.trim().slice(0, 500),
 			createdAt: new Date().toISOString(),
-			snapshot: this.snapshot(),
+			scope,
+			workspaceName: scope === "workspace" ? this.current()?.name : undefined,
+			snapshot: this.snapshot(scope),
 		};
 		this.checkpoints.unshift(checkpoint);
 		this.checkpointEvent("save", checkpoint.id, checkpoint.title);
@@ -360,16 +374,33 @@ class WorkspaceUiState {
 			throw new Error("Workspace checkpoint not found");
 		}
 
+		const scope = checkpoint.scope ?? "all";
 		this.checkpointUndo = {
 			id: makeId("checkpoint-undo"),
 			title: "Before last restore",
 			note: "Automatic undo point",
 			createdAt: new Date().toISOString(),
-			snapshot: this.snapshot(),
+			scope,
+			workspaceName: scope === "workspace" ? this.current()?.name : undefined,
+			snapshot: this.snapshot(scope),
 		};
 
-		this.instances = structuredClone(checkpoint.snapshot.instances);
-		this.activeInstanceId = checkpoint.snapshot.activeInstanceId;
+		if (scope === "all") {
+			this.instances = structuredClone(checkpoint.snapshot.instances);
+			this.activeInstanceId = checkpoint.snapshot.activeInstanceId;
+		} else {
+			const current = this.current();
+			const saved = checkpoint.snapshot.instances[0];
+			if (!current || !saved) {
+				throw new Error("Workspace checkpoint is incomplete");
+			}
+			const restored = {
+				...structuredClone(saved),
+				id: current.id,
+			};
+			this.instances = this.instances.map((instance) => (instance.id === current.id ? restored : instance));
+			this.activeInstanceId = current.id;
+		}
 		this.checkpointEvent("restore", checkpoint.id, checkpoint.title);
 		this.persist();
 		this.persistCheckpoints();
@@ -380,8 +411,23 @@ class WorkspaceUiState {
 			throw new Error("No restore undo point is available");
 		}
 		const undo = this.checkpointUndo;
-		this.instances = structuredClone(undo.snapshot.instances);
-		this.activeInstanceId = undo.snapshot.activeInstanceId;
+		const scope = undo.scope ?? "all";
+		if (scope === "all") {
+			this.instances = structuredClone(undo.snapshot.instances);
+			this.activeInstanceId = undo.snapshot.activeInstanceId;
+		} else {
+			const current = this.current();
+			const saved = undo.snapshot.instances[0];
+			if (!current || !saved) {
+				throw new Error("Workspace undo point is incomplete");
+			}
+			const restored = {
+				...structuredClone(saved),
+				id: current.id,
+			};
+			this.instances = this.instances.map((instance) => (instance.id === current.id ? restored : instance));
+			this.activeInstanceId = current.id;
+		}
 		this.checkpointUndo = undefined;
 		this.checkpointEvent("undo", undo.id, undo.title);
 		this.persist();
