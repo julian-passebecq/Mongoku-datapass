@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { ReportResult } from "$lib/datapass/reporting";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
