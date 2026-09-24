@@ -4,6 +4,28 @@ Date: 2026-09-24
 Observed implementation head before this note: `027bb95a42abee7486fc548959c42f702967be67`  
 PR: #1
 
+## Support-pass result
+
+The live DATAPASSCONTROL compatibility bug described below has now been implemented and qualified on code head `09c1b009dd11964a316fca68a339df84a6a9d6b7`.
+
+Qualification:
+
+- push CI `36042020873`: SUCCESS;
+- PR CI `36042023152`: SUCCESS;
+- format, lint, typecheck, unit tests, app build and CLI build all passed;
+- PR #1 is mergeable/clean at that checkpoint.
+
+Implemented behavior:
+
+- explicit `workspace-v1 / legacy-global / empty-or-unknown` persistence-mode detection;
+- live `entities + work_items` compatibility adapter with raw source status preserved;
+- explicit `sourceMode` metadata and visible fallback/error status;
+- no silent seed substitution for connection/schema failures;
+- workspace writes fail closed while connected to the legacy global graph;
+- regression tests cover mode detection, entity/work-item mapping, stopped FOIL Hydro and global `portfolio` compatibility work.
+
+The remaining work is product/runtime verification and any further workspace UX refinement; do not reimplement this adapter unless a reproducible defect is found.
+
 ## Context
 
 This is a targeted support note for the current Mongoku/Datapass control-plane. It does not redefine FOIL authority and does not replace the existing V4.1 report contract.
