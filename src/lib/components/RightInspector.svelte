@@ -16,10 +16,10 @@
 
 	const instance = $derived(workspaceUi.current());
 	const selectedProjectId = $derived(page.url.searchParams.get("project") || instance?.defaultProjectId);
-	const selectedProject = $derived(projects.find((project) => project.id === selectedProjectId));
+	const selectedProject = $derived(projects.find((project: Project) => project.id === selectedProjectId));
 	const relevantQueries = $derived(
 		queries
-			.filter((query) => {
+			.filter((query: SavedMongoQuery) => {
 				if (selectedProject) {
 					return query.tags.includes("projects") || query.tags.includes("dashboard");
 				}
@@ -197,7 +197,7 @@
 							value={instance.presetId || ""}
 							onchange={(event) => {
 								const preset = presets.find(
-									(candidate) => candidate.id === (event.currentTarget as HTMLSelectElement).value,
+									(candidate: WorkspacePreset) => candidate.id === (event.currentTarget as HTMLSelectElement).value,
 								);
 								if (preset) {
 									workspaceUi.applyPreset(preset);
