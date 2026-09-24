@@ -15,7 +15,9 @@ import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/report
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { loadControlWorkspace } from "$lib/server/datapassControl";
 import { getMongo } from "$lib/server/mongo";
-import type { Collection, Document, Filter, MongoClient, Sort } from "mongodb";
+import type { Collection, Document, Filter, MongoClient, ObjectId, Sort } from "mongodb";
+
+type RegistryDocument = Document & { _id: string | ObjectId };
 
 type SourceBinding = {
 	server: string;
@@ -257,14 +259,14 @@ function kindMatches(row: Record<string, unknown> | undefined, token: string): b
 }
 
 async function registryParent(
-	collection: Collection<Document>,
+	collection: Collection<RegistryDocument>,
 	row: Record<string, unknown> | undefined,
 ): Promise<Record<string, unknown> | undefined> {
 	const parentId = stringValue(row, "parentResourceId");
 	if (!parentId) {
 		return undefined;
 	}
-	const parent = await collection.findOne({ _id: parentId } as Filter<Document>);
+	const parent = await collection.findOne({ _id: parentId });
 	return parent ? ({ ...parent } as Record<string, unknown>) : undefined;
 }
 
@@ -307,10 +309,10 @@ async function resolveRegistryRecord(
 		}
 
 		await selected.client.connect();
-		const registry = selected.client.db(pmDatabase).collection("resource_registry");
+		const registry = selected.client.db(pmDatabase).collection<RegistryDocument>("resource_registry");
 
 		let matches = await registry
-			.find({ _id: source.resourceRef } as Filter<Document>)
+			.find({ _id: source.resourceRef })
 			.limit(2)
 			.toArray();
 
