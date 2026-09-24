@@ -66,7 +66,7 @@
 
 	function createPresetInstance(event: Event) {
 		const select = event.currentTarget as HTMLSelectElement;
-		const preset = presets.find((candidate) => candidate.id === select.value);
+		const preset = presets.find((candidate: WorkspacePreset) => candidate.id === select.value);
 		select.value = "";
 		if (!preset) {
 			return;
@@ -80,7 +80,7 @@
 
 	function applyPreset(event: Event) {
 		const presetId = (event.currentTarget as HTMLSelectElement).value;
-		const preset = presets.find((candidate) => candidate.id === presetId);
+		const preset = presets.find((candidate: WorkspacePreset) => candidate.id === presetId);
 		if (!preset) {
 			return;
 		}
