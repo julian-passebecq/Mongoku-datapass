@@ -1,10 +1,17 @@
 import { env } from "$env/dynamic/private";
-import { adaptLegacyGlobalWorkspace, detectControlPersistenceMode } from "$lib/datapass/legacyGlobalAdapter";
+import {
+	adaptLegacyGlobalWorkspace,
+	bindPresetsToProjects,
+	detectControlPersistenceMode,
+	workspaceWriteBlockReason,
+} from "$lib/datapass/legacyGlobalAdapter";
 import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { getMongo } from "$lib/server/mongo";
 import type { Db, Document, Filter, Sort } from "mongodb";
 
 const DEFAULT_QUERY_LIMIT = 1000;
+/** Upper bound for whole-collection control reads; hitting it is surfaced as a warning, never silently. */
+const CONTROL_READ_LIMIT = 2000;
 
 const collections = {
 	projects: "projects",
@@ -71,9 +78,29 @@ export async function getControlDb(): Promise<Db> {
 	return selected.client.db(env.DATAPASS_CONTROL_DATABASE);
 }
 
+type BoundedRead = { rows: Record<string, unknown>[]; truncated: boolean };
+
+async function readCollectionBounded(db: Db, name: string): Promise<BoundedRead> {
+	const docs = await db
+		.collection(name)
+		.find({}, { maxTimeMS: 5000 })
+		.limit(CONTROL_READ_LIMIT + 1)
+		.toArray();
+	const truncated = docs.length > CONTROL_READ_LIMIT;
+	return { rows: docs.slice(0, CONTROL_READ_LIMIT).map(withoutMongoId), truncated };
+}
+
 async function readCollection(db: Db, name: string): Promise<Record<string, unknown>[]> {
-	const docs = await db.collection(name).find({}).toArray();
-	return docs.map(withoutMongoId);
+	return (await readCollectionBounded(db, name)).rows;
+}
+
+function truncationWarning(reads: Record<string, BoundedRead>): string | undefined {
+	const truncated = Object.entries(reads)
+		.filter(([, read]) => read.truncated)
+		.map(([name]) => name);
+	return truncated.length > 0
+		? "Control read truncated at " + CONTROL_READ_LIMIT + " rows for: " + truncated.join(", ")
+		: undefined;
 }
 
 async function controlCollectionNames(db: Db): Promise<Set<string>> {
@@ -112,15 +139,29 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 	try {
 		const db = await getControlDb();
 		const names = await controlCollectionNames(db);
-		const mode = detectControlPersistenceMode(names);
+		let mode = detectControlPersistenceMode(names);
+		let mixedWarning: string | undefined;
+
+		// Mixed layout: an empty `projects` collection next to a populated legacy graph must not
+		// turn a live database into a seed workspace.
+		if (mode === "workspace-v1" && names.has("entities") && names.has("work_items")) {
+			const projectCount = await db.collection(collections.projects).countDocuments({}, { limit: 1 });
+			if (projectCount === 0) {
+				mode = "legacy-global";
+				mixedWarning = "Empty `projects` collection ignored; the populated legacy entities/work_items graph was read.";
+			}
+		}
 
 		if (mode === "legacy-global") {
-			const [entityRows, legacyWorkItemRows] = await Promise.all([
-				readCollection(db, "entities"),
-				readCollection(db, "work_items"),
+			const [entityRead, workItemRead] = await Promise.all([
+				readCollectionBounded(db, "entities"),
+				readCollectionBounded(db, "work_items"),
 			]);
-			const adapted = adaptLegacyGlobalWorkspace(entityRows, legacyWorkItemRows);
+			const adapted = adaptLegacyGlobalWorkspace(entityRead.rows, workItemRead.rows);
 			const seed = buildSeedWorkspace();
+			const warning = [mixedWarning, truncationWarning({ entities: entityRead, work_items: workItemRead })]
+				.filter(Boolean)
+				.join(" ");
 
 			return workspaceExportSchema.parse({
 				...seed,
@@ -129,9 +170,14 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 					source: "mongo",
 					sourceMode: "legacy-adapter",
 					controlDatabase: db.databaseName,
+					warning: warning || undefined,
 				},
 				projects: adapted.projects,
 				workItems: adapted.workItems,
+				workspacePresets: bindPresetsToProjects(
+					seed.workspacePresets,
+					new Set(adapted.projects.map((project) => project.id)),
+				),
 				agentNodes: [],
 				instructionProfiles: [],
 				savedQueries: [],
@@ -220,16 +266,27 @@ export function controlWritesEnabled(): boolean {
 	);
 }
 
+/**
+ * Single write chokepoint for Mongoku-owned control persistence. The env flag alone is not
+ * enough: the target database must also be a pure workspace-v1 namespace, so no write path
+ * (workspace replace, history, ChangeSets, identity bootstrap) can add or erase collections
+ * in the live global DATAPASSCONTROL graph.
+ */
+export async function getWritableControlDb(): Promise<Db> {
+	if (!controlWritesEnabled()) {
+		throw new Error("Datapass control writes are disabled");
+	}
+	const db = await getControlDb();
+	const blockReason = workspaceWriteBlockReason(await controlCollectionNames(db));
+	if (blockReason) {
+		throw new Error(blockReason);
+	}
+	return db;
+}
+
 export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "merge" | "replace"): Promise<void> {
 	const parsed = workspaceExportSchema.parse(workspace);
-	const db = await getControlDb();
-	const persistenceMode = detectControlPersistenceMode(await controlCollectionNames(db));
-
-	if (persistenceMode === "legacy-global") {
-		throw new Error(
-			"Legacy DATAPASSCONTROL graph is read-only through the compatibility adapter. Initialize a workspace-v1 namespace explicitly before using workspace writes.",
-		);
-	}
+	const db = await getWritableControlDb();
 
 	if (mode === "replace") {
 		await Promise.all(Object.values(collections).map((collectionName) => db.collection(collectionName).deleteMany({})));

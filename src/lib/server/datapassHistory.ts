@@ -19,6 +19,7 @@ import type { ControlChangeOperation, ControlResourceType } from "$lib/datapass/
 import {
 	controlWritesEnabled,
 	getControlDb,
+	getWritableControlDb,
 	loadControlWorkspace,
 	saveControlWorkspace,
 } from "$lib/server/datapassControl";
@@ -116,8 +117,11 @@ async function ensureIdentity(workspace: WorkspaceExport): Promise<WorkspaceIden
 		updatedAt: new Date().toISOString(),
 	};
 	if (controlWritesEnabled()) {
-		await db
-			.collection("control_meta")
+		// Bootstrap the identity only in a writable workspace-v1 namespace; a read must never
+		// create control_* collections inside the live global graph.
+		const writable = await getWritableControlDb().catch(() => null);
+		await writable
+			?.collection("control_meta")
 			.updateOne({ id: META_ID }, { $set: { id: META_ID, ...identity } }, { upsert: true });
 	}
 	return identity;
@@ -295,9 +299,7 @@ export async function previewControlChangeSet(input: unknown, selectedIds?: stri
 }
 
 export async function stageControlChangeSet(input: unknown): Promise<StoredChangeSet> {
-	if (!controlWritesEnabled()) {
-		throw new Error("Datapass control writes are disabled");
-	}
+	await getWritableControlDb();
 
 	const preview = await previewControlChangeSet(input);
 	if (!preview.ok) {
@@ -452,18 +454,14 @@ export async function commitDirectWorkspace(
 	summary: string,
 	mode: "merge" | "replace" = "merge",
 ) {
-	if (!controlWritesEnabled()) {
-		throw new Error("Datapass control writes are disabled");
-	}
+	await getWritableControlDb();
 	const parsed = workspaceExportSchema.parse(workspace);
 	const candidate = mode === "merge" ? mergeWorkspace(await loadControlWorkspace(), parsed) : parsed;
 	return commitWorkspace({ workspace: candidate, source, summary });
 }
 
 export async function acceptControlChangeSet(id: string, selectedIds?: string[]) {
-	if (!controlWritesEnabled()) {
-		throw new Error("Datapass control writes are disabled");
-	}
+	await getWritableControlDb();
 
 	const db = await getControlDb();
 	const row = (await db.collection("control_changesets").findOne({ id })) as StoredChangeSet | null;
@@ -537,9 +535,7 @@ export async function acceptControlChangeSet(id: string, selectedIds?: string[])
 }
 
 export async function rejectControlChangeSet(id: string) {
-	if (!controlWritesEnabled()) {
-		throw new Error("Datapass control writes are disabled");
-	}
+	await getWritableControlDb();
 	const db = await getControlDb();
 	const row = (await db.collection("control_changesets").findOne({ id })) as StoredChangeSet | null;
 	if (!row || !["staged", "stale"].includes(row.status)) {
@@ -613,9 +609,7 @@ export async function getControlRevision(revision: number) {
 }
 
 export async function restoreControlRevision(revision: number, expected: WorkspaceIdentity) {
-	if (!controlWritesEnabled()) {
-		throw new Error("Datapass control writes are disabled");
-	}
+	await getWritableControlDb();
 	const current = await getWorkspaceIdentity();
 	if (current.revision !== expected.revision || current.fingerprint !== expected.fingerprint) {
 		throw new Error("Workspace changed before restore. Refresh history first.");

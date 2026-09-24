@@ -1,4 +1,4 @@
-import type { Project, ProjectStatus, WorkItem, WorkStatus, WorkType } from "./controlPlane";
+import type { Project, ProjectStatus, WorkItem, WorkStatus, WorkType, WorkspacePreset } from "./controlPlane";
 
 export type ControlPersistenceMode = "workspace-v1" | "legacy-global" | "empty-or-unknown";
 
@@ -17,6 +17,20 @@ function numeric(row: Record<string, unknown>, key: string): number | undefined 
 	return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+/**
+ * Collections that belong to the live global DATAPASSCONTROL graph. Their presence in a
+ * database means the workspace-v1 writer must not touch it: `work_items` is shared by name,
+ * so a workspace replace would erase the global work queue.
+ */
+export const LEGACY_GLOBAL_COLLECTIONS = [
+	"organizations",
+	"entities",
+	"repositories",
+	"relationships",
+	"events",
+	"audit_runs",
+] as const;
+
 export function detectControlPersistenceMode(collectionNames: Iterable<string>): ControlPersistenceMode {
 	const names = new Set(collectionNames);
 	if (names.has("projects")) {
@@ -28,46 +42,79 @@ export function detectControlPersistenceMode(collectionNames: Iterable<string>):
 	return "empty-or-unknown";
 }
 
+/** Returns why workspace writes are refused for this database, or null when it is a pure workspace-v1 namespace. */
+export function workspaceWriteBlockReason(collectionNames: Iterable<string>): string | null {
+	const names = new Set(collectionNames);
+	const legacy = LEGACY_GLOBAL_COLLECTIONS.filter((name) => names.has(name));
+	if (legacy.length > 0) {
+		return (
+			"Control database contains legacy DATAPASSCONTROL graph collections (" +
+			legacy.join(", ") +
+			"). Workspace writes are refused; initialize a separate workspace-v1 namespace explicitly."
+		);
+	}
+	return null;
+}
+
+/**
+ * Splits a raw status such as `partial_green` or `not_live_proven` into lowercase tokens so
+ * normalization matches whole words instead of substrings (`incomplete` must not read as `complete`).
+ */
+function statusTokens(rawStatus: string): string[] {
+	return rawStatus
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter(Boolean);
+}
+
+function hasToken(tokens: string[], candidates: readonly string[]): boolean {
+	return tokens.some((token) => candidates.includes(token));
+}
+
+/** Qualifiers that mean a positive-looking status is not actually finished. */
+const NOT_FINISHED_TOKENS = ["not", "partial", "partially", "pending", "unverified", "incomplete", "unresolved"];
+
 function normalizeProjectStatus(rawStatus: string): ProjectStatus {
-	const raw = rawStatus.toLowerCase();
-	if (/stopped|done|closed|archived|retired/.test(raw)) {
+	const tokens = statusTokens(rawStatus);
+	if (hasToken(tokens, ["stopped", "done", "closed", "archived", "retired"])) {
 		return "done";
 	}
-	if (/planned|candidate|reference|donor|paused|hold/.test(raw)) {
+	if (hasToken(tokens, ["planned", "candidate", "reference", "donor", "paused", "hold"])) {
 		return "paused";
 	}
 	return "active";
 }
 
 function normalizeProjectKanban(rawStatus: string): WorkStatus {
-	const raw = rawStatus.toLowerCase();
-	if (/stopped|done|closed|archived|retired/.test(raw)) {
+	const tokens = statusTokens(rawStatus);
+	if (hasToken(tokens, ["stopped", "done", "closed", "archived", "retired"])) {
 		return "done";
 	}
-	if (/block|wait|hold/.test(raw)) {
+	if (hasToken(tokens, ["blocked", "blocker", "blocking", "waiting", "awaiting", "wait", "hold"])) {
 		return "blocked";
 	}
-	if (/planned|candidate|reference|donor|draft/.test(raw)) {
+	if (hasToken(tokens, ["planned", "candidate", "reference", "donor", "draft"])) {
 		return "backlog";
 	}
-	if (/ready|verify|review|test/.test(raw)) {
+	if (hasToken(tokens, ["ready", "verify", "review", "test", "testing"])) {
 		return "todo";
 	}
 	return "in_progress";
 }
 
 function normalizeWorkStatus(rawStatus: string): WorkStatus {
-	const raw = rawStatus.toLowerCase();
-	if (/done|green|complete|completed|resolved|mitigated|closed/.test(raw)) {
+	const tokens = statusTokens(rawStatus);
+	const unfinished = hasToken(tokens, NOT_FINISHED_TOKENS);
+	if (!unfinished && hasToken(tokens, ["done", "green", "complete", "completed", "resolved", "mitigated", "closed"])) {
 		return "done";
 	}
-	if (/block|wait|hold/.test(raw)) {
+	if (hasToken(tokens, ["blocked", "blocker", "blocking", "waiting", "awaiting", "wait", "hold"])) {
 		return "blocked";
 	}
-	if (/ongoing|active|in_progress|progress/.test(raw)) {
+	if (hasToken(tokens, ["ongoing", "active", "progress"])) {
 		return "in_progress";
 	}
-	if (/planned|backlog|draft/.test(raw)) {
+	if (hasToken(tokens, ["planned", "backlog", "draft"])) {
 		return "backlog";
 	}
 	return "todo";
@@ -250,4 +297,20 @@ export function adaptLegacyGlobalWorkspace(
 	}
 
 	return { projects, workItems };
+}
+
+/**
+ * Seed presets are app configuration, not live data. On the live graph their project
+ * references are advisory: a retired or renamed entity (for example the legacy `foil` node
+ * once `foil_project` replaces it) must not invalidate the whole live workspace.
+ */
+export function bindPresetsToProjects(presets: WorkspacePreset[], projectIds: Set<string>): WorkspacePreset[] {
+	return presets.map((preset) => ({
+		...preset,
+		defaultProjectId:
+			preset.defaultProjectId && projectIds.has(preset.defaultProjectId) ? preset.defaultProjectId : undefined,
+		tabs: preset.tabs.map((tab) =>
+			tab.projectId && !projectIds.has(tab.projectId) ? { ...tab, projectId: undefined } : tab,
+		),
+	}));
 }

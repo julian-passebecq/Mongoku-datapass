@@ -82,6 +82,21 @@ describe("legacy DATAPASSCONTROL adapter", () => {
 		expect(item?.severity).toBe("critical");
 	});
 
+	it("matches status words, not substrings, and never reads qualified statuses as done", () => {
+		const status = (raw: string) =>
+			legacyWorkItemToWorkspaceItem({ work_item_id: "X", project_id: "p", title: "t", status: raw })?.status;
+
+		expect(status("green")).toBe("done");
+		expect(status("mitigated")).toBe("done");
+		expect(status("partial_green")).not.toBe("done");
+		expect(status("not_live_proven")).not.toBe("done");
+		expect(status("incomplete")).not.toBe("done");
+		expect(status("unresolved")).not.toBe("done");
+		expect(status("awaiting_review")).toBe("blocked");
+		expect(status("ongoing")).toBe("in_progress");
+		expect(status("inactive")).not.toBe("in_progress");
+	});
+
 	it("creates a compatibility project for global portfolio work without an entity", () => {
 		const adapted = adaptLegacyGlobalWorkspace(
 			[
