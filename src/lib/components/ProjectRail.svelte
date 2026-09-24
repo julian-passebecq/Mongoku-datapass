@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$app/paths";
+	import { appPath } from "$lib/navigation";
 	import type { Project } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -9,9 +9,9 @@
 	const roots = $derived(projects.filter((project) => !project.parentProjectId));
 	const childrenOf = (projectId: string) => projects.filter((project) => project.parentProjectId === projectId);
 	const architectureHref = (projectId: string) =>
-		projectId === "foil" ? resolve("/foil/architecture") : resolve("/architecture") + "?project=" + projectId;
+		projectId === "foil" ? appPath("/foil/architecture") : appPath("/architecture") + "?project=" + projectId;
 	const workHref = (projectId: string) =>
-		projectId === "foil" ? resolve("/foil/kanban") : resolve("/projects") + "?project=" + projectId;
+		projectId === "foil" ? appPath("/foil/kanban") : appPath("/projects") + "?project=" + projectId;
 </script>
 
 <aside
@@ -40,22 +40,22 @@
 	{#if collapsed}
 		<div class="flex flex-1 flex-col items-center gap-2 py-3">
 			<a
-				href={resolve("/projects")}
+				href={appPath("/projects")}
 				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
 				title="Projects">P</a
 			>
 			<a
-				href={resolve("/architecture")}
+				href={appPath("/architecture")}
 				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
 				title="AI architecture">A</a
 			>
 			<a
-				href={resolve("/instructions")}
+				href={appPath("/instructions")}
 				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
 				title="Instructions">I</a
 			>
 			<a
-				href={resolve("/ai-json")}
+				href={appPath("/ai-json")}
 				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
 				title="AI JSON">J</a
 			>
@@ -64,12 +64,12 @@
 		<div class="flex-1 overflow-y-auto p-3">
 			<div class="mb-3 grid grid-cols-2 gap-2">
 				<a
-					href={resolve("/projects")}
+					href={appPath("/projects")}
 					class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-center text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"
 					>Board</a
 				>
 				<a
-					href={resolve("/architecture")}
+					href={appPath("/architecture")}
 					class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-center text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"
 					>AI graph</a
 				>
@@ -89,18 +89,18 @@
 						</summary>
 						<div class="border-t border-[var(--border-color)] px-2 py-2">
 							<a
-								href={resolve(architectureHref(project.id))}
+								href={appPath(architectureHref(project.id))}
 								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 								>Architecture</a
 							>
 							<a
-								href={resolve(workHref(project.id))}
+								href={appPath(workHref(project.id))}
 								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 								>{project.id === "foil" ? "Authoritative backlog" : "Tasks"}</a
 							>
 							{#if project.id === "foil"}
 								<a
-									href={resolve("/foil/resources")}
+									href={appPath("/foil/resources")}
 									class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 									>Authorities & resources</a
 								>
@@ -115,7 +115,7 @@
 							{/if}
 							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
 								<a
-									href={resolve(
+									href={appPath(
 										project.id === "foil" ? "/foil/report/FOIL_PROJECTS" : "/architecture?project=" + child.id,
 									)}
 									class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline"
@@ -132,12 +132,12 @@
 
 		<div class="border-t border-[var(--border-color)] p-3">
 			<a
-				href={resolve("/instructions")}
+				href={appPath("/instructions")}
 				class="block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
 				>Instruction library</a
 			>
 			<a
-				href={resolve("/ai-json")}
+				href={appPath("/ai-json")}
 				class="mt-1 block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
 				>AI JSON workspace</a
 			>
