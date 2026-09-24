@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { resolve } from "$app/paths";
+	import { appPath } from "$lib/navigation";
 	import type { Project, SavedMongoQuery, WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -57,7 +57,7 @@
 		if (href.startsWith("http://") || href.startsWith("https://")) {
 			window.open(href, "_blank", "noopener,noreferrer");
 		} else {
-			goto(resolve(href));
+			goto(appPath(href));
 		}
 	}
 
@@ -112,24 +112,24 @@
 						<div class="mt-3 space-y-1 text-[11px]">
 							<button
 								type="button"
-								onclick={() => goto(resolve(projectRoute("board", selectedProject.id)))}
+								onclick={() => goto(appPath(projectRoute("board", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Authoritative backlog" : "Project board"}</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(resolve(projectRoute("architecture", selectedProject.id)))}
+								onclick={() => goto(appPath(projectRoute("architecture", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Authority architecture" : "AI graph"}</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(resolve(projectRoute("calendar", selectedProject.id)))}
+								onclick={() => goto(appPath(projectRoute("calendar", selectedProject.id)))}
 								class="block hover:underline">Calendar</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(resolve(projectRoute("notes", selectedProject.id)))}
+								onclick={() => goto(appPath(projectRoute("notes", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Recent authority changes" : "Notes"}</button
 							>
@@ -177,7 +177,7 @@
 						<button
 							type="button"
 							onclick={() =>
-								goto(resolve("/queries?query=" + query.id + (selectedProject ? "&project=" + selectedProject.id : "")))}
+								goto(appPath("/queries?query=" + query.id + (selectedProject ? "&project=" + selectedProject.id : "")))}
 							class="block w-full rounded-md border border-[var(--border-color)] px-3 py-2 text-left"
 						>
 							<span class="block text-xs font-medium">{query.name}</span>
@@ -213,19 +213,19 @@
 					<div class="grid grid-cols-3 gap-1">
 						<button
 							type="button"
-							onclick={() => goto(resolve("/ai-review"))}
+							onclick={() => goto(appPath("/ai-review"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>AI Review</button
 						>
 						<button
 							type="button"
-							onclick={() => goto(resolve("/history"))}
+							onclick={() => goto(appPath("/history"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>History</button
 						>
 						<button
 							type="button"
-							onclick={() => goto(resolve("/workspace-states"))}
+							onclick={() => goto(appPath("/workspace-states"))}
 							class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-[10px] hover:bg-[var(--hover-background)]"
 							>States</button
 						>
