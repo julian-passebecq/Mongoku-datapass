@@ -198,7 +198,11 @@
 	/** Bound-but-failing sections (errors, truncation); plain "unbound" is reported by the source line. */
 	const sourceProblems = $derived(
 		(globalReport?.sections ?? []).filter(
-			(section) => section.meta && !["OK", "EMPTY", "SOURCE_UNBOUND"].includes(section.meta.state),
+			(section) =>
+				section.meta &&
+				!["OK", "EMPTY", "SOURCE_UNBOUND"].includes(section.meta.state) &&
+				// Recent is intentionally bounded (latest N events); truncation there is expected, not a source problem.
+				!(section.id === "events" && section.meta.state === "TRUNCATED"),
 		),
 	);
 	const globalSourceState = $derived(

@@ -1,22 +1,22 @@
 # Mongoku qualification handoff — 2026-09-25
 
-**Branch:** `datapass/control-plane-v1` · **PR:** #1 → `master` (draft)
+**Branch:** `datapass/control-plane-v1` · **PR:** #1 → `master` (ready for review)
 **Starting head:** `faa821bcb350884d85e53a5e5ffecbec72fbacd8`
-**Qualified code head:** `78a42b247c5b1aa2ab9801a80c68fa51c081ce2c` (this document is committed on top of it)
+**Qualified code head:** see the latest commit touching `src/` on the branch; CI evidence below (this document is committed on top of it)
 
 Read after `docs/CLAUDE_FULL_HANDOFF_2026-09-24.md` and `docs/CODEX_SUPPORT_2026-09-24.md`. No architecture was redesigned; the legacy-global adapter was kept and only hardened where a defect was reproduced.
 
 ## Verdict on PR #1
 
-**Not yet ready to merge.** One gate remains: the connected smoke against the real ClusterDP. It was deliberately not run in this pass, because no read-only DB credential was available to the app and creating Atlas users / access-list entries was out of scope. Everything else in the merge gate is met (see below). Running the checklist in [Remaining gate](#remaining-gate-connected-smoke) and getting the expected results is enough to recommend the merge.
+**Ready to merge.** The connected read-only smoke against the real ClusterDP passed on 2026-09-25 (see [Connected smoke](#connected-smoke--real-clusterdp)). Every merge-gate item is met.
 
 | Merge-gate item                         | State                                                                                                              |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Final head CI green                     | ✅ push + PR CI on `78a42b2` (run IDs below)                                                                       |
-| Connected DATAPASSCONTROL runtime smoke | ⚠️ Replica only (live snapshot on a local mongod). **Real ClusterDP not run.**                                     |
+| Connected DATAPASSCONTROL runtime smoke | ✅ Real ClusterDP, read-only (plus the earlier replica smoke)                                                      |
 | Source-mode / fallback behaviour        | ✅ legacy-adapter, seed-disabled, fallback-error verified at runtime; seed-empty / mixed / error verified by tests |
 | Workspaces                              | ✅ create from preset, blank, switch, per-workspace tabs/bookmarks, save/restore/undo, reload persistence          |
-| No authority / write regression         | ✅ writes fail closed; replica unchanged after smoke                                                               |
+| No authority / write regression         | ✅ writes fail closed; ClusterDP unchanged after smoke (7 collections, same counts)                                |
 | Home / portfolio UX usable              | ✅ Today, Ready to test, Blocked, Resume, Websites, Knowledge, Recent, reconciliation, project cards               |
 | Known limitations documented            | ✅ below                                                                                                           |
 
@@ -26,6 +26,24 @@ Read after `docs/CLAUDE_FULL_HANDOFF_2026-09-24.md` and `docs/CODEX_SUPPORT_2026
 
 - Code head `78a42b2`: push `Datapass Debug CI` **36066388912**, PR `CI` **36066395243** — see `gh run view <id>`.
 - Local, on Windows (Node 26, pnpm 10.11.0 lockfile): `prettier --check` (only the git-excluded `.claude/launch.json` flagged), `eslint .` clean, `svelte-check` 0 errors (11 pre-existing warnings in untouched files), `vitest` 104 passed / 3 skipped (76 before), `vite build` OK, CLI `tsc` OK.
+
+### Connected smoke — real ClusterDP
+
+Run on 2026-09-25 from the user's machine (IP already on the DATAPASSCONTROL access list). The configuration was the MODE B+ block of `.env.example` in a gitignored `.env`; the user entered the password there, and it never passed through chat or logs.
+
+- Header `Control source: legacy-adapter`; rail `Live · legacy-adapter`; Home `Source: live · DATAPASSCONTROL · dataprojects_control · 31 entities · 31 open work items · 2 organizations · read-only`, 31 cards.
+- `/?org=foil` → 6 entities. The only reconciliation finding is `foil` / `foil_project` duplicate roots; Wind and Hydro now sit under `foil_project`.
+- `/?org=datapass` → 10 entities, including `datapass_portfolio`, with no reconciliation finding (the default project is now a project entity). Ready 4, blocked 0.
+- `/?project=mongoku_datapass` → 1 card; `TEST-MONGOKU` is in Ready to test and the gate conflict is gone.
+- All 27 page and API routes returned 200 in 100–450 ms against real BSON data.
+- `PUT /api/datapass/workspace` → 403; `/api/health` → `mongo-read-only`, `writesEnabled: false`.
+- DATAPASSCONTROL afterwards: exactly the 7 collections, with the same counts (31 / 2 / 134 / 33 / 34 / 34 / 4). No `control_*` collection was created.
+
+Also fixed after the replica smoke:
+
+- **Mongo host unreachable → 30–90 s hangs.** Clients had no `serverSelectionTimeoutMS`, so the 30 s driver default applied. Measured with the source down: `/` went from 60.8 s to 5.3 s, `/projects` from 30.4 s to 5.2 s, and the report API from 59.6 s to 10.0 s; `/api/health` stayed under 0.1 s. The default is 5 s, set by `MONGOKU_SERVER_SELECTION_TIMEOUT_MS`; a URI that sets `serverSelectionTimeoutMS` keeps its own value. The Power Ops embedded-Mongoku test (PowerToy_UI PR #4) had reported this symptom and should now be re-run: `.	ests
+ative\web-embedded.ps1 -RealUrl http://localhost:3100/`.
+- The Home no longer flags the intentionally bounded Recent list (latest 30 of 34 events) as a source problem.
 
 ### Runtime smoke — replica of live data
 
@@ -76,21 +94,23 @@ Observed:
 - **Power Ops summary card** not built; `/?project=<id>` and `/?org=<id>` are the URLs it should open.
 - `readCollection` in the legacy path is bounded at 2000 rows with a visible truncation warning. Home report steps keep their existing per-step limits.
 
-## Remaining gate: connected smoke
+## Re-running the connected smoke
 
-1. Put a **read-only** ClusterDP URI in a local `.env` using the MODE B+ block of `.env.example`.
-2. Run `pnpm dev` and open `/`. Expect `Control source: legacy-adapter`, rail `Live · legacy-adapter`, and Home `Source: live · … 31 entities … 2 organizations · read-only` (30 + `datapass_portfolio` from the applied batch).
-3. Open `/?org=foil`, `/?org=datapass` and `/?project=mongoku_datapass`. Since the applied batch, the reconciliation panel should list two review findings: `foil` / `foil_project` duplicate roots (now with no children under `foil`), and the `datapass` default project that is a product. The `TEST-MONGOKU` gate conflict should be gone, because the item is now `ready`.
-4. Confirm that `PUT /api/datapass/workspace` returns 403 and that `dataprojects_control` still has exactly its 7 collections.
-5. If all of this holds, mark PR #1 ready and merge.
+The smoke passed, as recorded above. To repeat it:
+
+1. Put a ClusterDP URI in a local `.env` using the MODE B+ block of `.env.example`. Prefer a dedicated `read`-only user on `dataprojects_control` over the operator account.
+2. Run `pnpm dev` and check the header, the rail and the Home source line against the results above.
+3. Mongoku persists its connection list, URI included, in `MONGOKU_DATABASE_FILE`. If that points to the gitignored `.mongoku.db`, delete the file after a credential change so the new `.env` value is used.
 
 ## DATAPASSCONTROL batch — applied 2026-09-25
 
 This batch was approved by the user and applied through the MongoDB MCP, then verified by reading every record back. It is recorded as event `GLOBAL-PORTFOLIO-RECONCILIATION-2026-09-25`, whose `details.rollback` holds before-images of every changed field. Nothing was deleted, and FOIL Core Truth was not touched.
 
-1. `work_items.TEST-MONGOKU-20260924`: `blocked` → **`ready`** (not `done`), with CI and handoff evidence. Mark it `done` only after the connected smoke passes.
+1. `work_items.TEST-MONGOKU-20260924`: `blocked` → `ready`, with CI and handoff evidence, then set to `done` after the connected smoke passed.
 2. `entities.mongoku_datapass` and `repositories.julian-passebecq/Mongoku-datapass`: head `daa857e`, code head `78a42b2`, CI runs 36066516884 / 36066525144, status `pr_open_ci_green_replica_smoke_passed_connected_smoke_pending`, plus the new stop point and next action.
 3. `foil_wind` and `foil_hydro` now have `parent_entity_id` = `foil_project` (`previous_parent_entity_id: foil` is kept). Relationship `FOIL-NAV-005` (`foil_project` contains Wind) was added. `foil` is retained, because relationships, `T004`/`B010`, 2 events and 4 repositories still reference it.
 4. Entity `datapass_portfolio` was added, with relationships `DP-PORT-001..009` (`contains_product`) to the 9 Datapass-organization entities. This change is additive only: product parents and `organizations.datapass.default_project_id` (still `datapass`) are unchanged until their consumers are reviewed.
 
-Still open: the switch of `default_project_id`, and retiring or aliasing the legacy `foil` node.
+Follow-up, applied on user request: `organizations.datapass.default_project_id` switched from `datapass` to `datapass_portfolio`. Consumer check: in Mongoku only the Home reconciliation reads it, and GitHub code search over the owner's default branches found no other reader. The rollback is logged on the same event.
+
+Still open: retiring or aliasing the legacy `foil` node, and optionally re-parenting Datapass products under `datapass_portfolio`.
