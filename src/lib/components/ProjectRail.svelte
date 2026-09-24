@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import type { Project } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
