@@ -51,10 +51,28 @@
 		}
 	}
 
-	function createInstance() {
-		const preset = presets.find((candidate) => candidate.id === instance?.presetId) || presets[0];
-		const created = workspaceUi.newInstance(preset);
+	function createBlankInstance() {
+		workspaceUi.newInstance();
+		navigate("/");
+	}
+
+	function duplicateInstance() {
+		const created = workspaceUi.duplicateCurrent();
 		const first = created?.tabs[0];
+		if (first) {
+			navigate(first.href);
+		}
+	}
+
+	function createPresetInstance(event: Event) {
+		const select = event.currentTarget as HTMLSelectElement;
+		const preset = presets.find((candidate) => candidate.id === select.value);
+		select.value = "";
+		if (!preset) {
+			return;
+		}
+		const created = workspaceUi.newInstance(preset);
+		const first = created.tabs[0];
 		if (first) {
 			navigate(first.href);
 		}
@@ -109,11 +127,32 @@
 
 		<button
 			type="button"
-			onclick={createInstance}
+			onclick={createBlankInstance}
 			class="shrink-0 rounded-md border border-[var(--border-color)] px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]"
-			title="Open another workspace instance"
+			title="Open a blank workspace instance"
 		>
-			+ Workspace
+			+ Blank
+		</button>
+
+		<select
+			value=""
+			onchange={createPresetInstance}
+			class="shrink-0 rounded-md border border-[var(--border-color)] bg-transparent px-2 py-1 text-[11px]"
+			title="Create a new workspace from a preset"
+		>
+			<option value="">+ Preset…</option>
+			{#each presets as preset}
+				<option value={preset.id}>{preset.name}</option>
+			{/each}
+		</select>
+
+		<button
+			type="button"
+			onclick={duplicateInstance}
+			class="shrink-0 rounded-md border border-[var(--border-color)] px-2 py-1 text-[11px] hover:bg-[var(--hover-background)]"
+			title="Duplicate the current workspace with its tabs and bookmarks"
+		>
+			Duplicate
 		</button>
 
 		<div class="h-5 w-px shrink-0 bg-[var(--border-color)]"></div>
