@@ -1,30 +1,26 @@
 import { describe, expect, it } from "vitest";
-import {
-	applyReportSemantics,
-	normalizeReportLimit,
-	normalizeWorkStatus,
-} from "$lib/datapass/reportSemantics";
+import { applyReportSemantics, normalizeReportLimit, normalizeWorkStatus } from "$lib/datapass/reportSemantics";
 import { reportCatalog } from "$lib/datapass/reporting";
 
 describe("FOIL report semantics", () => {
 	it("surfaces a blocked P0 embedded task from a P0_P1 parent", () => {
-		const rows = applyReportSemantics(
-			"FOIL_P0_BLOCKERS",
-			"blockers",
-			"backlog",
-			[
-				{
-					_id: "BL-PARENT",
-					priority: "P0_P1",
-					status: "ACTIVE",
-					title: "Parent",
-					tasks: [
-						{ id: "task-1", label: "Critical child", priority: "P0", status: "BLOCKED" },
-						{ id: "task-2", label: "Finished child", priority: "P0", status: "QUALIFIED_COMPLETE" },
-					],
-				},
-			],
-		);
+		const rows = applyReportSemantics("FOIL_P0_BLOCKERS", "blockers", "backlog", [
+			{
+				_id: "BL-PARENT",
+				priority: "P0_P1",
+				status: "ACTIVE",
+				title: "Parent",
+				tasks: [
+					{ id: "task-1", label: "Critical child", priority: "P0", status: "BLOCKED" },
+					{
+						id: "task-2",
+						label: "Finished child",
+						priority: "P0",
+						status: "QUALIFIED_COMPLETE",
+					},
+				],
+			},
+		]);
 
 		expect(rows).toHaveLength(1);
 		expect(rows[0]._id).toBe("BL-PARENT::task-1");
@@ -33,22 +29,17 @@ describe("FOIL report semantics", () => {
 	});
 
 	it("does not expose QUALIFIED_COMPLETE as executable next work", () => {
-		const rows = applyReportSemantics(
-			"FOIL_NEXT",
-			"backlog",
-			"backlog",
-			[
-				{
-					_id: "BL-1",
-					priority: "P0_P1",
-					status: "ACTIVE",
-					tasks: [
-						{ id: "done", title: "Done", priority: "P0", status: "QUALIFIED_COMPLETE" },
-						{ id: "ready", title: "Ready", priority: "P1", status: "READY" },
-					],
-				},
-			],
-		);
+		const rows = applyReportSemantics("FOIL_NEXT", "backlog", "backlog", [
+			{
+				_id: "BL-1",
+				priority: "P0_P1",
+				status: "ACTIVE",
+				tasks: [
+					{ id: "done", title: "Done", priority: "P0", status: "QUALIFIED_COMPLETE" },
+					{ id: "ready", title: "Ready", priority: "P1", status: "READY" },
+				],
+			},
+		]);
 
 		expect(rows.some((row) => row._id === "BL-1::done")).toBe(false);
 		expect(rows.some((row) => row._id === "BL-1::ready")).toBe(true);
