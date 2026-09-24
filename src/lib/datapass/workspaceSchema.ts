@@ -22,6 +22,7 @@ export const projectSchema = z.object({
 	parentProjectId: z.string().min(1).optional(),
 	category: z.string(),
 	progress: z.number().min(0).max(100),
+	progressKnown: z.boolean().optional(),
 	activeItems: z.number().int().min(0),
 	kanbanStatus: workStatus,
 	statusQueryId: z.string().min(1).optional(),
@@ -29,6 +30,14 @@ export const projectSchema = z.object({
 	githubRepo: z.string().optional(),
 	mongoContextKey: z.string().optional(),
 	mongoNamespaces: z.array(z.string()).optional(),
+	rawStatus: z.string().optional(),
+	rawEntityType: z.string().optional(),
+	organizationId: z.string().optional(),
+	parentEntityId: z.string().optional(),
+	health: z.string().optional(),
+	testReadiness: z.string().optional(),
+	nextAction: z.string().optional(),
+	canonicalRepo: z.string().optional(),
 });
 
 export const workItemSchema = z.object({
@@ -45,6 +54,11 @@ export const workItemSchema = z.object({
 	externalAuthority: z.string().optional(),
 	externalProjectRef: z.string().optional(),
 	externalBacklogRef: z.string().optional(),
+	rawStatus: z.string().optional(),
+	rawKind: z.string().optional(),
+	rawPriority: z.string().optional(),
+	severity: z.string().optional(),
+	nextAction: z.string().optional(),
 });
 
 export const instructionProfileSchema = z.object({
@@ -272,6 +286,10 @@ export const workspaceExportSchema = z
 		metadata: z.object({
 			name: z.string(),
 			source: z.enum(["seed", "mongo", "import"]),
+			sourceMode: z
+				.enum(["workspace-v1", "legacy-adapter", "seed-empty", "seed-disabled", "fallback-error"])
+				.optional(),
+			warning: z.string().optional(),
 			exportedAt: z.string(),
 			controlDatabase: z.string().optional(),
 		}),
