@@ -69,6 +69,7 @@ which is the Datapass Workbench / Mosaic VS Code learning/workbench product.
 DataPass VS Code and Mongoku are complementary, not replacements for each other.
 
 **DataPass VS Code**
+
 - selected developer/work scope;
 - Git and source revisions;
 - cloud/tool qualification;
@@ -78,6 +79,7 @@ DataPass VS Code and Mongoku are complementary, not replacements for each other.
 - developer execution preparation and receipts.
 
 **Mongoku**
+
 - enterprise/portfolio view;
 - organizations and typed project/tool/domain nodes;
 - global attention and test queue;
@@ -295,17 +297,17 @@ Claude has MongoDB Atlas access. Resolve current resources through FOIL PM `reso
 
 ### Core operational authorities
 
-| Authority | Atlas project | Database | Responsibility |
-|---|---|---|---|
-| Project Management | FOIL Project Management | `foil_project_management` | Routing, portfolio, backlog, events, stakeholder questions, resource registry, architecture index |
-| Core Truth | FOIL Core Truth | `foil_control` | Accepted machine/evidence state, sources, validation |
-| STUDY | FOIL STUDY | `foil_study` | Scientific paper/report decomposition and transferability |
-| AI Reasoning | logical authority FOIL AI Reasoning; Atlas project currently labelled `FOIL AI Thinkink` | `foil_ai_reasoning` | Durable non-authoritative rationale, hypotheses, derivations, validation plans |
-| IT DEV | FOIL IT DEV | `foil_it_dev` | Software/cloud/data architecture, contracts, ADRs |
-| FRONT | FOIL FRONT | `foil_front` | Front/application/visual representation state and decisions |
-| Work Archive | FOIL Work Archive | `foil_work_archive` | Artifact provenance, checkpoints, material history |
-| Databricks Lab | FOIL Databricks Lab | `foil_lab` | Frozen/versioned Databricks contracts, campaigns and model profiles |
-| Fabric Lab | FOIL Ms Fabric | `foil_fabric_lab` | Fabric lab/runtime metadata |
+| Authority          | Atlas project                                                                            | Database                  | Responsibility                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------- |
+| Project Management | FOIL Project Management                                                                  | `foil_project_management` | Routing, portfolio, backlog, events, stakeholder questions, resource registry, architecture index |
+| Core Truth         | FOIL Core Truth                                                                          | `foil_control`            | Accepted machine/evidence state, sources, validation                                              |
+| STUDY              | FOIL STUDY                                                                               | `foil_study`              | Scientific paper/report decomposition and transferability                                         |
+| AI Reasoning       | logical authority FOIL AI Reasoning; Atlas project currently labelled `FOIL AI Thinkink` | `foil_ai_reasoning`       | Durable non-authoritative rationale, hypotheses, derivations, validation plans                    |
+| IT DEV             | FOIL IT DEV                                                                              | `foil_it_dev`             | Software/cloud/data architecture, contracts, ADRs                                                 |
+| FRONT              | FOIL FRONT                                                                               | `foil_front`              | Front/application/visual representation state and decisions                                       |
+| Work Archive       | FOIL Work Archive                                                                        | `foil_work_archive`       | Artifact provenance, checkpoints, material history                                                |
+| Databricks Lab     | FOIL Databricks Lab                                                                      | `foil_lab`                | Frozen/versioned Databricks contracts, campaigns and model profiles                               |
+| Fabric Lab         | FOIL Ms Fabric                                                                           | `foil_fabric_lab`         | Fabric lab/runtime metadata                                                                       |
 
 Additional initialized domains exist, including:
 
