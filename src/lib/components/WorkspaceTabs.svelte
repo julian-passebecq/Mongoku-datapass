@@ -141,7 +141,7 @@
 			title="Create a new workspace from a preset"
 		>
 			<option value="">+ Preset…</option>
-			{#each presets as preset}
+			{#each presets as preset (preset.id)}
 				<option value={preset.id}>{preset.name}</option>
 			{/each}
 		</select>
