@@ -264,7 +264,7 @@ async function registryParent(
 	if (!parentId) {
 		return undefined;
 	}
-	const parent = await collection.findOne({ _id: parentId });
+	const parent = await collection.findOne({ _id: parentId } as Filter<Document>);
 	return parent ? ({ ...parent } as Record<string, unknown>) : undefined;
 }
 
@@ -309,7 +309,7 @@ async function resolveRegistryRecord(
 		await selected.client.connect();
 		const registry = selected.client.db(pmDatabase).collection("resource_registry");
 
-		let matches = await registry.find({ _id: source.resourceRef }).limit(2).toArray();
+		let matches = await registry.find({ _id: source.resourceRef } as Filter<Document>).limit(2).toArray();
 
 		if (matches.length === 0 && source.database) {
 			matches = await registry
