@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
 	import type { ReportResult } from "$lib/datapass/reporting";
 
 	let { data } = $props();
@@ -10,6 +11,7 @@
 	const sectionRows = (report: ReportResult | undefined, id: string) =>
 		report?.sections.find((section) => section.id === id)?.rows ?? [];
 
+	const organizations = $derived(sectionRows(globalReport, "organizations"));
 	const entities = $derived(sectionRows(globalReport, "entities"));
 	const globalWork = $derived(sectionRows(globalReport, "work"));
 	const audits = $derived(sectionRows(globalReport, "audits"));
@@ -57,6 +59,38 @@
 		return text(row, "test_readiness") || "UNCLASSIFIED";
 	}
 
+	let selectedCategory = $state(page.url.searchParams.get("category") || "all");
+	let selectedReadiness = $state(page.url.searchParams.get("readiness") || "all");
+	const selectedOrganization = $derived(page.url.searchParams.get("org") || "all");
+
+	const categories = $derived(
+		Array.from(new Set(entities.map((entity) => text(entity, "category")).filter(Boolean))).sort(),
+	);
+	const readinessValues = $derived(
+		Array.from(new Set(entities.map((entity) => text(entity, "test_readiness")).filter(Boolean))).sort(),
+	);
+
+	function inOrganization(entity: Record<string, unknown>): boolean {
+		const organizationId = text(entity, "organization_id");
+		if (selectedOrganization === "all") {
+			return true;
+		}
+		if (selectedOrganization === "independent") {
+			return !organizationId;
+		}
+		return organizationId === selectedOrganization;
+	}
+
+	const visibleEntities = $derived(
+		entities.filter(
+			(entity) =>
+				inOrganization(entity) &&
+				(selectedCategory === "all" || text(entity, "category") === selectedCategory) &&
+				(selectedReadiness === "all" || text(entity, "test_readiness") === selectedReadiness),
+		),
+	);
+
+	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
 	const testQueue = $derived(
 		globalWork.filter(
 			(item) =>
@@ -64,7 +98,12 @@
 				["ready", "verify", "blocked"].includes(text(item, "status").toLowerCase()),
 		),
 	);
-	const readyToTest = $derived(testQueue.filter((item) => text(item, "status").toLowerCase() === "ready"));
+	const visibleTestQueue = $derived(
+		testQueue.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
+	);
+	const readyToTest = $derived(
+		visibleTestQueue.filter((item) => text(item, "status").toLowerCase() === "ready"),
+	);
 
 	const sourceAvailable = $derived(globalReport?.sections.some((section) => section.trace.resolved) ?? false);
 	const foilSourceAvailable = $derived(foilReport?.sections.some((section) => section.trace.resolved) ?? false);
@@ -94,10 +133,66 @@
 		</div>
 	</div>
 
+	<section class="rounded-xl border border-[var(--border-color)] p-4">
+		<div class="flex flex-wrap items-center gap-2">
+			<a
+				href={resolve("/")}
+				class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
+					(selectedOrganization === "all"
+						? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+						: "border-[var(--border-color)]")}
+			>
+				All
+			</a>
+			{#each organizations as organization}
+				{@const organizationId = text(organization, "organization_id")}
+				<a
+					href={resolve("/?org=" + organizationId)}
+					class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
+						(selectedOrganization === organizationId
+							? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+							: "border-[var(--border-color)]")}
+				>
+					{text(organization, "name")}
+				</a>
+			{/each}
+			<a
+				href={resolve("/?org=independent")}
+				class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
+					(selectedOrganization === "independent"
+						? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+						: "border-[var(--border-color)]")}
+			>
+				Independent
+			</a>
+
+			<div class="ml-auto flex flex-wrap gap-2">
+				<select
+					bind:value={selectedCategory}
+					class="rounded-lg border border-[var(--border-color)] bg-transparent px-2 py-1.5 text-xs"
+				>
+					<option value="all">All categories</option>
+					{#each categories as category}
+						<option value={category}>{category}</option>
+					{/each}
+				</select>
+				<select
+					bind:value={selectedReadiness}
+					class="rounded-lg border border-[var(--border-color)] bg-transparent px-2 py-1.5 text-xs"
+				>
+					<option value="all">All readiness</option>
+					{#each readinessValues as value}
+						<option value={value}>{value}</option>
+					{/each}
+				</select>
+			</div>
+		</div>
+	</section>
+
 	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
 		<div class="rounded-xl border border-[var(--border-color)] p-5">
 			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Projects / entities</p>
-			<p class="mt-2 text-3xl font-semibold">{entities.length}</p>
+			<p class="mt-2 text-3xl font-semibold">{visibleEntities.length}</p>
 		</div>
 		<div class="rounded-xl border border-[var(--border-color)] p-5">
 			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Important global work</p>
@@ -126,17 +221,17 @@
 		</div>
 	{/if}
 
-	{#if testQueue.length > 0}
+	{#if visibleTestQueue.length > 0}
 		<section class="rounded-xl border border-[var(--border-color)]">
 			<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
 				<div>
 					<h2 class="text-sm font-semibold">Test / verification queue</h2>
 					<p class="mt-1 text-[10px] text-[var(--text-muted)]">Global portfolio gates only; detailed domain backlogs stay authoritative in their own systems.</p>
 				</div>
-				<span class="rounded-full bg-[var(--hover-background)] px-2 py-1 text-[10px]">{testQueue.length} gates</span>
+				<span class="rounded-full bg-[var(--hover-background)] px-2 py-1 text-[10px]">{visibleTestQueue.length} gates</span>
 			</div>
 			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
-				{#each testQueue as item}
+				{#each visibleTestQueue as item}
 					<article class="rounded-lg border border-[var(--border-color)] p-3">
 						<div class="flex items-center justify-between gap-2">
 							<span class="text-[10px] font-semibold uppercase tracking-wide">{text(item, "priority")}</span>
@@ -154,7 +249,7 @@
 	{/if}
 
 	<div class="grid gap-5 xl:grid-cols-2">
-		{#each entities as entity, __eachIndex0 (__eachIndex0)}
+		{#each visibleEntities as entity, __eachIndex0 (__eachIndex0)}
 			{@const id = entityId(entity)}
 			{@const canonicalRepo = text(entity, "canonical_repo") || text(repoFor(id) ?? {}, "repo")}
 			{@const projectWork = workFor(id)}
