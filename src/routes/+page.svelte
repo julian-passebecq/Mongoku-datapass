@@ -297,7 +297,8 @@
 						<p class="truncate text-xs font-medium">{text(item.row, "name") || entityId(item.row)}</p>
 						<p class="mt-0.5 truncate text-[10px] text-[var(--text-muted)]">
 							{text(item.row, "entity_type") || text(item.row, "entity_level") || "node"}
-							{#if text(item.row, "category")} · {text(item.row, "category")}{/if}
+							{#if text(item.row, "category")}
+								· {text(item.row, "category")}{/if}
 						</p>
 					</div>
 					<span class="rounded-full border border-[var(--border-color)] px-2 py-0.5 text-[9px]">
