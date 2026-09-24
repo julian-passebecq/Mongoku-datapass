@@ -222,9 +222,7 @@ export function adaptLegacyGlobalWorkspace(
 	entityRows: Record<string, unknown>[],
 	workItemRows: Record<string, unknown>[],
 ): { projects: Project[]; workItems: WorkItem[] } {
-	const workItems = workItemRows
-		.map(legacyWorkItemToWorkspaceItem)
-		.filter((item): item is WorkItem => item !== null);
+	const workItems = workItemRows.map(legacyWorkItemToWorkspaceItem).filter((item): item is WorkItem => item !== null);
 
 	const knownEntityIds = new Set(
 		entityRows.map((row) => text(row, "entity_id") || text(row, "id")).filter((id) => id.length > 0),
