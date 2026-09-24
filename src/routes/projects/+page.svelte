@@ -180,7 +180,7 @@
 			<div class="rounded-xl border border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
 				Detailed FOIL tasks are not authoritative here. This view may contain global portfolio work or explicit FOIL
 				references only.
-				<a href="/foil/kanban" class="ml-2 font-medium no-underline hover:underline">Open FOIL PM backlog →</a>
+				<a href={resolve("/foil/kanban")} class="ml-2 font-medium no-underline hover:underline">Open FOIL PM backlog →</a>
 			</div>
 		{/if}
 		<div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
