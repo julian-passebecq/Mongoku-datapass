@@ -5,11 +5,12 @@
 
 	let title = $state("");
 	let note = $state("");
+	let scope = $state<"workspace" | "all">("workspace");
 	let message = $state("");
 
 	function save() {
 		try {
-			const checkpoint = workspaceUi.saveCheckpoint(title, note);
+			const checkpoint = workspaceUi.saveCheckpoint(title, note, scope);
 			message = "Saved " + checkpoint.title + ".";
 			title = "";
 			note = "";
@@ -50,8 +51,8 @@
 		<p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Workspace States</p>
 		<h1 class="mt-2 text-3xl font-semibold tracking-tight">Saved workspace checkpoints</h1>
 		<p class="mt-2 max-w-4xl text-sm leading-6 text-[var(--text-muted)]">
-			Checkpoint tabs, workspace instances, bookmarks and panel state without rolling back Mongo project data. Each
-			restore creates one automatic undo point.
+			Checkpoint the current workspace or all workspaces without rolling back Mongo project data. Tabs, bookmarks and
+			panel state are session state; each restore creates one automatic undo point.
 		</p>
 	</div>
 
@@ -59,6 +60,22 @@
 		<section class="rounded-xl border border-[var(--border-color)] p-5">
 			<h2 class="text-sm font-semibold">Save current state</h2>
 			<div class="mt-4 grid gap-3">
+				<div class="inline-flex w-fit rounded-lg border border-[var(--border-color)] p-1">
+					<button
+						type="button"
+						onclick={() => (scope = "workspace")}
+						class={"rounded-md px-3 py-1.5 text-xs " + (scope === "workspace" ? "bg-[var(--hover-background)] font-medium" : "")}
+					>
+						Current workspace
+					</button>
+					<button
+						type="button"
+						onclick={() => (scope = "all")}
+						class={"rounded-md px-3 py-1.5 text-xs " + (scope === "all" ? "bg-[var(--hover-background)] font-medium" : "")}
+					>
+						All workspaces
+					</button>
+				</div>
 				<input
 					bind:value={title}
 					maxlength="120"
@@ -113,10 +130,17 @@
 					<div class="flex items-start justify-between gap-4 px-4 py-4">
 						<div>
 							<p class="text-sm font-semibold">{checkpoint.title}</p>
-							<p class="mt-1 text-[10px] text-[var(--text-muted)]">{checkpoint.createdAt}</p>
+							<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+								{checkpoint.scope === "workspace"
+									? "Workspace · " + (checkpoint.workspaceName || "current")
+									: checkpoint.scope === "all"
+										? "All workspaces"
+										: "Legacy all-workspace save"}
+								· {checkpoint.createdAt}
+							</p>
 							{#if checkpoint.note}<p class="mt-2 text-xs">{checkpoint.note}</p>{/if}
 							<p class="mt-2 text-[10px] text-[var(--text-muted)]">
-								{checkpoint.snapshot.instances.length} workspace instance(s)
+								{checkpoint.snapshot.instances.length} workspace instance(s) · {checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0)} tab(s)
 							</p>
 						</div>
 						<div class="flex shrink-0 gap-2">
