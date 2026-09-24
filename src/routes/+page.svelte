@@ -92,9 +92,7 @@
 
 	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
 	const visibleGlobalWork = $derived(
-		globalWork.filter(
-			(item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id")),
-		),
+		globalWork.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
 	);
 
 	const globalWorkColumns = [
@@ -143,24 +141,19 @@
 	}
 
 	const scheduledGlobalWork = $derived(
-		visibleGlobalWork
-			.filter((item) => scheduledAt(item))
-			.sort((a, b) => scheduledAt(a).localeCompare(scheduledAt(b))),
+		visibleGlobalWork.filter((item) => scheduledAt(item)).sort((a, b) => scheduledAt(a).localeCompare(scheduledAt(b))),
 	);
 
 	const testQueue = $derived(
 		globalWork.filter(
 			(item) =>
-				text(item, "kind") === "test" &&
-				["ready", "verify", "blocked"].includes(text(item, "status").toLowerCase()),
+				text(item, "kind") === "test" && ["ready", "verify", "blocked"].includes(text(item, "status").toLowerCase()),
 		),
 	);
 	const visibleTestQueue = $derived(
 		testQueue.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
 	);
-	const readyToTest = $derived(
-		visibleTestQueue.filter((item) => text(item, "status").toLowerCase() === "ready"),
-	);
+	const readyToTest = $derived(visibleTestQueue.filter((item) => text(item, "status").toLowerCase() === "ready"));
 
 	const sourceAvailable = $derived(globalReport?.sections.some((section) => section.trace.resolved) ?? false);
 	const foilSourceAvailable = $derived(foilReport?.sections.some((section) => section.trace.resolved) ?? false);
@@ -217,7 +210,7 @@
 				>
 					<option value="all">All readiness</option>
 					{#each readinessValues as value}
-						<option value={value}>{value}</option>
+						<option {value}>{value}</option>
 					{/each}
 				</select>
 			</div>
@@ -270,9 +263,7 @@
 						<h3 class="text-xs font-semibold">{column.label}</h3>
 						<div class="mt-3 space-y-2">
 							{#each visibleGlobalWork.filter((item) => workBucket(item) === column.id) as item}
-								<article
-									class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2"
-								>
+								<article class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2">
 									<div class="flex items-center justify-between gap-2">
 										<span class="text-[9px] font-semibold uppercase">{text(item, "priority")}</span>
 										<span class="text-[9px] text-[var(--text-muted)]">{text(item, "project_id")}</span>
