@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import type { ReportResult } from "$lib/datapass/reporting";
 
 	let { data } = $props();
