@@ -2,6 +2,7 @@
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import type { ReportResult } from "$lib/datapass/reporting";
+	import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
 	let { data } = $props();
 	const reports = $derived(data.reports as ReportResult[]);
@@ -88,8 +89,8 @@
 	);
 
 	function hierarchyRows(rows: Record<string, unknown>[]) {
-		const byParent = new Map<string, Record<string, unknown>[]>();
-		const knownIds = new Set(rows.map((row) => entityId(row)));
+		const byParent = new SvelteMap<string, Record<string, unknown>[]>();
+		const knownIds = new SvelteSet(rows.map((row) => entityId(row)));
 		for (const row of rows) {
 			const parentId = text(row, "parent_entity_id");
 			const key = parentId && knownIds.has(parentId) ? parentId : "";
@@ -101,11 +102,13 @@
 			bucket.sort((a, b) => (text(a, "name") || entityId(a)).localeCompare(text(b, "name") || entityId(b)));
 		}
 		const flattened: Array<{ row: Record<string, unknown>; depth: number }> = [];
-		const visited = new Set<string>();
+		const visited = new SvelteSet<string>();
 		const append = (parentId: string, depth: number) => {
 			for (const row of byParent.get(parentId) ?? []) {
 				const id = entityId(row);
-				if (!id || visited.has(id)) continue;
+				if (!id || visited.has(id)) {
+					continue;
+				}
 				visited.add(id);
 				flattened.push({ row, depth });
 				append(id, depth + 1);
@@ -114,7 +117,9 @@
 		append("", 0);
 		for (const row of rows) {
 			const id = entityId(row);
-			if (id && !visited.has(id)) flattened.push({ row, depth: 0 });
+			if (id && !visited.has(id)) {
+				flattened.push({ row, depth: 0 });
+			}
 		}
 		return flattened;
 	}
