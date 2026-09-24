@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
