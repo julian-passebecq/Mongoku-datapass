@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { page } from "$app/state";
 	import type { ReportResult } from "$lib/datapass/reporting";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -206,12 +206,12 @@
 		</div>
 		<div class="flex gap-2">
 			<a
-				href={appPath("/projects")}
+				href={resolve("/projects")}
 				class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
 				>Portfolio board</a
 			>
 			<a
-				href={appPath("/foil")}
+				href={resolve("/foil")}
 				class="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white no-underline dark:bg-white dark:text-black"
 				>Open FOIL</a
 			>
@@ -220,14 +220,14 @@
 
 	<section class="rounded-xl border border-[var(--border-color)] p-4">
 		<div class="flex flex-wrap items-center gap-2">
-			<a href={appPath(organizationHref("all"))} class={organizationClass("all")}>All</a>
+			<a href={resolve(organizationHref("all"))} class={organizationClass("all")}>All</a>
 			{#each organizations as organization (text(organization, "organization_id"))}
 				{@const organizationId = text(organization, "organization_id")}
-				<a href={appPath(organizationHref(organizationId))} class={organizationClass(organizationId)}>
+				<a href={resolve(organizationHref(organizationId))} class={organizationClass(organizationId)}>
 					{text(organization, "name")}
 				</a>
 			{/each}
-			<a href={appPath(organizationHref("independent"))} class={organizationClass("independent")}>Independent</a>
+			<a href={resolve(organizationHref("independent"))} class={organizationClass("independent")}>Independent</a>
 
 			<div class="ml-auto flex flex-wrap gap-2">
 				<select
@@ -468,7 +468,7 @@
 					<div class="mt-4 rounded-lg border border-[var(--border-color)] p-3">
 						<div class="flex items-center justify-between">
 							<p class="text-xs font-semibold">FOIL PM summary</p>
-							<a href={appPath("/foil")} class="text-[10px] no-underline hover:underline">Open FOIL cockpit</a>
+							<a href={resolve("/foil")} class="text-[10px] no-underline hover:underline">Open FOIL cockpit</a>
 						</div>
 						{#if foilSourceAvailable}
 							<p class="mt-2 text-[10px] text-[var(--text-muted)]">
