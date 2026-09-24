@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Print formatted legacy adapter
-        run: pnpm prettier src/lib/datapass/legacyGlobalAdapter.ts
-
       - name: Format check
         run: pnpm format:check
 
