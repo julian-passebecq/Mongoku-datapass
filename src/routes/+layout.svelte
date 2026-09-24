@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$app/paths";
+	import { appPath } from "$lib/navigation";
 	import { createPortal } from "$lib/actions/portal";
 	import Breadcrumbs from "$lib/components/Breadcrumbs.svelte";
 	import Notifications from "$lib/components/Notifications.svelte";
@@ -45,7 +45,7 @@
 	<header class="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--background-color)]/90 backdrop-blur">
 		<div class="mx-auto max-w-[110rem] px-4 sm:px-6 lg:px-8">
 			<div class="flex min-h-14 items-center gap-3">
-				<a href={resolve("/")} class="inline-flex items-center gap-2 no-underline hover:no-underline">
+				<a href={appPath("/")} class="inline-flex items-center gap-2 no-underline hover:no-underline">
 					<span
 						class="inline-flex h-7 w-7 select-none items-center justify-center rounded-md bg-black text-sm font-semibold text-white dark:bg-white dark:text-black"
 						>D</span
@@ -60,7 +60,7 @@
 				<nav class="hidden items-center gap-1 xl:flex">
 					{#each nav as item, __eachIndex0 (__eachIndex0)}
 						<a
-							href={resolve(item.href)}
+							href={appPath(item.href)}
 							class="rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
 							>{item.label}</a
 						>
@@ -80,7 +80,7 @@
 							<span class="hidden max-w-32 truncate text-xs text-[var(--text-muted)] md:inline" title={data.user.email}
 								>{data.user.name || data.user.email || "User"}</span
 							>
-							<form method="POST" action={resolve("/auth/logout")}>
+							<form method="POST" action={appPath("/auth/logout")}>
 								<button
 									type="submit"
 									class="inline-flex cursor-pointer items-center justify-center rounded-md px-2 py-1 text-xs text-[var(--text-muted)] transition-colors hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
@@ -95,7 +95,7 @@
 			<nav class="flex gap-1 overflow-x-auto pb-2 xl:hidden">
 				{#each nav as item, __eachIndex1 (__eachIndex1)}
 					<a
-						href={resolve(item.href)}
+						href={appPath(item.href)}
 						class="whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-muted)] no-underline hover:bg-[var(--hover-background)] hover:text-[var(--text)]"
 						>{item.label}</a
 					>
