@@ -42,7 +42,17 @@ function statusTokens(raw: string): string[] {
 
 /** Qualifiers that mean a positive-looking status is not actually reached (`not_deployed`, `partial_green`). */
 const UNFINISHED_TOKENS = ["not", "partial", "partially", "unverified", "incomplete", "unresolved"];
-const DONE_TOKENS = ["done", "complete", "completed", "closed", "resolved", "verified", "reconciled", "green", "mitigated"];
+const DONE_TOKENS = [
+	"done",
+	"complete",
+	"completed",
+	"closed",
+	"resolved",
+	"verified",
+	"reconciled",
+	"green",
+	"mitigated",
+];
 const BLOCKED_TOKENS = ["blocked", "blocker", "blocking"];
 const WAITING_TOKENS = ["waiting", "awaiting", "wait", "external", "business", "user", "francis"];
 const VERIFY_TOKENS = [

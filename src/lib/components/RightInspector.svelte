@@ -2,7 +2,12 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
-	import { isFoilRootProject, type Project, type SavedMongoQuery, type WorkspacePreset } from "$lib/datapass/controlPlane";
+	import {
+		isFoilRootProject,
+		type Project,
+		type SavedMongoQuery,
+		type WorkspacePreset,
+	} from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let { projects, queries, presets } = $props<{
