@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 
 	let { data } = $props();
@@ -16,7 +16,7 @@
 		if (projectId) {
 			params.set("project", projectId);
 		}
-		goto(appPath("/queries?" + params.toString()));
+		goto(resolve("/queries?" + params.toString()));
 	}
 </script>
 
