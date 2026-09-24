@@ -63,9 +63,7 @@
 	let selectedReadiness = $state(page.url.searchParams.get("readiness") || "all");
 	const selectedOrganization = $derived(page.url.searchParams.get("org") || "all");
 
-	const categories = $derived(
-		Array.from(new Set(entities.map((entity) => text(entity, "category")).filter(Boolean))).sort(),
-	);
+	const categories = $derived(Array.from(new Set(entities.map((entity) => text(entity, "category")).filter(Boolean))).sort());
 	const readinessValues = $derived(
 		Array.from(new Set(entities.map((entity) => text(entity, "test_readiness")).filter(Boolean))).sort(),
 	);
@@ -92,8 +90,31 @@
 
 	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
 	const visibleGlobalWork = $derived(
-		globalWork.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
+		globalWork.filter(
+			(item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id")),
+		),
 	);
+
+	const globalWorkColumns = [
+		{ id: "actionable", label: "Actionable" },
+		{ id: "blocked", label: "Blocked / waiting" },
+		{ id: "verify", label: "Verify" },
+		{ id: "other", label: "Later / other" },
+	] as const;
+
+	function organizationHref(organizationId: string): string {
+		return organizationId === "all" ? "/" : "/?org=" + organizationId;
+	}
+
+	function organizationClass(organizationId: string): string {
+		const active = selectedOrganization === organizationId;
+		return (
+			"rounded-full border px-3 py-1.5 text-xs no-underline " +
+			(active
+				? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+				: "border-[var(--border-color)]")
+		);
+	}
 
 	function workBucket(item: Record<string, unknown>): "actionable" | "blocked" | "verify" | "other" {
 		const status = text(item, "status").toLowerCase();
@@ -169,36 +190,14 @@
 
 	<section class="rounded-xl border border-[var(--border-color)] p-4">
 		<div class="flex flex-wrap items-center gap-2">
-			<a
-				href={resolve("/")}
-				class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
-					(selectedOrganization === "all"
-						? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-						: "border-[var(--border-color)]")}
-			>
-				All
-			</a>
+			<a href={resolve(organizationHref("all"))} class={organizationClass("all")}>All</a>
 			{#each organizations as organization}
 				{@const organizationId = text(organization, "organization_id")}
-				<a
-					href={resolve("/?org=" + organizationId)}
-					class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
-						(selectedOrganization === organizationId
-							? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-							: "border-[var(--border-color)]")}
-				>
+				<a href={resolve(organizationHref(organizationId))} class={organizationClass(organizationId)}>
 					{text(organization, "name")}
 				</a>
 			{/each}
-			<a
-				href={resolve("/?org=independent")}
-				class={"rounded-full border px-3 py-1.5 text-xs no-underline " +
-					(selectedOrganization === "independent"
-						? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-						: "border-[var(--border-color)]")}
-			>
-				Independent
-			</a>
+			<a href={resolve(organizationHref("independent"))} class={organizationClass("independent")}>Independent</a>
 
 			<div class="ml-auto flex flex-wrap gap-2">
 				<select
@@ -259,20 +258,19 @@
 		<section class="rounded-xl border border-[var(--border-color)]">
 			<div class="border-b border-[var(--border-color)] px-4 py-3">
 				<h2 class="text-sm font-semibold">Global work board</h2>
-				<p class="mt-1 text-[10px] text-[var(--text-muted)]">Macro portfolio work only. Detailed project/domain backlogs remain external where authoritative.</p>
+				<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+					Macro portfolio work only. Detailed project/domain backlogs remain external where authoritative.
+				</p>
 			</div>
 			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
-				{#each [
-					{ id: "actionable", label: "Actionable" },
-					{ id: "blocked", label: "Blocked / waiting" },
-					{ id: "verify", label: "Verify" },
-					{ id: "other", label: "Later / other" },
-				] as column}
+				{#each globalWorkColumns as column}
 					<section class="rounded-lg bg-[var(--hover-background)] p-3">
 						<h3 class="text-xs font-semibold">{column.label}</h3>
 						<div class="mt-3 space-y-2">
 							{#each visibleGlobalWork.filter((item) => workBucket(item) === column.id) as item}
-								<article class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2">
+								<article
+									class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2"
+								>
 									<div class="flex items-center justify-between gap-2">
 										<span class="text-[9px] font-semibold uppercase">{text(item, "priority")}</span>
 										<span class="text-[9px] text-[var(--text-muted)]">{text(item, "project_id")}</span>
@@ -314,9 +312,13 @@
 			<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
 				<div>
 					<h2 class="text-sm font-semibold">Test / verification queue</h2>
-					<p class="mt-1 text-[10px] text-[var(--text-muted)]">Global portfolio gates only; detailed domain backlogs stay authoritative in their own systems.</p>
+					<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+						Global portfolio gates only; detailed domain backlogs stay authoritative in their own systems.
+					</p>
 				</div>
-				<span class="rounded-full bg-[var(--hover-background)] px-2 py-1 text-[10px]">{visibleTestQueue.length} gates</span>
+				<span class="rounded-full bg-[var(--hover-background)] px-2 py-1 text-[10px]">
+					{visibleTestQueue.length} gates
+				</span>
 			</div>
 			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
 				{#each visibleTestQueue as item}
