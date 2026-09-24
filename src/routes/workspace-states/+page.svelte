@@ -19,10 +19,7 @@
 	}
 
 	function checkpointTabCount(checkpoint: WorkspaceCheckpoint): number {
-		return checkpoint.snapshot.instances.reduce(
-			(count, instance) => count + instance.tabs.length,
-			0,
-		);
+		return checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0);
 	}
 
 	function checkpointSummary(checkpoint: WorkspaceCheckpoint): string {
@@ -32,10 +29,7 @@
 	}
 
 	function scopeButtonClass(value: "workspace" | "all"): string {
-		return (
-			"rounded-md px-3 py-1.5 text-xs " +
-			(scope === value ? "bg-[var(--hover-background)] font-medium" : "")
-		);
+		return "rounded-md px-3 py-1.5 text-xs " + (scope === value ? "bg-[var(--hover-background)] font-medium" : "");
 	}
 
 	function save() {
@@ -91,18 +85,10 @@
 			<h2 class="text-sm font-semibold">Save current state</h2>
 			<div class="mt-4 grid gap-3">
 				<div class="inline-flex w-fit rounded-lg border border-[var(--border-color)] p-1">
-					<button
-						type="button"
-						onclick={() => (scope = "workspace")}
-						class={scopeButtonClass("workspace")}
-					>
+					<button type="button" onclick={() => (scope = "workspace")} class={scopeButtonClass("workspace")}>
 						Current workspace
 					</button>
-					<button
-						type="button"
-						onclick={() => (scope = "all")}
-						class={scopeButtonClass("all")}
-					>
+					<button type="button" onclick={() => (scope = "all")} class={scopeButtonClass("all")}>
 						All workspaces
 					</button>
 				</div>
