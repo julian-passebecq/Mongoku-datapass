@@ -7,7 +7,8 @@
 	const collapsed = $derived(workspaceUi.current()?.leftPanelCollapsed ?? false);
 
 	const roots = $derived(projects.filter((project: Project) => !project.parentProjectId));
-	const childrenOf = (projectId: string) => projects.filter((project: Project) => project.parentProjectId === projectId);
+	const childrenOf = (projectId: string) =>
+		projects.filter((project: Project) => project.parentProjectId === projectId);
 	const architectureHref = (projectId: string) =>
 		projectId === "foil" ? appPath("/foil/architecture") : appPath("/architecture") + "?project=" + projectId;
 	const workHref = (projectId: string) =>
