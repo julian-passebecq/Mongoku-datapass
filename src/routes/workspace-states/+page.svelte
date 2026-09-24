@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { workspaceUi, type WorkspaceCheckpoint } from "$lib/stores/workspaceUi.svelte";
 
 	let title = $state("");
