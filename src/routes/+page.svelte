@@ -44,10 +44,27 @@
 		return workFor(id).filter((item) => /block|hold|wait/i.test(text(item, "status"))).length;
 	}
 
-	function nextAction(id: string): string {
+	function nextAction(id: string, entity?: Record<string, unknown>): string {
+		const entityAction = entity ? text(entity, "next_action") : "";
+		if (entityAction) {
+			return entityAction;
+		}
 		const item = workFor(id).find((candidate) => text(candidate, "next_action")) ?? workFor(id)[0];
 		return item ? text(item, "next_action") || text(item, "title") : "";
 	}
+
+	function readiness(row: Record<string, unknown>): string {
+		return text(row, "test_readiness") || "UNCLASSIFIED";
+	}
+
+	const testQueue = $derived(
+		globalWork.filter(
+			(item) =>
+				text(item, "kind") === "test" &&
+				["ready", "verify", "blocked"].includes(text(item, "status").toLowerCase()),
+		),
+	);
+	const readyToTest = $derived(testQueue.filter((item) => text(item, "status").toLowerCase() === "ready"));
 
 	const sourceAvailable = $derived(globalReport?.sections.some((section) => section.trace.resolved) ?? false);
 	const foilSourceAvailable = $derived(foilReport?.sections.some((section) => section.trace.resolved) ?? false);
@@ -77,7 +94,7 @@
 		</div>
 	</div>
 
-	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+	<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
 		<div class="rounded-xl border border-[var(--border-color)] p-5">
 			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Projects / entities</p>
 			<p class="mt-2 text-3xl font-semibold">{entities.length}</p>
@@ -93,6 +110,10 @@
 			</p>
 		</div>
 		<div class="rounded-xl border border-[var(--border-color)] p-5">
+			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">Ready to test</p>
+			<p class="mt-2 text-3xl font-semibold">{readyToTest.length}</p>
+		</div>
+		<div class="rounded-xl border border-[var(--border-color)] p-5">
 			<p class="text-[10px] uppercase tracking-wide text-[var(--text-muted)]">FOIL P0 attention</p>
 			<p class="mt-2 text-3xl font-semibold">{foilP0.length}</p>
 		</div>
@@ -103,6 +124,33 @@
 			The global source is not bound in this runtime. Configure <code>DATAPASS_SOURCE_BINDINGS</code>; Mongoku will not
 			create or infer a replacement database.
 		</div>
+	{/if}
+
+	{#if testQueue.length > 0}
+		<section class="rounded-xl border border-[var(--border-color)]">
+			<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
+				<div>
+					<h2 class="text-sm font-semibold">Test / verification queue</h2>
+					<p class="mt-1 text-[10px] text-[var(--text-muted)]">Global portfolio gates only; detailed domain backlogs stay authoritative in their own systems.</p>
+				</div>
+				<span class="rounded-full bg-[var(--hover-background)] px-2 py-1 text-[10px]">{testQueue.length} gates</span>
+			</div>
+			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+				{#each testQueue as item}
+					<article class="rounded-lg border border-[var(--border-color)] p-3">
+						<div class="flex items-center justify-between gap-2">
+							<span class="text-[10px] font-semibold uppercase tracking-wide">{text(item, "priority")}</span>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">{text(item, "status")}</span>
+						</div>
+						<h3 class="mt-2 text-sm font-medium">{text(item, "title")}</h3>
+						<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(item, "project_id")}</p>
+						{#if text(item, "next_action")}
+							<p class="mt-3 text-xs leading-5">{text(item, "next_action")}</p>
+						{/if}
+					</article>
+				{/each}
+			</div>
+		</section>
 	{/if}
 
 	<div class="grid gap-5 xl:grid-cols-2">
@@ -139,12 +187,23 @@
 					</div>
 				</div>
 
-				{#if nextAction(id)}
+				{#if nextAction(id, entity)}
 					<div class="mt-4">
 						<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Next action</p>
-						<p class="mt-1 text-xs leading-5">{nextAction(id)}</p>
+						<p class="mt-1 text-xs leading-5">{nextAction(id, entity)}</p>
 					</div>
 				{/if}
+
+				<div class="mt-4 grid grid-cols-2 gap-2 text-[10px]">
+					<div class="rounded-lg bg-[var(--hover-background)] p-2">
+						<p class="text-[9px] uppercase text-[var(--text-muted)]">Health</p>
+						<p class="mt-1 font-medium">{text(entity, "health") || "not classified"}</p>
+					</div>
+					<div class="rounded-lg bg-[var(--hover-background)] p-2">
+						<p class="text-[9px] uppercase text-[var(--text-muted)]">Verified</p>
+						<p class="mt-1 font-medium">{text(entity, "last_verified_at") || text(entity, "updated_at") || "—"}</p>
+					</div>
+				</div>
 
 				<div class="mt-4 border-t border-[var(--border-color)] pt-3 text-[10px] text-[var(--text-muted)]">
 					<p>Canonical repo: {canonicalRepo || "not registered"}</p>
