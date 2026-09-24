@@ -91,6 +91,40 @@
 	);
 
 	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
+	const visibleGlobalWork = $derived(
+		globalWork.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
+	);
+
+	function workBucket(item: Record<string, unknown>): "actionable" | "blocked" | "verify" | "other" {
+		const status = text(item, "status").toLowerCase();
+		if (/block|hold|wait/.test(status)) {
+			return "blocked";
+		}
+		if (/verify|review|unknown/.test(status)) {
+			return "verify";
+		}
+		if (/ready|ongoing|open|active|todo|in_progress/.test(status)) {
+			return "actionable";
+		}
+		return "other";
+	}
+
+	function scheduledAt(item: Record<string, unknown>): string {
+		return (
+			text(item, "due_at") ||
+			text(item, "dueDate") ||
+			text(item, "next_review_at") ||
+			text(item, "nextReviewAt") ||
+			text(item, "targetReviewDate")
+		);
+	}
+
+	const scheduledGlobalWork = $derived(
+		visibleGlobalWork
+			.filter((item) => scheduledAt(item))
+			.sort((a, b) => scheduledAt(a).localeCompare(scheduledAt(b))),
+	);
+
 	const testQueue = $derived(
 		globalWork.filter(
 			(item) =>
@@ -220,6 +254,60 @@
 			create or infer a replacement database.
 		</div>
 	{/if}
+
+	<div class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+		<section class="rounded-xl border border-[var(--border-color)]">
+			<div class="border-b border-[var(--border-color)] px-4 py-3">
+				<h2 class="text-sm font-semibold">Global work board</h2>
+				<p class="mt-1 text-[10px] text-[var(--text-muted)]">Macro portfolio work only. Detailed project/domain backlogs remain external where authoritative.</p>
+			</div>
+			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+				{#each [
+					{ id: "actionable", label: "Actionable" },
+					{ id: "blocked", label: "Blocked / waiting" },
+					{ id: "verify", label: "Verify" },
+					{ id: "other", label: "Later / other" },
+				] as column}
+					<section class="rounded-lg bg-[var(--hover-background)] p-3">
+						<h3 class="text-xs font-semibold">{column.label}</h3>
+						<div class="mt-3 space-y-2">
+							{#each visibleGlobalWork.filter((item) => workBucket(item) === column.id) as item}
+								<article class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2">
+									<div class="flex items-center justify-between gap-2">
+										<span class="text-[9px] font-semibold uppercase">{text(item, "priority")}</span>
+										<span class="text-[9px] text-[var(--text-muted)]">{text(item, "project_id")}</span>
+									</div>
+									<p class="mt-1 text-[11px] font-medium leading-4">{text(item, "title")}</p>
+								</article>
+							{:else}
+								<p class="text-[10px] text-[var(--text-muted)]">None</p>
+							{/each}
+						</div>
+					</section>
+				{/each}
+			</div>
+		</section>
+
+		<section class="rounded-xl border border-[var(--border-color)]">
+			<div class="border-b border-[var(--border-color)] px-4 py-3">
+				<h2 class="text-sm font-semibold">Calendar / reviews</h2>
+				<p class="mt-1 text-[10px] text-[var(--text-muted)]">Only explicit due or review dates are shown.</p>
+			</div>
+			<div class="divide-y divide-[var(--border-color)]">
+				{#each scheduledGlobalWork.slice(0, 8) as item}
+					<div class="px-4 py-3">
+						<div class="flex items-start justify-between gap-3">
+							<p class="text-xs font-medium">{text(item, "title")}</p>
+							<span class="shrink-0 text-[10px] text-[var(--text-muted)]">{scheduledAt(item)}</span>
+						</div>
+						<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(item, "project_id")}</p>
+					</div>
+				{:else}
+					<p class="p-4 text-xs text-[var(--text-muted)]">No explicit global due/review dates for this filter.</p>
+				{/each}
+			</div>
+		</section>
+	</div>
 
 	{#if visibleTestQueue.length > 0}
 		<section class="rounded-xl border border-[var(--border-color)]">
