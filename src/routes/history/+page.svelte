@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { SvelteURLSearchParams } from "svelte/reactivity";
 
 	let { data } = $props();
@@ -18,7 +18,7 @@
 		if (right) {
 			params.set("right", right);
 		}
-		goto(appPath("/history?" + params.toString()));
+		goto(resolve("/history?" + params.toString()));
 	}
 
 	async function restore(revision: number) {
