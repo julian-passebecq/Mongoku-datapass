@@ -112,24 +112,24 @@
 						<div class="mt-3 space-y-1 text-[11px]">
 							<button
 								type="button"
-								onclick={() => goto(projectRoute("board", selectedProject.id))}
+								onclick={() => goto(resolve(projectRoute("board", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Authoritative backlog" : "Project board"}</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(projectRoute("architecture", selectedProject.id))}
+								onclick={() => goto(resolve(projectRoute("architecture", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Authority architecture" : "AI graph"}</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(projectRoute("calendar", selectedProject.id))}
+								onclick={() => goto(resolve(projectRoute("calendar", selectedProject.id)))}
 								class="block hover:underline">Calendar</button
 							>
 							<button
 								type="button"
-								onclick={() => goto(projectRoute("notes", selectedProject.id))}
+								onclick={() => goto(resolve(projectRoute("notes", selectedProject.id)))}
 								class="block hover:underline"
 								>{selectedProject.id === "foil" ? "Recent authority changes" : "Notes"}</button
 							>
