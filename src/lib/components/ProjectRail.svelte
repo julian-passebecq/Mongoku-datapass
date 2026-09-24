@@ -1,0 +1,161 @@
+<script lang="ts">
+	import { resolve } from "$app/paths";
+	import type { Project } from "$lib/datapass/controlPlane";
+	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
+
+	let { projects, sourceMode } = $props<{ projects: Project[]; sourceMode?: string }>();
+	const collapsed = $derived(workspaceUi.current()?.leftPanelCollapsed ?? false);
+	/** Seed projects are demo configuration; they must never read as live portfolio state. */
+	const isDemo = $derived(!sourceMode || sourceMode.startsWith("seed") || sourceMode === "fallback-error");
+
+	const roots = $derived(projects.filter((project: Project) => !project.parentProjectId));
+	const childrenOf = (projectId: string) =>
+		projects.filter((project: Project) => project.parentProjectId === projectId);
+	// Raw app paths; the template resolves each exactly once (resolving twice throws during SSR).
+	const architectureHref = (projectId: string) =>
+		projectId === "foil" ? "/foil/architecture" : "/architecture?project=" + encodeURIComponent(projectId);
+	const workHref = (projectId: string) =>
+		projectId === "foil" ? "/foil/kanban" : "/projects?project=" + encodeURIComponent(projectId);
+</script>
+
+<aside
+	class="sticky top-[57px] hidden h-[calc(100vh-57px)] shrink-0 border-r border-[var(--border-color)] bg-[var(--background-color)] lg:flex lg:flex-col"
+	class:w-14={collapsed}
+	class:w-64={!collapsed}
+>
+	<div class="flex items-center justify-between border-b border-[var(--border-color)] px-3 py-3">
+		{#if !collapsed}
+			<div>
+				<p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Workspace</p>
+				<p class="mt-0.5 text-sm font-semibold">Projects</p>
+				{#if isDemo}
+					<p
+						class="mt-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+						data-testid="rail-source"
+						title={"Control source: " + (sourceMode ?? "unknown")}
+					>
+						DEMO SEED — not live data
+					</p>
+				{:else}
+					<p class="mt-1 text-[9px] text-[var(--text-muted)]" data-testid="rail-source">Live · {sourceMode}</p>
+				{/if}
+			</div>
+		{/if}
+		<button
+			type="button"
+			onclick={() => workspaceUi.toggleLeftPanel()}
+			class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border-color)] text-xs hover:bg-[var(--hover-background)]"
+			aria-label={collapsed ? "Expand project rail" : "Collapse project rail"}
+			title={collapsed ? "Expand project rail" : "Collapse project rail"}
+		>
+			{collapsed ? ">" : "<"}
+		</button>
+	</div>
+
+	{#if collapsed}
+		<div class="flex flex-1 flex-col items-center gap-2 py-3">
+			<a
+				href={resolve("/projects")}
+				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
+				title="Projects">P</a
+			>
+			<a
+				href={resolve("/architecture")}
+				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
+				title="AI architecture">A</a
+			>
+			<a
+				href={resolve("/instructions")}
+				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
+				title="Instructions">I</a
+			>
+			<a
+				href={resolve("/ai-json")}
+				class="rounded-md px-2 py-1 text-xs font-semibold no-underline hover:bg-[var(--hover-background)]"
+				title="AI JSON">J</a
+			>
+		</div>
+	{:else}
+		<div class="flex-1 overflow-y-auto p-3">
+			<div class="mb-3 grid grid-cols-2 gap-2">
+				<a
+					href={resolve("/projects")}
+					class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-center text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"
+					>Board</a
+				>
+				<a
+					href={resolve("/architecture")}
+					class="rounded-md border border-[var(--border-color)] px-2 py-1.5 text-center text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"
+					>AI graph</a
+				>
+			</div>
+
+			<div class="space-y-2">
+				{#each roots as project, __eachIndex0 (__eachIndex0)}
+					<details open class="group rounded-lg border border-[var(--border-color)]">
+						<summary class="cursor-pointer list-none px-3 py-2">
+							<div class="flex items-center justify-between gap-2">
+								<div class="min-w-0">
+									<p class="truncate text-xs font-semibold">{project.name}</p>
+									<p class="truncate text-[10px] text-[var(--text-muted)]">{project.category}</p>
+								</div>
+								<span class="text-[10px] text-[var(--text-muted)]">{childrenOf(project.id).length}</span>
+							</div>
+						</summary>
+						<div class="border-t border-[var(--border-color)] px-2 py-2">
+							<a
+								href={resolve(architectureHref(project.id))}
+								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
+								>Architecture</a
+							>
+							<a
+								href={resolve(workHref(project.id))}
+								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
+								>{project.id === "foil" ? "Authoritative backlog" : "Tasks"}</a
+							>
+							{#if project.id === "foil"}
+								<a
+									href={resolve("/foil/resources")}
+									class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
+									>Authorities & resources</a
+								>
+							{/if}
+							{#if project.githubRepo}
+								<a
+									href={"https://github.com/" + project.githubRepo}
+									target="_blank"
+									rel="noreferrer"
+									class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]">GitHub</a
+								>
+							{/if}
+							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
+								<a
+									href={resolve(
+										project.id === "foil" ? "/foil/report/FOIL_PROJECTS" : "/architecture?project=" + child.id,
+									)}
+									class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline"
+								>
+									<span class="font-medium">{child.name}</span>
+									<span class="ml-1 text-[var(--text-muted)]">· {child.tags.slice(0, 2).join(", ")}</span>
+								</a>
+							{/each}
+						</div>
+					</details>
+				{/each}
+			</div>
+		</div>
+
+		<div class="border-t border-[var(--border-color)] p-3">
+			<a
+				href={resolve("/instructions")}
+				class="block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
+				>Instruction library</a
+			>
+			<a
+				href={resolve("/ai-json")}
+				class="mt-1 block rounded-md px-2 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
+				>AI JSON workspace</a
+			>
+		</div>
+	{/if}
+</aside>

@@ -1,3 +1,5 @@
+import type { ResolvedPathname } from "$app/types";
+
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
@@ -18,6 +20,13 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+}
+
+// Workspace tabs, bookmarks and filters build runtime query-string paths.
+// Keep SvelteKit's native resolve() at runtime while allowing those validated
+// app-internal strings through the generated route typing.
+declare module "$app/paths" {
+	export function resolve(path: string): ResolvedPathname;
 }
 
 export {};

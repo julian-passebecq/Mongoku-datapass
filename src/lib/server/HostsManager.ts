@@ -8,7 +8,12 @@ export interface Host {
 	_id: string;
 }
 
-const DEFAULT_HOSTS = env.MONGOKU_DEFAULT_HOST ? env.MONGOKU_DEFAULT_HOST.split(";") : ["localhost:27017"];
+const DEFAULT_HOSTS =
+	env.MONGOKU_DISABLE_DEFAULT_HOSTS === "true"
+		? []
+		: env.MONGOKU_DEFAULT_HOST
+			? env.MONGOKU_DEFAULT_HOST.split(";")
+			: ["localhost:27017"];
 const DATABASE_FILE = env.MONGOKU_DATABASE_FILE || path.join(os.homedir(), ".mongoku.db");
 
 export class HostsManager {
