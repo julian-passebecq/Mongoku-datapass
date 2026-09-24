@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { workspaceUi, type WorkspaceCheckpoint } from "$lib/stores/workspaceUi.svelte";
 
 	let title = $state("");
@@ -49,7 +49,7 @@
 			message = "Workspace restored. Undo is available.";
 			const first = workspaceUi.current()?.tabs[0];
 			if (first) {
-				goto(appPath(first.href));
+				goto(resolve(first.href));
 			}
 		} catch (error) {
 			message = error instanceof Error ? error.message : "Restore failed";
@@ -62,7 +62,7 @@
 			message = "Restore undone.";
 			const first = workspaceUi.current()?.tabs[0];
 			if (first) {
-				goto(appPath(first.href));
+				goto(resolve(first.href));
 			}
 		} catch (error) {
 			message = error instanceof Error ? error.message : "Undo failed";
