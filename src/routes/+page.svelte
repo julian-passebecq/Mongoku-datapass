@@ -461,12 +461,18 @@
 
 				{#if text(entity, "current_product_version") || text(entity, "target_design_version") || text(entity, "architecture_version")}
 					<div class="mt-4 rounded-lg border border-[var(--border-color)] p-3 text-[10px]">
-						<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Version / architecture</p>
+						<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+							Version / architecture
+						</p>
 						{#if text(entity, "current_product_version")}
-							<p class="mt-1">Current product: {text(entity, "current_product_version")} · {text(entity, "current_product_state")}</p>
+							<p class="mt-1">
+								Current product: {text(entity, "current_product_version")} · {text(entity, "current_product_state")}
+							</p>
 						{/if}
 						{#if text(entity, "target_design_version")}
-							<p class="mt-1">Target design: {text(entity, "target_design_version")} · {text(entity, "target_design_state")}</p>
+							<p class="mt-1">
+								Target design: {text(entity, "target_design_version")} · {text(entity, "target_design_state")}
+							</p>
 						{/if}
 						{#if text(entity, "architecture_version")}
 							<p class="mt-1">Architecture: {text(entity, "architecture_version")} · {text(entity, "status")}</p>
