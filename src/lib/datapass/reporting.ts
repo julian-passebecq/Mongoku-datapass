@@ -329,6 +329,18 @@ export const reportCatalog: ReportDefinition[] = [
 				label: "Projects",
 			},
 			{
+				id: "relationships",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "relationships",
+				operation: "find",
+				filter: {},
+				sort: { relationship_id: 1 },
+				limit: 500,
+				optional: true,
+				label: "Portfolio relationships",
+			},
+			{
 				id: "work",
 				sourceId: "DATAPROJECTS_GLOBAL",
 				authority: "DATAPASSCONTROL",
