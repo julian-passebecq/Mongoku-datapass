@@ -309,7 +309,10 @@ async function resolveRegistryRecord(
 		await selected.client.connect();
 		const registry = selected.client.db(pmDatabase).collection("resource_registry");
 
-		let matches = await registry.find({ _id: source.resourceRef } as Filter<Document>).limit(2).toArray();
+		let matches = await registry
+			.find({ _id: source.resourceRef } as Filter<Document>)
+			.limit(2)
+			.toArray();
 
 		if (matches.length === 0 && source.database) {
 			matches = await registry
