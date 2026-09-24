@@ -8,6 +8,25 @@
 	let scope = $state<"workspace" | "all">("workspace");
 	let message = $state("");
 
+	function checkpointScopeLabel(checkpoint: {
+		scope?: "workspace" | "all";
+		workspaceName?: string;
+	}): string {
+		if (checkpoint.scope === "workspace") {
+			return "Workspace · " + (checkpoint.workspaceName || "current");
+		}
+		if (checkpoint.scope === "all") {
+			return "All workspaces";
+		}
+		return "Legacy all-workspace save";
+	}
+
+	function checkpointTabCount(checkpoint: {
+		snapshot: { instances: Array<{ tabs: unknown[] }> };
+	}): number {
+		return checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0);
+	}
+
 	function save() {
 		try {
 			const checkpoint = workspaceUi.saveCheckpoint(title, note, scope);
@@ -64,14 +83,16 @@
 					<button
 						type="button"
 						onclick={() => (scope = "workspace")}
-						class={"rounded-md px-3 py-1.5 text-xs " + (scope === "workspace" ? "bg-[var(--hover-background)] font-medium" : "")}
+						class={"rounded-md px-3 py-1.5 text-xs " +
+							(scope === "workspace" ? "bg-[var(--hover-background)] font-medium" : "")}
 					>
 						Current workspace
 					</button>
 					<button
 						type="button"
 						onclick={() => (scope = "all")}
-						class={"rounded-md px-3 py-1.5 text-xs " + (scope === "all" ? "bg-[var(--hover-background)] font-medium" : "")}
+						class={"rounded-md px-3 py-1.5 text-xs " +
+							(scope === "all" ? "bg-[var(--hover-background)] font-medium" : "")}
 					>
 						All workspaces
 					</button>
@@ -131,16 +152,11 @@
 						<div>
 							<p class="text-sm font-semibold">{checkpoint.title}</p>
 							<p class="mt-1 text-[10px] text-[var(--text-muted)]">
-								{checkpoint.scope === "workspace"
-									? "Workspace · " + (checkpoint.workspaceName || "current")
-									: checkpoint.scope === "all"
-										? "All workspaces"
-										: "Legacy all-workspace save"}
-								· {checkpoint.createdAt}
+								{checkpointScopeLabel(checkpoint)} · {checkpoint.createdAt}
 							</p>
 							{#if checkpoint.note}<p class="mt-2 text-xs">{checkpoint.note}</p>{/if}
 							<p class="mt-2 text-[10px] text-[var(--text-muted)]">
-								{checkpoint.snapshot.instances.length} workspace instance(s) · {checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0)} tab(s)
+								{checkpoint.snapshot.instances.length} workspace instance(s) · {checkpointTabCount(checkpoint)} tab(s)
 							</p>
 						</div>
 						<div class="flex shrink-0 gap-2">
