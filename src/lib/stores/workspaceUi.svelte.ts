@@ -187,22 +187,35 @@ class WorkspaceUiState {
 	}
 
 	newInstance(preset?: WorkspacePreset) {
-		let instance: WorkspaceInstance;
-		if (preset) {
-			instance = fromPreset(preset, preset.name + " " + (this.instances.length + 1));
-		} else {
-			const current = this.current();
-			instance = {
-				id: makeId("workspace"),
-				name: "Workspace " + (this.instances.length + 1),
-				defaultProjectId: current?.defaultProjectId,
-				tabs: current?.tabs.map((tab) => ({ ...tab, id: makeId("tab") })) ?? [],
-				bookmarks: current?.bookmarks.map((bookmark) => ({ ...bookmark, id: makeId("bookmark") })) ?? [],
-				leftPanelCollapsed: current?.leftPanelCollapsed ?? false,
-				rightPanelOpen: current?.rightPanelOpen ?? true,
-				rightPanelMode: current?.rightPanelMode ?? "context",
-			};
+		const instance: WorkspaceInstance = preset
+			? fromPreset(preset, preset.name + " " + (this.instances.length + 1))
+			: {
+					id: makeId("workspace"),
+					name: "Blank Workspace " + (this.instances.length + 1),
+					tabs: [],
+					bookmarks: [],
+					leftPanelCollapsed: false,
+					rightPanelOpen: true,
+					rightPanelMode: "context",
+				};
+		this.instances.push(instance);
+		this.activeInstanceId = instance.id;
+		this.persist();
+		return instance;
+	}
+
+	duplicateCurrent() {
+		const current = this.current();
+		if (!current) {
+			return this.newInstance();
 		}
+		const instance: WorkspaceInstance = {
+			...structuredClone(current),
+			id: makeId("workspace"),
+			name: current.name + " Copy",
+			tabs: current.tabs.map((tab) => ({ ...tab, id: makeId("tab") })),
+			bookmarks: current.bookmarks.map((bookmark) => ({ ...bookmark, id: makeId("bookmark") })),
+		};
 		this.instances.push(instance);
 		this.activeInstanceId = instance.id;
 		this.persist();
