@@ -617,11 +617,17 @@ let initPromise: Promise<MongoConnections> | null = null;
 export async function getMongo(): Promise<MongoConnections> {
 	if (!mongoConnections) {
 		if (!initPromise) {
+			// Publish the singleton only once hosts are loaded: concurrent callers must wait on
+			// initPromise instead of seeing an instance with no clients (cold-start SOURCE_UNAVAILABLE).
 			initPromise = (async () => {
-				mongoConnections = new MongoConnections();
-				await mongoConnections.initialize();
-				return mongoConnections;
+				const connections = new MongoConnections();
+				await connections.initialize();
+				mongoConnections = connections;
+				return connections;
 			})();
+			initPromise.catch(() => {
+				initPromise = null;
+			});
 		}
 		return initPromise;
 	}
