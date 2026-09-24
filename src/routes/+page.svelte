@@ -126,6 +126,12 @@
 
 	const visibleHierarchy = $derived(hierarchyRows(visibleEntities));
 	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
+	const visibleRelationships = $derived(
+		relationships.filter(
+			(relationship) =>
+				visibleEntityIds.has(text(relationship, "from_id")) && visibleEntityIds.has(text(relationship, "to_id")),
+		),
+	);
 	const visibleGlobalWork = $derived(
 		globalWork.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
 	);
@@ -292,7 +298,7 @@
 					Configurable typed navigation tree. Cross-links stay separate from parent/child navigation.
 				</p>
 			</div>
-			<span class="text-[10px] text-[var(--text-muted)]">{relationships.length} relationship(s)</span>
+			<span class="text-[10px] text-[var(--text-muted)]">{visibleRelationships.length} visible relationship(s)</span>
 		</div>
 		<div class="divide-y divide-[var(--border-color)]">
 			{#each visibleHierarchy as item (entityId(item.row))}
@@ -314,6 +320,18 @@
 				<p class="p-4 text-xs text-[var(--text-muted)]">No hierarchy nodes for this filter.</p>
 			{/each}
 		</div>
+		{#if visibleRelationships.length > 0}
+			<div class="border-t border-[var(--border-color)] px-4 py-3">
+				<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Cross-links</p>
+				<div class="mt-2 flex flex-wrap gap-2">
+					{#each visibleRelationships.slice(0, 12) as relationship (text(relationship, "relationship_id") || text(relationship, "_id"))}
+						<span class="rounded-full bg-[var(--hover-background)] px-2.5 py-1 text-[10px]">
+							{text(relationship, "from_id")} → {text(relationship, "to_id")} · {text(relationship, "type")}
+						</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
 	</section>
 
 	<div class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
@@ -438,6 +456,21 @@
 					<div class="mt-4">
 						<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Next action</p>
 						<p class="mt-1 text-xs leading-5">{nextAction(id, entity)}</p>
+					</div>
+				{/if}
+
+				{#if text(entity, "current_product_version") || text(entity, "target_design_version") || text(entity, "architecture_version")}
+					<div class="mt-4 rounded-lg border border-[var(--border-color)] p-3 text-[10px]">
+						<p class="text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">Version / architecture</p>
+						{#if text(entity, "current_product_version")}
+							<p class="mt-1">Current product: {text(entity, "current_product_version")} · {text(entity, "current_product_state")}</p>
+						{/if}
+						{#if text(entity, "target_design_version")}
+							<p class="mt-1">Target design: {text(entity, "target_design_version")} · {text(entity, "target_design_state")}</p>
+						{/if}
+						{#if text(entity, "architecture_version")}
+							<p class="mt-1">Architecture: {text(entity, "architecture_version")} · {text(entity, "status")}</p>
+						{/if}
 					</div>
 				{/if}
 
