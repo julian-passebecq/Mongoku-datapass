@@ -669,31 +669,26 @@ export const workspacePresets: WorkspacePreset[] = [
 		id: "datapass-command",
 		name: "Datapass",
 		description: "Datapass company workspace for Core, VS Code, Mosaic Workbench, Mongo Control and related tools.",
-		defaultProjectId: "datapass",
 		tabs: [
 			{
 				id: "datapass-home",
 				title: "Datapass",
 				href: "/?org=datapass",
-				projectId: "datapass",
 			},
 			{
 				id: "datapass-projects",
 				title: "Projects",
 				href: "/?org=datapass&view=projects",
-				projectId: "datapass",
 			},
 			{
 				id: "datapass-tests",
 				title: "Test Queue",
 				href: "/?org=datapass&focus=test",
-				projectId: "datapass",
 			},
 			{
 				id: "datapass-states",
 				title: "States",
 				href: "/workspace-states",
-				projectId: "datapass",
 			},
 		],
 		bookmarks: [
