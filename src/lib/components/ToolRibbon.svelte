@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { page } from "$app/state";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -43,21 +43,21 @@
 <div class="border-b border-[var(--border-color)] bg-[var(--background-color)] px-3 py-1.5">
 	<div class="flex items-center gap-1 overflow-x-auto">
 		<a
-			href={appPath(foilMode ? "/foil" : "/")}
+			href={resolve(foilMode ? "/foil" : "/")}
 			class="mr-1 shrink-0 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--text-muted)] no-underline"
 		>
 			{foilMode ? "FOIL" : "Tools"}
 		</a>
 		{#each tools as tool, __eachIndex0 (__eachIndex0)}
 			<a
-				href={appPath(tool.href)}
+				href={resolve(tool.href)}
 				class="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium no-underline hover:bg-[var(--hover-background)]"
 				>{tool.label}</a
 			>
 		{/each}
 		<div class="ml-auto flex shrink-0 gap-1">
 			{#if foilMode}
-				<a href={appPath("/")} class="rounded-md px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
+				<a href={resolve("/")} class="rounded-md px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
 					>Global</a
 				>
 			{/if}
