@@ -19,7 +19,14 @@
 	}
 
 	function checkpointTabCount(checkpoint: WorkspaceCheckpoint): number {
-		return checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0);
+		return checkpoint.snapshot.instances.reduce(
+			(count, instance) => count + instance.tabs.length,
+			0,
+		);
+	}
+
+	function checkpointSummary(checkpoint: WorkspaceCheckpoint): string {
+		return checkpoint.snapshot.instances.length + " workspace instance(s) · " + checkpointTabCount(checkpoint) + " tab(s)";
 	}
 
 	function scopeButtonClass(value: "workspace" | "all"): string {
@@ -156,7 +163,7 @@
 							</p>
 							{#if checkpoint.note}<p class="mt-2 text-xs">{checkpoint.note}</p>{/if}
 							<p class="mt-2 text-[10px] text-[var(--text-muted)]">
-								{checkpoint.snapshot.instances.length} workspace instance(s) · {checkpointTabCount(checkpoint)} tab(s)
+								{checkpointSummary(checkpoint)}
 							</p>
 						</div>
 						<div class="flex shrink-0 gap-2">
