@@ -1,6 +1,6 @@
 # Claude entry point — Mongoku Datapass
 
-Read **[docs/CLAUDE_FULL_HANDOFF_2026-09-24.md](docs/CLAUDE_FULL_HANDOFF_2026-09-24.md)** first, then **[docs/CODEX_SUPPORT_2026-09-24.md](docs/CODEX_SUPPORT_2026-09-24.md)**.
+Read **[docs/CLAUDE_FULL_HANDOFF_2026-09-24.md](docs/CLAUDE_FULL_HANDOFF_2026-09-24.md)** first, then **[docs/CODEX_SUPPORT_2026-09-24.md](docs/CODEX_SUPPORT_2026-09-24.md)**, then the latest status in **[docs/CLAUDE_QUALIFICATION_2026-09-25.md](docs/CLAUDE_QUALIFICATION_2026-09-25.md)** (current head, evidence, remaining merge gate).
 
 Key constraints:
 
