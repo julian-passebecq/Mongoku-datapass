@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Print formatted Claude handoff
-        run: pnpm prettier docs/CLAUDE_FULL_HANDOFF_2026-09-24.md
-
       - name: Format check
         run: pnpm format:check
 
