@@ -774,6 +774,17 @@ export const foilEdges: SystemEdge[] = [
 	{ from: "mongo", to: "databricks", label: "analytics" },
 ];
 
+/**
+ * FOIL root node ids. `foil_project` is the live macro node (organization default project);
+ * `foil` is the seed id and the legacy DATAPASSCONTROL node kept for provenance. Both open the
+ * FOIL cockpit, so retiring or aliasing the legacy node does not change navigation.
+ */
+export const FOIL_ROOT_PROJECT_IDS = ["foil", "foil_project"] as const;
+
+export function isFoilRootProject(projectId: string | null | undefined): boolean {
+	return (FOIL_ROOT_PROJECT_IDS as readonly string[]).includes(projectId ?? "");
+}
+
 export const workStatuses: { id: WorkStatus; label: string }[] = [
 	{ id: "backlog", label: "Backlog" },
 	{ id: "todo", label: "Todo" },

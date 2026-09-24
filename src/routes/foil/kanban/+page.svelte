@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ReportResult } from "$lib/datapass/reporting";
+	import { normalizeWorkStatus } from "$lib/datapass/reportSemantics";
 
 	let { data } = $props();
 	const report = $derived(data.report as ReportResult);
@@ -18,29 +19,8 @@
 	}
 
 	function column(row: Record<string, unknown>): (typeof columns)[number] {
-		const status = text(row, "status").toUpperCase();
-		if (/DONE|CLOSED|RESOLVED|COMPLETE/.test(status)) {
-			return "DONE";
-		}
-		if (/DEFER|FROZEN|HOLD/.test(status)) {
-			return "DEFERRED";
-		}
-		if (/BLOCK/.test(status)) {
-			return "BLOCKED";
-		}
-		if (/WAIT|EXTERNAL|BUSINESS|USER/.test(status)) {
-			return "WAITING_EXTERNAL";
-		}
-		if (/VERIFY|REVIEW|QUALIFIED|PRETEST/.test(status)) {
-			return "VERIFY";
-		}
-		if (/ACTIVE|PROGRESS|DOING|IMPLEMENT/.test(status)) {
-			return "ACTIVE";
-		}
-		if (/READY|OPEN|TODO|NEXT/.test(status)) {
-			return "READY";
-		}
-		return "BACKLOG";
+		const status = normalizeWorkStatus(row.rawStatus ?? row.status);
+		return status === "UNKNOWN" ? "BACKLOG" : status;
 	}
 
 	function impactCount(row: Record<string, unknown>): number {

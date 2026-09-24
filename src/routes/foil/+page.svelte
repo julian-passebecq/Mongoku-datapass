@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import type { ReportResult } from "$lib/datapass/reporting";
+	import { normalizeWorkStatus } from "$lib/datapass/reportSemantics";
 
 	let { data } = $props();
 	const reports = $derived(data.reports as ReportResult[]);
@@ -26,22 +27,10 @@
 	}
 
 	function bucket(row: Record<string, unknown>): string {
-		const normalized = text(row, "displayStatus");
-		if (normalized) {
+		const normalized = text(row, "displayStatus") || normalizeWorkStatus(row.rawStatus ?? row.status);
+		// READY, ACTIVE, BACKLOG and UNKNOWN are all work that can move now.
+		if (["DONE", "BLOCKED", "WAITING_EXTERNAL", "VERIFY", "DEFERRED"].includes(normalized)) {
 			return normalized;
-		}
-		const status = text(row, "status").toUpperCase();
-		if (/DONE|CLOSED|RESOLVED|COMPLETE/.test(status)) {
-			return "DONE";
-		}
-		if (/BLOCK/.test(status)) {
-			return "BLOCKED";
-		}
-		if (/WAIT|USER|BUSINESS|EXTERNAL/.test(status)) {
-			return "WAITING_EXTERNAL";
-		}
-		if (/VERIFY|REVIEW|QUALIFIED|PRETEST/.test(status)) {
-			return "VERIFY";
 		}
 		return "ACTIONABLE";
 	}
