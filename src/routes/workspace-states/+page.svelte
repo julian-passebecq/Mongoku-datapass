@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
-	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
+	import { workspaceUi, type WorkspaceCheckpoint } from "$lib/stores/workspaceUi.svelte";
 
 	let title = $state("");
 	let note = $state("");
 	let scope = $state<"workspace" | "all">("workspace");
 	let message = $state("");
 
-	function checkpointScopeLabel(checkpoint: {
-		scope?: "workspace" | "all";
-		workspaceName?: string;
-	}): string {
+	function checkpointScopeLabel(checkpoint: WorkspaceCheckpoint): string {
 		if (checkpoint.scope === "workspace") {
 			return "Workspace · " + (checkpoint.workspaceName || "current");
 		}
@@ -21,10 +18,15 @@
 		return "Legacy all-workspace save";
 	}
 
-	function checkpointTabCount(checkpoint: {
-		snapshot: { instances: Array<{ tabs: unknown[] }> };
-	}): number {
+	function checkpointTabCount(checkpoint: WorkspaceCheckpoint): number {
 		return checkpoint.snapshot.instances.reduce((count, instance) => count + instance.tabs.length, 0);
+	}
+
+	function scopeButtonClass(value: "workspace" | "all"): string {
+		return (
+			"rounded-md px-3 py-1.5 text-xs " +
+			(scope === value ? "bg-[var(--hover-background)] font-medium" : "")
+		);
 	}
 
 	function save() {
@@ -83,16 +85,14 @@
 					<button
 						type="button"
 						onclick={() => (scope = "workspace")}
-						class={"rounded-md px-3 py-1.5 text-xs " +
-							(scope === "workspace" ? "bg-[var(--hover-background)] font-medium" : "")}
+						class={scopeButtonClass("workspace")}
 					>
 						Current workspace
 					</button>
 					<button
 						type="button"
 						onclick={() => (scope = "all")}
-						class={"rounded-md px-3 py-1.5 text-xs " +
-							(scope === "all" ? "bg-[var(--hover-background)] font-medium" : "")}
+						class={scopeButtonClass("all")}
 					>
 						All workspaces
 					</button>
