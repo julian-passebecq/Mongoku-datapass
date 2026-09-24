@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { onMount } from "svelte";
 	import type { WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
