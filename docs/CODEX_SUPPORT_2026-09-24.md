@@ -1,73 +1,59 @@
 # Codex support — Mongoku / Datapass control-plane
-Date: 2026-09-24
-Observed branch head before this note: 027bb95a42abee7486fc548959c42f702967be67
+
+Date: 2026-09-24  
+Observed implementation head before this note: `027bb95a42abee7486fc548959c42f702967be67`  
 PR: #1
 
 ## Context
 
-This note is a targeted support pass for the current Mongoku/Datapass control-plane work. It does not redefine FOIL authority and it does not replace the existing V4.1 report contract.
+This is a targeted support note for the current Mongoku/Datapass control-plane. It does not redefine FOIL authority and does not replace the existing V4.1 report contract.
 
-Current CI at 027bb95 is green. The old lockfile failure is resolved.
+The implementation head `027bb95...` had green push and PR CI. The old lockfile problem is resolved.
 
 ## Critical runtime mismatch discovered
 
-The live registered DATAPASSCONTROL database was inspected directly:
+The registered live DATAPASSCONTROL database was inspected directly:
 
-- Atlas project: DATAPASSCONTROL
-- cluster: ClusterDP
-- database: dataprojects_control
-- observed collections:
-  - repositories
-  - audit_runs
-  - work_items
-  - organizations
-  - entities
-  - events
-  - relationships
+- Atlas project: `DATAPASSCONTROL`
+- cluster: `ClusterDP`
+- database: `dataprojects_control`
+- observed collections: `repositories`, `audit_runs`, `work_items`, `organizations`, `entities`, `events`, `relationships`
 
-The current app-owned workspace loader in:
+The current app-owned workspace loader in `src/lib/server/datapassControl.ts` expects:
 
-`src/lib/server/datapassControl.ts`
-
-expects:
-
-- projects
-- work_items
-- agent_nodes
-- instruction_profiles
-- saved_queries
-- source_catalog
-- report_catalog
-- workspace_presets
-- system_nodes
-- system_edges
+- `projects`
+- `work_items`
+- `agent_nodes`
+- `instruction_profiles`
+- `saved_queries`
+- `source_catalog`
+- `report_catalog`
+- `workspace_presets`
+- `system_nodes`
+- `system_edges`
 
 and uses `projects` as the first existence check.
 
 ### Why this is a real bug
 
-`loadControlWorkspace()` currently does roughly:
+`loadControlWorkspace()` currently behaves approximately as follows:
 
-1. connect to configured control DB;
-2. read `projects`;
-3. if no projects -> return seed workspace;
-4. catch any error -> return seed workspace.
+1. Connect to the configured control database.
+2. Read `projects`.
+3. If there are no projects, return the seed workspace.
+4. On any error, also return the seed workspace.
 
-Because the live database has `entities`, not `projects`, Mongoku can silently display seed/demo workspace data while a real populated DATAPASSCONTROL database exists.
+Because the live database has `entities`, not `projects`, Mongoku can silently display seed/demo workspace data while a populated DATAPASSCONTROL database exists.
 
-This can make the UI appear healthy while being stale or incomplete.
+That can make the UI look healthy while showing incomplete or stale control-plane state.
 
 ## Required fix
 
-Do not simply rename collections in the live database and do not create a second hidden source of truth.
+Do not rename live collections implicitly and do not create a second hidden source of truth.
 
-Implement an explicit compatibility layer.
-
-Recommended shape:
+Implement an explicit compatibility layer with two persistence shapes:
 
 ```text
-control persistence modes
-
 WORKSPACE_V1
   projects
   work_items
@@ -86,19 +72,17 @@ LEGACY_GLOBAL_GRAPH
 
 At load time:
 
-1. inspect collection availability explicitly;
-2. if workspace-v1 collections exist, load workspace-v1;
-3. otherwise if legacy-global collections exist, use a typed adapter;
-4. otherwise use seed only when the DB is genuinely empty or control persistence is intentionally disabled;
-5. never silently hide connection/schema/validation errors behind seed.
+1. Inspect collection availability explicitly.
+2. If workspace-v1 collections exist, load workspace-v1.
+3. Otherwise, if legacy-global collections exist, use a typed adapter.
+4. Use seed only when the database is genuinely empty or control persistence is intentionally disabled.
+5. Never silently hide connection, schema, or validation errors behind the seed.
 
 ## Legacy adapter expectations
 
 The legacy global schema is not field-compatible with workspace-v1.
 
-Examples observed:
-
-### entities
+Observed `entities` fields include:
 
 ```text
 entity_id
@@ -115,38 +99,34 @@ next_action
 test_readiness
 ```
 
-### work_items
+Observed `work_items` fields include:
 
 ```text
 work_item_id
 kind
 project_id
-priority = P0/P1/...
-status = ongoing/open/ready/blocked/done/...
+priority
+status
 severity
 title
 summary
 next_action
 ```
 
-Do not feed those records directly through the current strict `projectSchema` / `workItemSchema`.
+Do not feed these records directly through the current strict `projectSchema` and `workItemSchema`.
 
-Create normalization functions with explicit provenance, for example:
+Create explicit normalization functions, for example:
 
 ```text
 legacyEntityToProject()
 legacyWorkItemToWorkspaceItem()
 ```
 
-Do not lose original status/severity. Preserve them as raw metadata if a normalized UI state is required.
+Preserve original status and severity as raw metadata when normalized UI states are needed.
 
-## Status mapping must be explicit
+## Status mapping
 
-Current workspace status enums are much smaller than live status vocabularies.
-
-Avoid regex-only destructive normalization in persistence.
-
-Suggested display-only normalization:
+Persistence must keep raw statuses. Display normalization may use a bounded map such as:
 
 ```text
 qualified/main/current/active/ongoing -> ACTIVE
@@ -157,11 +137,11 @@ planned/draft                       -> BACKLOG
 otherwise                           -> UNKNOWN
 ```
 
-Raw values remain authoritative in source records.
+Do not overwrite the source record with the normalized display value.
 
-## Seed fallback bug
+## Seed fallback
 
-Current broad catch:
+The current broad fallback:
 
 ```ts
 catch {
@@ -171,7 +151,7 @@ catch {
 
 must not remain silent.
 
-Return metadata capable of distinguishing at least:
+Expose a source mode that distinguishes at least:
 
 ```text
 mongo
@@ -181,41 +161,39 @@ seed-disabled
 fallback-error
 ```
 
-If fallback-error occurs, surface a visible warning in the UI with a safe message.
+If `fallback-error` occurs, show a visible but safe warning in the UI.
 
 A schema error, missing binding, or connection failure must not look like a normal seed workspace.
 
 ## Write safety
 
-Do not run `saveControlWorkspace(..., "replace")` against the legacy `dataprojects_control` layout until the persistence mode is explicit.
+Do not run `saveControlWorkspace(..., "replace")` against the legacy `dataprojects_control` layout until persistence mode is explicit.
 
-The current replace path deletes every app-owned workspace-v1 collection. Even though those collections are currently absent, future mixed-mode deployments could become dangerous/confusing.
-
-Required guard:
+Required guardrails:
 
 - persistence mode must be known;
-- replace must target only the selected workspace-v1 namespace;
+- replace targets only the selected workspace-v1 namespace;
 - legacy global graph collections are never erased by workspace replacement.
 
 ## FOIL report path
 
-The V4.1 FOIL report fixes at the current head look materially better than the 2026-09-23 snapshot:
+The V4.1 FOIL report fixes at `027bb95...` are materially better than the 2026-09-23 snapshot:
 
 - propagation reads PM `events`, not nonexistent `propagation_queue`;
-- Core conflict matcher includes `kind=conflict`;
+- Core conflict matching includes `kind=conflict`;
 - embedded backlog tasks are surfaced;
 - query limits are bounded;
-- registry-vs-binding mismatch can return explicit unavailable states.
+- registry-vs-binding mismatches can return explicit unavailable states.
 
-Preserve these.
+Preserve these behaviors.
 
-Do not merge FOIL detailed backlog into DATAPASSCONTROL work_items. FOIL reports remain source-aware reads from FOIL authorities.
+Do not merge the detailed FOIL backlog into DATAPASSCONTROL `work_items`. FOIL reports remain source-aware reads from FOIL authorities.
 
-## New FOIL state to be aware of
+## Current FOIL route
 
-FOIL Project Instructions are now confirmed at V4.1.
+FOIL Project Instructions are now user-confirmed at V4.1.
 
-The current Wind Design Lab route is now:
+The current Wind Design Lab route is:
 
 ```text
 PORT-WIND-CAO-LAB
@@ -224,46 +202,46 @@ PORT-WIND-CAO-LAB
 -> julian-passebecq/foil-streamlit-wind-3d-lcoe
 ```
 
-Legacy `foil-3d-stream` is now a donor/reference, not the active Design Lab implementation.
+Legacy `foil-3d-stream` is a donor/reference, not the active Design Lab implementation.
 
-Mongoku should discover this through FOIL PM reports/resource_registry, not through hardcoded repo assumptions.
+Mongoku should discover this through FOIL PM reports and `resource_registry`, not through hardcoded repo assumptions.
 
-## Tests to add
+## Regression tests to add
 
-Add regression tests for:
-
-1. populated legacy DB + no projects collection -> legacy adapter, NOT seed;
-2. empty DB -> seed-empty;
-3. intentionally disabled control DB -> seed-disabled;
-4. connection failure -> fallback-error surfaced;
-5. workspace-v1 DB -> normal mongo mode;
-6. legacy statuses remain available as raw status;
-7. replace operation cannot delete legacy graph collections;
-8. projects page clearly exposes whether its data is mongo/workspace-v1, legacy-adapter, or seed.
+1. Populated legacy DB with no `projects` collection -> legacy adapter, not seed.
+2. Empty DB -> `seed-empty`.
+3. Intentionally disabled control DB -> `seed-disabled`.
+4. Connection or schema failure -> `fallback-error` is surfaced.
+5. Workspace-v1 DB -> normal `mongo` mode.
+6. Legacy statuses remain available as raw values.
+7. Replace operation cannot delete legacy graph collections.
+8. Projects page exposes whether data came from workspace-v1, legacy adapter, or seed.
 
 ## Acceptance criteria
 
 - CI remains green.
-- A populated `dataprojects_control` with current live collection names is rendered from live data.
-- No silent seed substitution for errors.
+- A populated `dataprojects_control` with the current live collection names is rendered from live data.
+- No silent seed substitution occurs on errors.
 - FOIL report pages remain authority-aware and read-only.
-- No new duplicate control database is created.
+- No duplicate control database is created.
 - No DATAPASSCONTROL legacy collection is deleted or migrated implicitly.
-- UI visibly distinguishes source mode and source errors.
+- The UI visibly distinguishes source mode and source errors.
 
-## Current evidence
+## Evidence captured
 
-GitHub:
+GitHub at the implementation checkpoint:
+
 - PR #1 open
-- head 027bb95a42abee7486fc548959c42f702967be67
-- push CI 36031341175 PASS
-- PR CI 36031347051 PASS
+- head `027bb95a42abee7486fc548959c42f702967be67`
+- push CI `36031341175` PASS
+- PR CI `36031347051` PASS
 
 Live Mongo inspection:
-- dataprojects_control exists
-- 7 collections observed
-- non-empty entities/repositories/work_items/events/relationships/organizations/audit_runs
-- no projects collection observed
-- no source_catalog/report_catalog/workspace_presets collections observed
+
+- `dataprojects_control` exists;
+- seven collections were observed;
+- `entities/repositories/work_items/events/relationships/organizations/audit_runs` are populated;
+- no `projects` collection was observed;
+- no `source_catalog/report_catalog/workspace_presets` collections were observed.
 
 This is a runtime/data-contract issue, not a reason to redesign the whole application.
