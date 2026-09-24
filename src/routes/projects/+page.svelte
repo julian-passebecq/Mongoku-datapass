@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { appPath } from "$lib/navigation";
+	import { resolve } from "$lib/navigation";
 	import { workStatuses } from "$lib/datapass/controlPlane";
 
 	let { data } = $props();
@@ -142,13 +142,13 @@
 
 									<div class="mt-2 flex gap-3 text-[11px]">
 										<a
-											href={appPath(
+											href={resolve(
 												project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id,
 											)}
 											class="no-underline hover:underline">Graph</a
 										>
 										{#if project.id === "foil"}
-											<a href={appPath("/foil/kanban")} class="no-underline hover:underline">Authoritative backlog</a>
+											<a href={resolve("/foil/kanban")} class="no-underline hover:underline">Authoritative backlog</a>
 										{:else}
 											<button
 												type="button"
@@ -180,7 +180,7 @@
 			<div class="rounded-xl border border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
 				Detailed FOIL tasks are not authoritative here. This view may contain global portfolio work or explicit FOIL
 				references only.
-				<a href={appPath("/foil/kanban")} class="ml-2 font-medium no-underline hover:underline">
+				<a href={resolve("/foil/kanban")} class="ml-2 font-medium no-underline hover:underline">
 					Open FOIL PM backlog →
 				</a>
 			</div>
