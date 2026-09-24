@@ -26,7 +26,9 @@
 	}
 
 	function checkpointSummary(checkpoint: WorkspaceCheckpoint): string {
-		return checkpoint.snapshot.instances.length + " workspace instance(s) · " + checkpointTabCount(checkpoint) + " tab(s)";
+		const instances = checkpoint.snapshot.instances.length;
+		const tabs = checkpointTabCount(checkpoint);
+		return `${instances} workspace instance(s) · ${tabs} tab(s)`;
 	}
 
 	function scopeButtonClass(value: "workspace" | "all"): string {
