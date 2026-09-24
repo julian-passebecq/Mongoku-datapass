@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { workStatuses } from "$lib/datapass/controlPlane";
 
 	let { data } = $props();
