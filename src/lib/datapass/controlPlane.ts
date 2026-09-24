@@ -647,7 +647,12 @@ export const workspacePresets: WorkspacePreset[] = [
 			{ id: "foil", title: "FOIL Home", href: "/foil", projectId: "foil" },
 			{ id: "foil-work", title: "Kanban", href: "/foil/kanban", projectId: "foil" },
 			{ id: "foil-calendar", title: "Calendar", href: "/foil/calendar", projectId: "foil" },
-			{ id: "foil-architecture", title: "Architecture", href: "/foil/architecture", projectId: "foil" },
+			{
+				id: "foil-architecture",
+				title: "Architecture",
+				href: "/foil/architecture",
+				projectId: "foil",
+			},
 		],
 		bookmarks: [
 			{ id: "foil-resources", title: "Authorities & resources", href: "/foil/resources" },
@@ -666,16 +671,52 @@ export const workspacePresets: WorkspacePreset[] = [
 		description: "Datapass company workspace for Core, VS Code, Mosaic Workbench, Mongo Control and related tools.",
 		defaultProjectId: "datapass",
 		tabs: [
-			{ id: "datapass-home", title: "Datapass", href: "/?org=datapass", projectId: "datapass" },
-			{ id: "datapass-projects", title: "Projects", href: "/?org=datapass&view=projects", projectId: "datapass" },
-			{ id: "datapass-tests", title: "Test Queue", href: "/?org=datapass&focus=test", projectId: "datapass" },
-			{ id: "datapass-states", title: "States", href: "/workspace-states", projectId: "datapass" },
+			{
+				id: "datapass-home",
+				title: "Datapass",
+				href: "/?org=datapass",
+				projectId: "datapass",
+			},
+			{
+				id: "datapass-projects",
+				title: "Projects",
+				href: "/?org=datapass&view=projects",
+				projectId: "datapass",
+			},
+			{
+				id: "datapass-tests",
+				title: "Test Queue",
+				href: "/?org=datapass&focus=test",
+				projectId: "datapass",
+			},
+			{
+				id: "datapass-states",
+				title: "States",
+				href: "/workspace-states",
+				projectId: "datapass",
+			},
 		],
 		bookmarks: [
-			{ id: "datapass-vscode", title: "Datapass VS Code", href: "https://github.com/julian-passebecq/datapass-vscode" },
-			{ id: "datapass-mosaic", title: "Mosaic Workbench", href: "https://github.com/julian-passebecq/datapass-mosaic-vscode" },
-			{ id: "mongoku", title: "Mongo Control", href: "https://github.com/julian-passebecq/Mongoku-datapass" },
-			{ id: "contoso", title: "Contoso Data Studio", href: "https://github.com/julian-passebecq/contoso-data-studio" },
+			{
+				id: "datapass-vscode",
+				title: "Datapass VS Code",
+				href: "https://github.com/julian-passebecq/datapass-vscode",
+			},
+			{
+				id: "datapass-mosaic",
+				title: "Mosaic Workbench",
+				href: "https://github.com/julian-passebecq/datapass-mosaic-vscode",
+			},
+			{
+				id: "mongoku",
+				title: "Mongo Control",
+				href: "https://github.com/julian-passebecq/Mongoku-datapass",
+			},
+			{
+				id: "contoso",
+				title: "Contoso Data Studio",
+				href: "https://github.com/julian-passebecq/contoso-data-studio",
+			},
 		],
 		leftPanelCollapsed: false,
 		rightPanelOpen: true,
@@ -698,6 +739,7 @@ export const workspacePresets: WorkspacePreset[] = [
 		tags: ["mongodb", "queries"],
 	},
 ];
+
 export const foilNodes: SystemNode[] = [
 	{ id: "turbine", label: "Wind Turbine", kind: "source", state: "healthy", detail: "Telemetry source" },
 	{ id: "oracle", label: "Oracle VM", kind: "runtime", state: "healthy", detail: "Simulation host" },
