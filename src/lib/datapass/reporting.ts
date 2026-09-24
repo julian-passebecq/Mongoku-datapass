@@ -306,6 +306,18 @@ export const reportCatalog: ReportDefinition[] = [
 		refreshPolicy: { mode: "ttl", ttlSeconds: 120 },
 		steps: [
 			{
+				id: "organizations",
+				sourceId: "DATAPROJECTS_GLOBAL",
+				authority: "DATAPASSCONTROL",
+				collection: "organizations",
+				operation: "find",
+				filter: {},
+				sort: { name: 1 },
+				limit: 100,
+				optional: true,
+				label: "Organizations",
+			},
+			{
 				id: "entities",
 				sourceId: "DATAPROJECTS_GLOBAL",
 				authority: "DATAPASSCONTROL",
