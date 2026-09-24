@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from "$lib/navigation";
+	import { resolve } from "$app/paths";
 	import { createPortal } from "$lib/actions/portal";
 	import Breadcrumbs from "$lib/components/Breadcrumbs.svelte";
 	import Notifications from "$lib/components/Notifications.svelte";
