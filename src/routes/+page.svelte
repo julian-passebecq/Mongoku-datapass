@@ -63,7 +63,9 @@
 	let selectedReadiness = $state(page.url.searchParams.get("readiness") || "all");
 	const selectedOrganization = $derived(page.url.searchParams.get("org") || "all");
 
-	const categories = $derived(Array.from(new Set(entities.map((entity) => text(entity, "category")).filter(Boolean))).sort());
+	const categories = $derived(
+		Array.from(new Set(entities.map((entity) => text(entity, "category")).filter(Boolean))).sort(),
+	);
 	const readinessValues = $derived(
 		Array.from(new Set(entities.map((entity) => text(entity, "test_readiness")).filter(Boolean))).sort(),
 	);
@@ -325,7 +327,9 @@
 					<article class="rounded-lg border border-[var(--border-color)] p-3">
 						<div class="flex items-center justify-between gap-2">
 							<span class="text-[10px] font-semibold uppercase tracking-wide">{text(item, "priority")}</span>
-							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">{text(item, "status")}</span>
+							<span class="rounded-full bg-[var(--hover-background)] px-2 py-0.5 text-[10px]">
+								{text(item, "status")}
+							</span>
 						</div>
 						<h3 class="mt-2 text-sm font-medium">{text(item, "title")}</h3>
 						<p class="mt-1 text-[10px] text-[var(--text-muted)]">{text(item, "project_id")}</p>
