@@ -121,7 +121,7 @@
 	<ToolRibbon />
 
 	<div class="flex min-h-[calc(100vh-57px)]">
-		<ProjectRail projects={data.controlWorkspace.projects} />
+		<ProjectRail projects={data.controlWorkspace.projects} sourceMode={data.controlWorkspace.metadata.sourceMode} />
 
 		<main class="min-w-0 flex-1 px-4 py-6 sm:px-6 md:py-10 lg:px-8">
 			<div class="mx-auto max-w-[96rem]">

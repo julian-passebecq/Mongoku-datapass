@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
-	import { onMount } from "svelte";
+	import { onMount, untrack } from "svelte";
 	import type { WorkspacePreset } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
@@ -26,9 +26,14 @@
 		workspaceUi.hydrate(presets, href, routeTitle);
 	});
 
+	// Track the route only. ensureTab reads the active workspace; if that read were tracked, creating
+	// or switching a workspace would re-run this with the previous route and leak it into the new one.
 	$effect(() => {
+		const target = href;
+		const title = routeTitle;
+		const project = selectedProject;
 		if (workspaceUi.hydrated) {
-			workspaceUi.ensureTab(href, routeTitle, selectedProject);
+			untrack(() => workspaceUi.ensureTab(target, title, project));
 		}
 	});
 

@@ -3,16 +3,19 @@
 	import type { Project } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
-	let { projects } = $props<{ projects: Project[] }>();
+	let { projects, sourceMode } = $props<{ projects: Project[]; sourceMode?: string }>();
 	const collapsed = $derived(workspaceUi.current()?.leftPanelCollapsed ?? false);
+	/** Seed projects are demo configuration; they must never read as live portfolio state. */
+	const isDemo = $derived(!sourceMode || sourceMode.startsWith("seed") || sourceMode === "fallback-error");
 
 	const roots = $derived(projects.filter((project: Project) => !project.parentProjectId));
 	const childrenOf = (projectId: string) =>
 		projects.filter((project: Project) => project.parentProjectId === projectId);
+	// Raw app paths; the template resolves each exactly once (resolving twice throws during SSR).
 	const architectureHref = (projectId: string) =>
-		projectId === "foil" ? resolve("/foil/architecture") : resolve("/architecture") + "?project=" + projectId;
+		projectId === "foil" ? "/foil/architecture" : "/architecture?project=" + encodeURIComponent(projectId);
 	const workHref = (projectId: string) =>
-		projectId === "foil" ? resolve("/foil/kanban") : resolve("/projects") + "?project=" + projectId;
+		projectId === "foil" ? "/foil/kanban" : "/projects?project=" + encodeURIComponent(projectId);
 </script>
 
 <aside
@@ -25,6 +28,17 @@
 			<div>
 				<p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-muted)]">Workspace</p>
 				<p class="mt-0.5 text-sm font-semibold">Projects</p>
+				{#if isDemo}
+					<p
+						class="mt-1 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+						data-testid="rail-source"
+						title={"Control source: " + (sourceMode ?? "unknown")}
+					>
+						DEMO SEED — not live data
+					</p>
+				{:else}
+					<p class="mt-1 text-[9px] text-[var(--text-muted)]" data-testid="rail-source">Live · {sourceMode}</p>
+				{/if}
 			</div>
 		{/if}
 		<button

@@ -214,7 +214,7 @@ class WorkspaceUiState {
 			return this.newInstance();
 		}
 		const instance: WorkspaceInstance = {
-			...structuredClone(current),
+			...$state.snapshot(current),
 			id: makeId("workspace"),
 			name: current.name + " Copy",
 			tabs: current.tabs.map((tab) => ({ ...tab, id: makeId("tab") })),
@@ -284,16 +284,17 @@ class WorkspaceUiState {
 		this.persist();
 	}
 
+	// $state.snapshot, not structuredClone: workspace state is a Svelte proxy, which structuredClone rejects.
 	private snapshot(scope: WorkspaceCheckpointScope = "all"): WorkspaceUiSnapshot {
 		const current = this.current();
 		if (scope === "workspace" && current) {
-			return structuredClone({
+			return $state.snapshot({
 				version: 1,
 				activeInstanceId: current.id,
 				instances: [current],
 			});
 		}
-		return structuredClone({
+		return $state.snapshot({
 			version: 1,
 			activeInstanceId: this.activeInstanceId,
 			instances: this.instances,
@@ -386,7 +387,7 @@ class WorkspaceUiState {
 		};
 
 		if (scope === "all") {
-			this.instances = structuredClone(checkpoint.snapshot.instances);
+			this.instances = $state.snapshot(checkpoint.snapshot.instances);
 			this.activeInstanceId = checkpoint.snapshot.activeInstanceId;
 		} else {
 			const current = this.current();
@@ -395,7 +396,7 @@ class WorkspaceUiState {
 				throw new Error("Workspace checkpoint is incomplete");
 			}
 			const restored = {
-				...structuredClone(saved),
+				...$state.snapshot(saved),
 				id: current.id,
 			};
 			this.instances = this.instances.map((instance) => (instance.id === current.id ? restored : instance));
@@ -413,7 +414,7 @@ class WorkspaceUiState {
 		const undo = this.checkpointUndo;
 		const scope = undo.scope ?? "all";
 		if (scope === "all") {
-			this.instances = structuredClone(undo.snapshot.instances);
+			this.instances = $state.snapshot(undo.snapshot.instances);
 			this.activeInstanceId = undo.snapshot.activeInstanceId;
 		} else {
 			const current = this.current();
@@ -422,7 +423,7 @@ class WorkspaceUiState {
 				throw new Error("Workspace undo point is incomplete");
 			}
 			const restored = {
-				...structuredClone(saved),
+				...$state.snapshot(saved),
 				id: current.id,
 			};
 			this.instances = this.instances.map((instance) => (instance.id === current.id ? restored : instance));

@@ -12,6 +12,7 @@ import {
 	type SourceDescriptor,
 } from "$lib/datapass/reporting";
 import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/reportSemantics";
+import { toSerializableRow } from "$lib/datapass/serializable";
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { loadControlWorkspace } from "$lib/server/datapassControl";
 import { getMongo } from "$lib/server/mongo";
@@ -179,12 +180,14 @@ function finalizeRows(
 			truncated = true;
 			break;
 		}
-		const rowBytes = byteLength(row);
+		// Plain JSON values only: raw ObjectId/Date/Long rows cannot cross the SvelteKit load boundary.
+		const plain = toSerializableRow(row);
+		const rowBytes = byteLength(plain);
 		if (responseBytes + rowBytes > MAX_RESPONSE_BYTES) {
 			truncated = true;
 			break;
 		}
-		rows.push(row);
+		rows.push(plain);
 		responseBytes += rowBytes;
 	}
 
