@@ -1,4 +1,5 @@
 import { env } from "$env/dynamic/private";
+import { adaptLegacyGlobalWorkspace, detectControlPersistenceMode } from "$lib/datapass/legacyGlobalAdapter";
 import { buildSeedWorkspace, workspaceExportSchema, type WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { getMongo } from "$lib/server/mongo";
 import type { Db, Document, Filter, Sort } from "mongodb";
@@ -75,27 +76,73 @@ async function readCollection(db: Db, name: string): Promise<Record<string, unkn
 	return docs.map(withoutMongoId);
 }
 
+async function controlCollectionNames(db: Db): Promise<Set<string>> {
+	const rows = await db.listCollections({}, { nameOnly: true }).toArray();
+	return new Set(rows.map((row) => row.name));
+}
+
+function seedWorkspace(
+	sourceMode: "seed-empty" | "seed-disabled" | "fallback-error",
+	controlDatabase?: string,
+	warning?: string,
+): WorkspaceExport {
+	const seed = buildSeedWorkspace();
+	return {
+		...seed,
+		metadata: {
+			...seed.metadata,
+			source: "seed",
+			sourceMode,
+			controlDatabase,
+			warning,
+		},
+	};
+}
+
+function safeWarning(error: unknown): string {
+	const message = error instanceof Error ? error.message : "Unknown control database error";
+	return message.replace(/mongodb(?:\+srv)?:\/\/[^\s]+/gi, "[redacted-mongodb-uri]").slice(0, 500);
+}
+
 export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 	if (env.DATAPASS_CONTROL_DISABLED === "true") {
-		return buildSeedWorkspace();
+		return seedWorkspace("seed-disabled");
 	}
 
 	try {
 		const db = await getControlDb();
-		const projectDocs = await readCollection(db, collections.projects);
+		const names = await controlCollectionNames(db);
+		const mode = detectControlPersistenceMode(names);
 
-		if (projectDocs.length === 0) {
+		if (mode === "legacy-global") {
+			const [entityRows, legacyWorkItemRows] = await Promise.all([
+				readCollection(db, "entities"),
+				readCollection(db, "work_items"),
+			]);
+			const adapted = adaptLegacyGlobalWorkspace(entityRows, legacyWorkItemRows);
 			const seed = buildSeedWorkspace();
-			return {
+
+			return workspaceExportSchema.parse({
 				...seed,
 				metadata: {
 					...seed.metadata,
-					source: "seed",
+					source: "mongo",
+					sourceMode: "legacy-adapter",
 					controlDatabase: db.databaseName,
 				},
-			};
+				projects: adapted.projects,
+				workItems: adapted.workItems,
+				agentNodes: [],
+				instructionProfiles: [],
+				savedQueries: [],
+			});
 		}
 
+		if (mode === "empty-or-unknown") {
+			return seedWorkspace("seed-empty", db.databaseName);
+		}
+
+		const projectDocs = await readCollection(db, collections.projects);
 		const seed = buildSeedWorkspace();
 		const [
 			workItems,
@@ -124,6 +171,7 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			metadata: {
 				name: "Datapass Mongo Control",
 				source: "mongo",
+				sourceMode: "workspace-v1",
 				exportedAt: new Date().toISOString(),
 				controlDatabase: db.databaseName,
 			},
@@ -134,12 +182,12 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 			savedQueries,
 			sources: sources.length > 0 ? sources : seed.sources,
 			reports: reports.length > 0 ? reports : seed.reports,
-			workspacePresets,
+			workspacePresets: workspacePresets.length > 0 ? workspacePresets : seed.workspacePresets,
 			systemNodes,
 			systemEdges,
 		});
-	} catch {
-		return buildSeedWorkspace();
+	} catch (error) {
+		return seedWorkspace("fallback-error", env.DATAPASS_CONTROL_DATABASE, safeWarning(error));
 	}
 }
 
@@ -172,6 +220,13 @@ export function controlWritesEnabled(): boolean {
 export async function saveControlWorkspace(workspace: WorkspaceExport, mode: "merge" | "replace"): Promise<void> {
 	const parsed = workspaceExportSchema.parse(workspace);
 	const db = await getControlDb();
+	const persistenceMode = detectControlPersistenceMode(await controlCollectionNames(db));
+
+	if (persistenceMode === "legacy-global") {
+		throw new Error(
+			"Legacy DATAPASSCONTROL graph is read-only through the compatibility adapter. Initialize a workspace-v1 namespace explicitly before using workspace writes.",
+		);
+	}
 
 	if (mode === "replace") {
 		await Promise.all(Object.values(collections).map((collectionName) => db.collection(collectionName).deleteMany({})));
