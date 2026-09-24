@@ -5,7 +5,7 @@ import { base } from "$app/paths";
  * SvelteKit's generated resolve() typing is intentionally strict for known routes;
  * workspace/bookmark routes are runtime strings, so keep base-path handling here.
  */
-export function appPath(href: string): string {
+export function resolve(href: string): string {
 	if (!href.startsWith("/")) {
 		return href;
 	}
