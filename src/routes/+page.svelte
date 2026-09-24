@@ -13,6 +13,7 @@
 
 	const organizations = $derived(sectionRows(globalReport, "organizations"));
 	const entities = $derived(sectionRows(globalReport, "entities"));
+	const relationships = $derived(sectionRows(globalReport, "relationships"));
 	const globalWork = $derived(sectionRows(globalReport, "work"));
 	const audits = $derived(sectionRows(globalReport, "audits"));
 	const repositories = $derived(sectionRows(globalReport, "repositories"));
@@ -86,6 +87,39 @@
 		),
 	);
 
+	function hierarchyRows(rows: Record<string, unknown>[]) {
+		const byParent = new Map<string, Record<string, unknown>[]>();
+		const knownIds = new Set(rows.map((row) => entityId(row)));
+		for (const row of rows) {
+			const parentId = text(row, "parent_entity_id");
+			const key = parentId && knownIds.has(parentId) ? parentId : "";
+			const bucket = byParent.get(key) ?? [];
+			bucket.push(row);
+			byParent.set(key, bucket);
+		}
+		for (const bucket of byParent.values()) {
+			bucket.sort((a, b) => (text(a, "name") || entityId(a)).localeCompare(text(b, "name") || entityId(b)));
+		}
+		const flattened: Array<{ row: Record<string, unknown>; depth: number }> = [];
+		const visited = new Set<string>();
+		const append = (parentId: string, depth: number) => {
+			for (const row of byParent.get(parentId) ?? []) {
+				const id = entityId(row);
+				if (!id || visited.has(id)) continue;
+				visited.add(id);
+				flattened.push({ row, depth });
+				append(id, depth + 1);
+			}
+		};
+		append("", 0);
+		for (const row of rows) {
+			const id = entityId(row);
+			if (id && !visited.has(id)) flattened.push({ row, depth: 0 });
+		}
+		return flattened;
+	}
+
+	const visibleHierarchy = $derived(hierarchyRows(visibleEntities));
 	const visibleEntityIds = $derived(new Set(visibleEntities.map((entity) => entityId(entity))));
 	const visibleGlobalWork = $derived(
 		globalWork.filter((item) => selectedOrganization === "all" || visibleEntityIds.has(text(item, "project_id"))),
@@ -244,6 +278,37 @@
 			create or infer a replacement database.
 		</div>
 	{/if}
+
+	<section class="rounded-xl border border-[var(--border-color)]">
+		<div class="flex items-center justify-between border-b border-[var(--border-color)] px-4 py-3">
+			<div>
+				<h2 class="text-sm font-semibold">Portfolio hierarchy</h2>
+				<p class="mt-1 text-[10px] text-[var(--text-muted)]">
+					Configurable typed navigation tree. Cross-links stay separate from parent/child navigation.
+				</p>
+			</div>
+			<span class="text-[10px] text-[var(--text-muted)]">{relationships.length} relationship(s)</span>
+		</div>
+		<div class="divide-y divide-[var(--border-color)]">
+			{#each visibleHierarchy as item (entityId(item.row))}
+				<div class="flex items-center gap-3 px-4 py-2.5" style={"padding-left: " + (16 + item.depth * 22) + "px"}>
+					<span class="w-2 shrink-0 text-[10px] text-[var(--text-muted)]">{item.depth > 0 ? "↳" : "•"}</span>
+					<div class="min-w-0 flex-1">
+						<p class="truncate text-xs font-medium">{text(item.row, "name") || entityId(item.row)}</p>
+						<p class="mt-0.5 truncate text-[10px] text-[var(--text-muted)]">
+							{text(item.row, "entity_type") || text(item.row, "entity_level") || "node"}
+							{#if text(item.row, "category")} · {text(item.row, "category")}{/if}
+						</p>
+					</div>
+					<span class="rounded-full border border-[var(--border-color)] px-2 py-0.5 text-[9px]">
+						{text(item.row, "status") || "unclassified"}
+					</span>
+				</div>
+			{:else}
+				<p class="p-4 text-xs text-[var(--text-muted)]">No hierarchy nodes for this filter.</p>
+			{/each}
+		</div>
+	</section>
 
 	<div class="grid gap-5 xl:grid-cols-[1.35fr_0.65fr]">
 		<section class="rounded-xl border border-[var(--border-color)]">
