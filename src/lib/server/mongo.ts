@@ -3,7 +3,7 @@ import { logger } from "$lib/server/logger";
 import type { CollectionJSON, CollectionMappings, Mappings, ShardingInfo } from "$lib/types";
 import type { ShardKey } from "$lib/utils/shardKey";
 import { resolveSrv } from "dns/promises";
-import { MongoClient, ReadPreference, type Collection } from "mongodb";
+import { MongoClient, ReadPreference, type Collection, type MongoClientOptions } from "mongodb";
 import { buildDirectConnectionUri, mongoHostKey, parseMongoUri } from "./connectionString";
 import { HostsManager } from "./HostsManager";
 
@@ -128,6 +128,30 @@ export interface CachedIndex {
 	key: IndexKey;
 }
 
+const DEFAULT_SERVER_SELECTION_TIMEOUT_MS = 5000;
+
+/**
+ * The driver waits 30 s by default to find a reachable server. Report and control reads run
+ * sequentially inside page loads, so an unreachable host made pages hang for 30-90 s while
+ * /api/health (no database) kept answering. Fail fast instead; a URI that sets
+ * serverSelectionTimeoutMS itself keeps its own value.
+ */
+export function serverSelectionTimeoutMs(url: string): number | undefined {
+	if (/[?&]serverSelectionTimeoutMS=/i.test(url)) {
+		return undefined;
+	}
+	const configured = Number(env.MONGOKU_SERVER_SELECTION_TIMEOUT_MS);
+	return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_SERVER_SELECTION_TIMEOUT_MS;
+}
+
+function clientOptions(url: string, readPreference?: ReadPreference): MongoClientOptions {
+	const timeout = serverSelectionTimeoutMs(url);
+	return {
+		...(readPreference ? { readPreference } : {}),
+		...(timeout ? { serverSelectionTimeoutMS: timeout } : {}),
+	};
+}
+
 export class MongoClientWithMappings extends MongoClient {
 	url: string;
 	mappings: Record<string, Record<string, Mappings>> = {};
@@ -136,7 +160,7 @@ export class MongoClientWithMappings extends MongoClient {
 	name: string;
 
 	constructor(url: string, _id: string, name: string, readPreference?: ReadPreference) {
-		super(url, readPreference ? { readPreference } : {});
+		super(url, clientOptions(url, readPreference));
 		this.url = url;
 		this._id = _id;
 		this.name = name;
