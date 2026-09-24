@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { appPath } from "$lib/navigation";
 	import type { ReportResult } from "$lib/datapass/reporting";
 
 	let { data } = $props();
@@ -90,7 +91,7 @@
 			</p>
 		</div>
 		<a
-			href={resolve("/foil/resources")}
+			href={appPath("/foil/resources")}
 			class="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
 		>
 			Authority & resource map
@@ -100,7 +101,7 @@
 	<div class="flex flex-wrap gap-2">
 		{#each quickActions as action, __eachIndex0 (__eachIndex0)}
 			<a
-				href={resolve(action.href)}
+				href={appPath(action.href)}
 				class="rounded-full border border-[var(--border-color)] px-3 py-1.5 text-xs font-medium no-underline hover:bg-[var(--hover-background)]"
 				>{action.label}</a
 			>
@@ -137,7 +138,7 @@
 					<h2 class="font-semibold">NOW · NEXT · LATER</h2>
 					<p class="text-xs text-[var(--text-muted)]">Directly from FOIL Project Management backlog.</p>
 				</div>
-				<a href={resolve("/foil/kanban")} class="text-xs no-underline hover:underline">Open Kanban</a>
+				<a href={appPath("/foil/kanban")} class="text-xs no-underline hover:underline">Open Kanban</a>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
 				{#each nextRows.slice(0, 14) as item, __eachIndex1 (__eachIndex1)}
@@ -174,7 +175,7 @@
 						{propagationUnassessed.length} event(s) have unassessed/legacy propagation metadata.
 					</p>
 				{/if}
-				<a href={resolve("/foil/propagation")} class="mt-3 inline-block text-xs no-underline hover:underline"
+				<a href={appPath("/foil/propagation")} class="mt-3 inline-block text-xs no-underline hover:underline"
 					>Open propagation queue</a
 				>
 			</div>
@@ -184,7 +185,7 @@
 					Reviews/audits/backups/checks only. No audit is executed automatically.
 				</p>
 				<p class="mt-4 text-3xl font-semibold">{maintenance.length}</p>
-				<a href={resolve("/foil/calendar")} class="mt-3 inline-block text-xs no-underline hover:underline"
+				<a href={appPath("/foil/calendar")} class="mt-3 inline-block text-xs no-underline hover:underline"
 					>Open calendar</a
 				>
 			</div>
@@ -192,7 +193,7 @@
 				<h2 class="font-semibold">Instruction drift</h2>
 				<p class="mt-4 text-3xl font-semibold">{drift.length}</p>
 				<a
-					href={resolve("/foil/report/FOIL_INSTRUCTION_DRIFT")}
+					href={appPath("/foil/report/FOIL_INSTRUCTION_DRIFT")}
 					class="mt-3 inline-block text-xs no-underline hover:underline">Inspect versions</a
 				>
 			</div>
