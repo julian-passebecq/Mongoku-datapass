@@ -55,10 +55,6 @@
 		return item ? text(item, "next_action") || text(item, "title") : "";
 	}
 
-	function readiness(row: Record<string, unknown>): string {
-		return text(row, "test_readiness") || "UNCLASSIFIED";
-	}
-
 	let selectedCategory = $state(page.url.searchParams.get("category") || "all");
 	let selectedReadiness = $state(page.url.searchParams.get("readiness") || "all");
 	const selectedOrganization = $derived(page.url.searchParams.get("org") || "all");
@@ -186,7 +182,7 @@
 	<section class="rounded-xl border border-[var(--border-color)] p-4">
 		<div class="flex flex-wrap items-center gap-2">
 			<a href={resolve(organizationHref("all"))} class={organizationClass("all")}>All</a>
-			{#each organizations as organization}
+			{#each organizations as organization (text(organization, "organization_id"))}
 				{@const organizationId = text(organization, "organization_id")}
 				<a href={resolve(organizationHref(organizationId))} class={organizationClass(organizationId)}>
 					{text(organization, "name")}
@@ -200,7 +196,7 @@
 					class="rounded-lg border border-[var(--border-color)] bg-transparent px-2 py-1.5 text-xs"
 				>
 					<option value="all">All categories</option>
-					{#each categories as category}
+					{#each categories as category (category)}
 						<option value={category}>{category}</option>
 					{/each}
 				</select>
@@ -209,7 +205,7 @@
 					class="rounded-lg border border-[var(--border-color)] bg-transparent px-2 py-1.5 text-xs"
 				>
 					<option value="all">All readiness</option>
-					{#each readinessValues as value}
+					{#each readinessValues as value (value)}
 						<option {value}>{value}</option>
 					{/each}
 				</select>
@@ -258,11 +254,11 @@
 				</p>
 			</div>
 			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
-				{#each globalWorkColumns as column}
+				{#each globalWorkColumns as column (column.id)}
 					<section class="rounded-lg bg-[var(--hover-background)] p-3">
 						<h3 class="text-xs font-semibold">{column.label}</h3>
 						<div class="mt-3 space-y-2">
-							{#each visibleGlobalWork.filter((item) => workBucket(item) === column.id) as item}
+							{#each visibleGlobalWork.filter((item) => workBucket(item) === column.id) as item (text(item, "work_item_id") || text(item, "_id"))}
 								<article class="rounded-md border border-[var(--border-color)] bg-[var(--background-color)] p-2">
 									<div class="flex items-center justify-between gap-2">
 										<span class="text-[9px] font-semibold uppercase">{text(item, "priority")}</span>
@@ -285,7 +281,7 @@
 				<p class="mt-1 text-[10px] text-[var(--text-muted)]">Only explicit due or review dates are shown.</p>
 			</div>
 			<div class="divide-y divide-[var(--border-color)]">
-				{#each scheduledGlobalWork.slice(0, 8) as item}
+				{#each scheduledGlobalWork.slice(0, 8) as item (text(item, "work_item_id") || text(item, "_id"))}
 					<div class="px-4 py-3">
 						<div class="flex items-start justify-between gap-3">
 							<p class="text-xs font-medium">{text(item, "title")}</p>
@@ -314,7 +310,7 @@
 				</span>
 			</div>
 			<div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
-				{#each visibleTestQueue as item}
+				{#each visibleTestQueue as item (text(item, "work_item_id") || text(item, "_id"))}
 					<article class="rounded-lg border border-[var(--border-color)] p-3">
 						<div class="flex items-center justify-between gap-2">
 							<span class="text-[10px] font-semibold uppercase tracking-wide">{text(item, "priority")}</span>
