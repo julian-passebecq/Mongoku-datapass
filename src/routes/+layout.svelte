@@ -105,6 +105,18 @@
 	</header>
 
 	<OriginWarning serverOrigin={data.serverOrigin} readOnly={data.readOnly} />
+	{#if data.controlWorkspace.metadata.sourceMode && data.controlWorkspace.metadata.sourceMode !== "workspace-v1"}
+		<div
+			class="border-b border-[var(--border-color)] px-4 py-2 text-center text-xs text-[var(--text-muted)]"
+			class:bg-amber-50={data.controlWorkspace.metadata.sourceMode === "fallback-error"}
+			class:dark:bg-amber-950={data.controlWorkspace.metadata.sourceMode === "fallback-error"}
+		>
+			Control source: <strong>{data.controlWorkspace.metadata.sourceMode}</strong>
+			{#if data.controlWorkspace.metadata.warning}
+				<span> — {data.controlWorkspace.metadata.warning}</span>
+			{/if}
+		</div>
+	{/if}
 	<WorkspaceTabs presets={data.controlWorkspace.workspacePresets} />
 	<ToolRibbon />
 
