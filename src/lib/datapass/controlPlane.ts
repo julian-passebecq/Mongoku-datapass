@@ -42,6 +42,7 @@ export type Project = {
 	parentProjectId?: string;
 	category: string;
 	progress: number;
+	progressKnown?: boolean;
 	activeItems: number;
 	kanbanStatus: WorkStatus;
 	statusQueryId?: string;
@@ -49,6 +50,14 @@ export type Project = {
 	githubRepo?: string;
 	mongoContextKey?: string;
 	mongoNamespaces?: string[];
+	rawStatus?: string;
+	rawEntityType?: string;
+	organizationId?: string;
+	parentEntityId?: string;
+	health?: string;
+	testReadiness?: string;
+	nextAction?: string;
+	canonicalRepo?: string;
 };
 
 export type WorkItem = {
@@ -65,6 +74,11 @@ export type WorkItem = {
 	externalAuthority?: string;
 	externalProjectRef?: string;
 	externalBacklogRef?: string;
+	rawStatus?: string;
+	rawKind?: string;
+	rawPriority?: string;
+	severity?: string;
+	nextAction?: string;
 };
 
 export type InstructionProfile = {
