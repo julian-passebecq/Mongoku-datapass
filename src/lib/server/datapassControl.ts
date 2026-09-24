@@ -143,6 +143,9 @@ export async function loadControlWorkspace(): Promise<WorkspaceExport> {
 		}
 
 		const projectDocs = await readCollection(db, collections.projects);
+		if (projectDocs.length === 0) {
+			return seedWorkspace("seed-empty", db.databaseName);
+		}
 		const seed = buildSeedWorkspace();
 		const [
 			workItems,
