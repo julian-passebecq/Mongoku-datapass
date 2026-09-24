@@ -41,8 +41,7 @@ Run on 2026-09-25 from the user's machine (IP already on the DATAPASSCONTROL acc
 
 Also fixed after the replica smoke:
 
-- **Mongo host unreachable → 30–90 s hangs.** Clients had no `serverSelectionTimeoutMS`, so the 30 s driver default applied. Measured with the source down: `/` went from 60.8 s to 5.3 s, `/projects` from 30.4 s to 5.2 s, and the report API from 59.6 s to 10.0 s; `/api/health` stayed under 0.1 s. The default is 5 s, set by `MONGOKU_SERVER_SELECTION_TIMEOUT_MS`; a URI that sets `serverSelectionTimeoutMS` keeps its own value. The Power Ops embedded-Mongoku test (PowerToy_UI PR #4) had reported this symptom and should now be re-run: `.	ests
-ative\web-embedded.ps1 -RealUrl http://localhost:3100/`.
+- **Mongo host unreachable → 30–90 s hangs.** Clients had no `serverSelectionTimeoutMS`, so the 30 s driver default applied. Measured with the source down: `/` went from 60.8 s to 5.3 s, `/projects` from 30.4 s to 5.2 s, and the report API from 59.6 s to 10.0 s; `/api/health` stayed under 0.1 s. The default is 5 s, set by `MONGOKU_SERVER_SELECTION_TIMEOUT_MS`; a URI that sets `serverSelectionTimeoutMS` keeps its own value. The Power Ops embedded-Mongoku test (PowerToy_UI PR #4) had reported this symptom and should now be re-run from the PowerToy_UI repo: `tests/native/web-embedded.ps1 -RealUrl http://localhost:3100/`.
 - The Home no longer flags the intentionally bounded Recent list (latest 30 of 34 events) as a source problem.
 
 ### Runtime smoke — replica of live data
