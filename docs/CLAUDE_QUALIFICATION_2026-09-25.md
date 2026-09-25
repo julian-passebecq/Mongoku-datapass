@@ -99,7 +99,13 @@ The smoke passed, as recorded above. To repeat it:
 
 1. Put a ClusterDP URI in a local `.env` using the MODE B+ block of `.env.example`. Prefer a dedicated `read`-only user on `dataprojects_control` over the operator account.
 2. Run `pnpm dev` and check the header, the rail and the Home source line against the results above.
-3. Mongoku persists its connection list, URI included, in `MONGOKU_DATABASE_FILE`. If that points to the gitignored `.mongoku.db`, delete the file after a credential change so the new `.env` value is used.
+3. Mongoku persists its connection list, URI included, in `MONGOKU_DATABASE_FILE` (the gitignored `.mongoku.db`). When `MONGOKU_DEFAULT_HOST` is set, it is authoritative on every start:
+   - env servers missing from the file are added;
+   - a persisted URI for the same server, such as an old credential, is replaced;
+   - env entries no longer listed are dropped;
+   - servers added from the UI are kept.
+
+   No manual deletion is needed after a credential change, only a restart. Before this change, an existing file silently won over `.env`: Mongoku kept connecting as the operator account after `mongoku_readonly` was configured.
 
 ## DATAPASSCONTROL batch — applied 2026-09-25
 
