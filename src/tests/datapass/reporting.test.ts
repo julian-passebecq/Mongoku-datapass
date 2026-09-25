@@ -66,6 +66,18 @@ describe("FOIL report catalog", () => {
 		}
 	});
 
+	it("inventories every catalog source through the report engine", () => {
+		const inventory = reportCatalog.find((report) => report.id === "SOURCE_INVENTORY");
+		expect(inventory?.readOnly).toBe(true);
+		expect(inventory?.steps.map((step) => step.sourceId)).toEqual(sourceCatalog.map((source) => source.id));
+		for (const step of inventory?.steps ?? []) {
+			expect(step.operation, step.id).toBe("inventory");
+			// One unreachable authority must not break the other sections.
+			expect(step.optional, step.id).toBe(true);
+			expect(step.filter ?? step.pipeline, step.id).toBeUndefined();
+		}
+	});
+
 	it("keeps the global portfolio source on dataprojects_control", () => {
 		const source = sourceCatalog.find((candidate) => candidate.id === "DATAPROJECTS_GLOBAL");
 		expect(source?.database).toBe("dataprojects_control");

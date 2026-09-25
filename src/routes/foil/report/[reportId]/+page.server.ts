@@ -3,7 +3,8 @@ import { executeReport } from "$lib/server/reportEngine";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {
-	if (!params.reportId.startsWith("FOIL_")) {
+	// SOURCE_INVENTORY covers every catalog source (FOIL authorities and the global graph) and needs no custom UI.
+	if (!params.reportId.startsWith("FOIL_") && params.reportId !== "SOURCE_INVENTORY") {
 		throw error(404, "FOIL report not found");
 	}
 	try {

@@ -16,6 +16,7 @@ import { toSerializableRow } from "$lib/datapass/serializable";
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
 import { loadControlWorkspace } from "$lib/server/datapassControl";
 import { getMongo } from "$lib/server/mongo";
+import { inventoryRows } from "$lib/server/sourceInventory";
 import type { Collection, Document, Filter, MongoClient, ObjectId, Sort } from "mongodb";
 
 type RegistryDocument = Document & { _id: string | ObjectId };
@@ -551,9 +552,23 @@ async function executeStep(
 	}
 
 	const { requestedLimit, effectiveLimit } = limitsFor(step);
-	const collection = resolved.client.db(resolved.database).collection(step.collection);
 
 	try {
+		if (step.operation === "inventory") {
+			const rawRows = await inventoryRows(resolved.client.db(resolved.database), effectiveLimit, QUERY_TIMEOUT_MS);
+			const finalized = finalizeRows(reportId, step, rawRows, requestedLimit, effectiveLimit);
+			return {
+				id: step.id,
+				label: step.label,
+				authority: step.authority,
+				sourceId: step.sourceId,
+				rows: finalized.rows,
+				trace: traceFor(reportId, step, source, resolved.database, true, undefined, resolved.resourceRegistry),
+				meta: finalized.meta,
+			};
+		}
+
+		const collection = resolved.client.db(resolved.database).collection(step.collection);
 		if (step.operation === "find") {
 			const filter = substituteParameters(step.filter ?? {}, parameters);
 			const projection = substituteParameters(step.projection ?? {}, parameters);
