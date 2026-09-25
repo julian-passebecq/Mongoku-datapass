@@ -63,7 +63,8 @@ const SECRET_PATTERNS: RegExp[] = [
 	/\bAKIA[0-9A-Z]{16}\b/g,
 	/\bxox[abprs]-[A-Za-z0-9-]{10,}\b/g,
 	/\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g,
-	/\b(password|passwd|pwd|secret|token|api[_-]?key|client[_-]?secret)\s*[:=]\s*[^\s,;"'`]+/gi,
+	// A space counts as a separator too, so "api key: …" and "client secret = …" are caught.
+	/\b(password|passwd|pwd|secret|token|api[ _-]?key|client[ _-]?secret)\s*[:=]\s*[^\s,;"'`]+/gi,
 ];
 
 /** Replaces credential-like substrings; applied to every string in an exported bundle. */
