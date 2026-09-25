@@ -14,6 +14,7 @@
 		{ label: "Notes", href: project ? "/notes?project=" + project : "/notes" },
 		{ label: "Queries", href: "/queries" },
 		{ label: "AI Review", href: "/ai-review" },
+		{ label: "Maintenance", href: "/maintenance" },
 		{ label: "History", href: "/history" },
 		{ label: "States", href: "/workspace-states" },
 		{ label: "AI JSON", href: "/ai-json" },
