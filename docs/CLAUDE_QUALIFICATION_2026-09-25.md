@@ -152,18 +152,18 @@ Mongoku runtime:
 
 Live result of `SOURCE_INVENTORY` (Mongoku PR #7, `173599f`), all read through the normal report engine path: logical source → FOIL PM `resource_registry` → binding → client.
 
-| Source              | State        | Database                  | Collections | PM registry       |
-| ------------------- | ------------ | ------------------------- | ----------: | ----------------- |
-| DATAPROJECTS_GLOBAL | RESOLVED, OK | `dataprojects_control`    |           7 | not applicable    |
-| FOIL_PM             | RESOLVED, OK | `foil_project_management` |           7 | is the registry   |
-| FOIL_CORE           | RESOLVED, OK | `foil_control`            |          10 | found             |
-| FOIL_STUDY          | RESOLVED, OK | `foil_study`              |           3 | found             |
-| FOIL_AI_REASONING   | RESOLVED, OK | `foil_ai_reasoning`       |           2 | found (see below) |
-| FOIL_IT_DEV         | RESOLVED, OK | `foil_it_dev`             |           4 | found             |
-| FOIL_FRONT          | RESOLVED, OK | `foil_front`              |           5 | found             |
-| FOIL_WORK_ARCHIVE   | RESOLVED, OK | `foil_work_archive`       |           4 | found             |
-| FOIL_DATABRICKS     | RESOLVED, OK | `foil_lab`                |           6 | found             |
-| FOIL_FABRIC         | RESOLVED, OK | `foil_fabric_lab`         |           1 | found             |
+| Source              | State        | Database                  | Collections | PM registry                      |
+| ------------------- | ------------ | ------------------------- | ----------: | -------------------------------- |
+| DATAPROJECTS_GLOBAL | RESOLVED, OK | `dataprojects_control`    |           7 | not applicable                   |
+| FOIL_PM             | RESOLVED, OK | `foil_project_management` |           7 | is the registry                  |
+| FOIL_CORE           | RESOLVED, OK | `foil_control`            |          10 | found                            |
+| FOIL_STUDY          | RESOLVED, OK | `foil_study`              |           3 | found                            |
+| FOIL_AI_REASONING   | RESOLVED, OK | `foil_ai_reasoning`       |           2 | found (lineage added, see below) |
+| FOIL_IT_DEV         | RESOLVED, OK | `foil_it_dev`             |           4 | found                            |
+| FOIL_FRONT          | RESOLVED, OK | `foil_front`              |           5 | found                            |
+| FOIL_WORK_ARCHIVE   | RESOLVED, OK | `foil_work_archive`       |           4 | found                            |
+| FOIL_DATABRICKS     | RESOLVED, OK | `foil_lab`                |           6 | found                            |
+| FOIL_FABRIC         | RESOLVED, OK | `foil_fabric_lab`         |           1 | found                            |
 
 The API response contains no URI, username or Atlas host. Mongo writes are blocked at three independent levels:
 
@@ -208,8 +208,11 @@ Qualification: every section of the five reports resolves `OK`, and `SOURCE_INVE
 
 Power Ops was notified of the report IDs and display rules. It consumes and displays the reports; FOIL business logic stays in Mongoku.
 
+Resolved after PR #12 (2026-09-25, FOIL PM data only, no code change):
+
+- **AI Reasoning registry lineage.** The `resource_registry` record `RES-MONGODB-FOIL-AI-REASONING` (a `MONGODB_ATLAS_REASONING_AUTHORITY`) had no linked database resource, so Mongoku fell back to the catalog database `foil_ai_reasoning`. FOIL PM now holds `RES-MONGO-PROJECT-FOIL-AI-REASONING` (FOIL AI Thinkink) → `RES-MONGO-CLUSTER-FOIL-AI-REASONING` (`ClusterFOILAI`) → `RES-MONGO-DB-FOIL-AI-REASONING` (`foil_ai_reasoning`), in the FOIL STUDY convention and checked against the Atlas API. The authority record points at the database through `parentResourceId`, the only link the engine walks. Only that field and `lineageRef` were added to it; it stays non-authoritative. Recorded as PM event `EVT-20260925-FOIL-AI-REASONING-REGISTRY-LINEAGE`, with its rollback. Live check: `SOURCE_INVENTORY` is still 10/10 OK, and the AI Reasoning trace now reports cluster `ClusterFOILAI`, its cluster and project IDs, and database `foil_ai_reasoning` from the registry. `FOIL_AI_REASONING_RECENT` is unchanged (reasoning 7, boundary 1).
+
 Still open:
 
-- **AI Reasoning registry shape.** Its `resource_registry` record is a `MONGODB_ATLAS_REASONING_AUTHORITY` with no linked database resource. Mongoku therefore falls back to the catalog database `foil_ai_reasoning`, which matches the binding, so nothing breaks. The fix belongs in FOIL PM data: add a database resource `FOIL AI Reasoning → ClusterFOILAI → foil_ai_reasoning` linked to its project and cluster. `SOURCE_INVENTORY` works before and after that change.
 - **Cosmetic:** six keys are still defined twice in the local `.env` with identical values.
 - **Planned, not started:** a cross-authority `FOIL_TECH_OVERVIEW` that composes signals from the per-authority reports. It is deliberately deferred until each source has its own clean semantics, which PR #9 provides.
