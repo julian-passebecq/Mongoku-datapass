@@ -84,12 +84,11 @@ Observed:
 
 ## Known limitations
 
-- **No real ClusterDP smoke yet** (see the remaining gate).
 - **No `Open in DataPass VS Code` button.** `julian-passebecq/datapass-vscode` registers no URI handler (no `onUri` activation, no `registerUriHandler`), so a deep link would be invented. The integration today is _Developer context_ (stable `entity_id`, repo/branch/head, test gate, Mongoku URL). Proposed contract for the extension side: `vscode://julian-passebecq.datapass-vscode/open?entity=<entity_id>&mongoku=<url>`.
 - **Observation, not changed:** `datapass-vscode` `package.json` reports `version: 0.9.2` while DATAPASSCONTROL records the audited runtime as v0.8.0. Re-audit before updating the record.
 - **AtlasNote counts** appear only after a bounded overview is written to `entities.atlasnote.mongoku_projection.overview` (numeric fields plus `last_snapshot_at`). No ingestion endpoint was built.
 - **Kanban / sprint writes not added.** The global graph stays read-only through Mongoku, and native planning writes need the ACL/revision/CAS design from the blueprint (`planning-change` 0.1-proposal).
-- **FOIL PM was not bound** in the smoke, so FOIL report pages were checked for HTTP 200 and "unbound" states only.
+- **FOIL PM was not bound** in the PR #1 smoke. It has been bound since the read-only federation (see [below](#read-only-mongo-federation--10-sources-2026-09-25)).
 - **Power Ops summary card** not built; `/?project=<id>` and `/?org=<id>` are the URLs it should open.
 - `readCollection` in the legacy path is bounded at 2000 rows with a visible truncation warning. Home report steps keep their existing per-step limits.
 
@@ -133,3 +132,56 @@ This batch was approved by the user and applied through the MongoDB MCP after Mo
 Code support: `isFoilRootProject()` makes `foil` and `foil_project` open the same FOIL cockpit. A retired root with no children is no longer reported as a duplicate root. FOIL global references match every `foil*` project id, so work moved between FOIL entities stays visible.
 
 Status normalization for report `displayStatus` now matches whole words, like the legacy adapter and cockpit. No live raw status maps to `UNKNOWN` any more.
+
+## Read-only Mongo federation — 10 sources (2026-09-25)
+
+Architecture event: `EVT-20260925-MONGOKU-READONLY-FEDERATION-10-SOURCES`, recorded in FOIL Project Management (`foil_project_management.events`) with status `VERIFIED`. Read back read-only.
+
+The event title is "Mongoku read-only federation provisioned across 10 primary sources". A dedicated `mongoku_readonly` database user exists for DATAPASSCONTROL and for each of the nine primary FOIL Mongo authorities. Each user has only `read` on its intended database and is scoped to its intended cluster. No password is stored in PM.
+
+Atlas side, verified with the Atlas API for all 10 projects:
+
+- each `mongoku_readonly` user has one role, `read` on its database, and one scope, its cluster;
+- the operator account is no longer in Mongoku's connection list.
+
+Mongoku runtime:
+
+- `MONGOKU_READ_ONLY_MODE=true` and `DATAPASS_CONTROL_WRITE_ENABLED=false`;
+- health reports `mongo-read-only` with `writesEnabled: false`;
+- DATAPASSCONTROL stays the global project and entity graph. Authority data is read in place and never copied into it.
+
+Live result of `SOURCE_INVENTORY` (Mongoku PR #7, `173599f`), all read through the normal report engine path: logical source → FOIL PM `resource_registry` → binding → client.
+
+| Source              | State        | Database                  | Collections | PM registry       |
+| ------------------- | ------------ | ------------------------- | ----------: | ----------------- |
+| DATAPROJECTS_GLOBAL | RESOLVED, OK | `dataprojects_control`    |           7 | not applicable    |
+| FOIL_PM             | RESOLVED, OK | `foil_project_management` |           7 | is the registry   |
+| FOIL_CORE           | RESOLVED, OK | `foil_control`            |          10 | found             |
+| FOIL_STUDY          | RESOLVED, OK | `foil_study`              |           3 | found             |
+| FOIL_AI_REASONING   | RESOLVED, OK | `foil_ai_reasoning`       |           2 | found (see below) |
+| FOIL_IT_DEV         | RESOLVED, OK | `foil_it_dev`             |           4 | found             |
+| FOIL_FRONT          | RESOLVED, OK | `foil_front`              |           5 | found             |
+| FOIL_WORK_ARCHIVE   | RESOLVED, OK | `foil_work_archive`       |           4 | found             |
+| FOIL_DATABRICKS     | RESOLVED, OK | `foil_lab`                |           6 | found             |
+| FOIL_FABRIC         | RESOLVED, OK | `foil_fabric_lab`         |           1 | found             |
+
+The API response contains no URI, username or Atlas host. Mongo writes are blocked at three independent levels:
+
+1. the Atlas `read` roles;
+2. `checkReadOnly()` on every Mongo write command of the server browser;
+3. an aggregation-stage allowlist that rejects `$out` and `$merge`, which the report engine also forbids.
+
+No write probe was run against the authorities.
+
+Defects found and fixed while wiring the federation:
+
+1. **`.mongoku.db` silently won over `.env`.** Mongoku kept connecting with the operator account and loaded none of the new servers. Fixed in PR #5: an explicit `MONGOKU_DEFAULT_HOST` is now authoritative on every start (see [Re-running the connected smoke](#re-running-the-connected-smoke)). The new servers were then picked up by a reload with no manual cleanup.
+2. **A leftover single-source `DATAPASS_SOURCE_BINDINGS` line** in the local `.env` came after the multi-source one and overrode it, so FOIL PM stayed unbound. It was commented out locally; this was a local configuration fix, not a code change.
+3. **No report read AI Reasoning, IT DEV, FRONT, Databricks or Fabric,** so their resolution path was untested. PR #7 adds `SOURCE_INVENTORY`, one metadata-only section per catalog source, as a permanent smoke test of the federation.
+
+To re-check the federation, call `GET /api/datapass/reports/SOURCE_INVENTORY` or open `/foil/report/SOURCE_INVENTORY`. Expect 10 sections with `trace.resolved: true`. Power Ops consumes the same endpoint and still needs no Mongo credentials.
+
+Still open:
+
+- **AI Reasoning registry shape.** Its `resource_registry` record is a `MONGODB_ATLAS_REASONING_AUTHORITY` with no linked database resource. Mongoku therefore falls back to the catalog database `foil_ai_reasoning`, which matches the binding, so nothing breaks. The fix belongs in FOIL PM data: add a database resource `FOIL AI Reasoning → ClusterFOILAI → foil_ai_reasoning` linked to its project and cluster. `SOURCE_INVENTORY` works before and after that change.
+- **Cosmetic:** six keys are still defined twice in the local `.env` with identical values.
