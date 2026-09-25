@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
+	import ClaudePanel from "$lib/components/ClaudePanel.svelte";
 	import Modal from "$lib/components/Modal.svelte";
 	import {
 		buildProjectContext,
@@ -421,6 +422,8 @@
 			{/if}
 		</div>
 	</div>
+
+	<ClaudePanel />
 
 	{#if !sourceAvailable && globalSourceState === "SOURCE_UNBOUND"}
 		<div class="rounded-xl border border-dashed border-[var(--border-color)] p-5 text-sm text-[var(--text-muted)]">
