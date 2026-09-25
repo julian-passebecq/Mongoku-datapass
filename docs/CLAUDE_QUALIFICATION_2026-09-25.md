@@ -216,3 +216,23 @@ Still open:
 
 - **Cosmetic:** six keys are still defined twice in the local `.env` with identical values.
 - **Planned, not started:** a cross-authority `FOIL_TECH_OVERVIEW` that composes signals from the per-authority reports. It is deliberately deferred until each source has its own clean semantics, which PR #9 provides.
+
+## Read-only Claude panel (2026-09-25)
+
+Approved by Julian on 25 Sept 2026 (`claude-control` `docs/integrations/mongoku.md`). The approval covers this read-only panel only: any write, any new Mongo collection, or Claude activity inside Mongoku projections needs a new decision.
+
+- **Flag:** right inspector › Settings › _This browser_ › "Claude panel on Home". It is off by default and stored per browser (`datapass-mongo-control.claude-panel.v1`), outside the workspace snapshot, so checkpoints and UI-state JSON are unchanged. With the flag off, the panel renders nothing and sends no request.
+- **Read path:** the browser reads `GET http://127.0.0.1:7430/api/status?project=Mongoku-datapass` directly (`src/lib/claudeControl.ts`). Mongoku's server never calls Control, and the panel touches no Mongo data, collection or projection. It only reads when Mongoku is served from `localhost` or `127.0.0.1`, the origins Control allows.
+- **Panel** (`src/lib/components/ClaudePanel.svelte`, on Home under the KPI tiles): open conversations (with running), waiting on you, your to-do (`todo + to_check`), urgent alerts (listed with links), open pull requests, latest audit, and "Open Claude Control" → `/home.html#p.Mongoku-datapass`.
+- **Hidden when Control is off:** any failure hides the panel, including a refused connection, a timeout after 3 s, a non-200 response, a body that is not a status, or a status for another project. It re-reads every minute while visible, every 3 minutes while Control is off, and when the tab becomes visible or regains focus. Chrome still logs its own `net::ERR_CONNECTION_REFUSED` line for a refused read; no script error is raised.
+- **Control side:** `to_check` was added to `/api/status` (claude-control #2, `45609df`), because Home's "Your to-do" tile counts the "À vérifier" rows that `todo` leaves out. An older Control without the field still works (`todo` only).
+
+Browser smoke on 2026-09-25 (dev server on :3100, no Mongo credentials):
+
+- Flag off: no panel, 0 requests to 7430.
+- Flag on with Control running: the panel matched Claude Home zoomed on Mongoku-datapass on the same data build: 2 open, 1 waiting, to-do 2, 1 urgent, 0 PRs, audit 🟠.
+- Control stopped: the panel was hidden, the Home page was intact, and no script error appeared.
+- Control restarted: the panel came back when the tab became visible again.
+- Unticking the flag removed the panel and stopped the reads.
+
+Unit tests: `src/tests/integrations/claudeControl.test.ts` (11).

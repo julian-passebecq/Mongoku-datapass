@@ -8,6 +8,7 @@
 		type SavedMongoQuery,
 		type WorkspacePreset,
 	} from "$lib/datapass/controlPlane";
+	import { claudePanelFlag } from "$lib/stores/claudePanel.svelte";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let { projects, queries, presets } = $props<{
@@ -18,6 +19,10 @@
 
 	let importText = $state("");
 	let importMessage = $state("");
+
+	$effect(() => {
+		claudePanelFlag.hydrate();
+	});
 
 	const instance = $derived(workspaceUi.current());
 	const selectedProjectId = $derived(page.url.searchParams.get("project") || instance?.defaultProjectId);
@@ -259,6 +264,23 @@
 
 					{#if importMessage}<p class="text-[10px] leading-4 text-[var(--text-muted)]">{importMessage}</p>{/if}
 				</div>
+
+				<p class="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">This browser</p>
+				<label class="mt-3 flex items-start gap-2 text-xs" for="inspector-claude-panel">
+					<input
+						id="inspector-claude-panel"
+						type="checkbox"
+						class="mt-0.5"
+						checked={claudePanelFlag.enabled}
+						onchange={(event) => claudePanelFlag.setEnabled((event.currentTarget as HTMLInputElement).checked)}
+					/>
+					<span>
+						<span class="font-medium">Claude panel on Home</span>
+						<span class="mt-0.5 block text-[10px] leading-4 text-[var(--text-muted)]"
+							>Read-only status from Claude Control on this PC (127.0.0.1:7430). Hidden while Control is off.</span
+						>
+					</span>
+				</label>
 			{/if}
 		</div>
 	</aside>
