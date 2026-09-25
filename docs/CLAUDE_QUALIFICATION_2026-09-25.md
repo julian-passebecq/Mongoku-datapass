@@ -177,11 +177,39 @@ Defects found and fixed while wiring the federation:
 
 1. **`.mongoku.db` silently won over `.env`.** Mongoku kept connecting with the operator account and loaded none of the new servers. Fixed in PR #5: an explicit `MONGOKU_DEFAULT_HOST` is now authoritative on every start (see [Re-running the connected smoke](#re-running-the-connected-smoke)). The new servers were then picked up by a reload with no manual cleanup.
 2. **A leftover single-source `DATAPASS_SOURCE_BINDINGS` line** in the local `.env` came after the multi-source one and overrode it, so FOIL PM stayed unbound. It was commented out locally; this was a local configuration fix, not a code change.
-3. **No report read AI Reasoning, IT DEV, FRONT, Databricks or Fabric,** so their resolution path was untested. PR #7 adds `SOURCE_INVENTORY`, one metadata-only section per catalog source, as a permanent smoke test of the federation.
+3. **No report read AI Reasoning, IT DEV, FRONT, Databricks or Fabric,** so their resolution path was untested. PR #7 adds `SOURCE_INVENTORY`, one metadata-only section per catalog source, as a permanent smoke test of the federation. PR #9 then gives each of these five authorities its own report (see below).
 
 To re-check the federation, call `GET /api/datapass/reports/SOURCE_INVENTORY` or open `/foil/report/SOURCE_INVENTORY`. Expect 10 sections with `trace.resolved: true`. Power Ops consumes the same endpoint and still needs no Mongo credentials.
+
+### Authority reports for the five newly wired sources (PR #9, `8a873bf`)
+
+Each of the five authorities that only `SOURCE_INVENTORY` read before now has its own report. Every report:
+
+- uses its existing `sourceId` and the normal engine path (PM `resource_registry` → binding → client);
+- is an `aggregate` with an explicit `$project` and a limit of at most 100, so large nested documents (prompts, CAD, lineage) never leave the source.
+
+Projections and filters were written after inspecting the live documents (field inventory and status distribution per collection). "Current" sections exclude `SUPERSEDED`, `CANCELLED`, `HISTORICAL`, `LEGACY` and `MIGRATED` statuses. `SOURCE_INVENTORY` still counts every record.
+
+| Report                     | Source              | Sections (live rows, 2026-09-25)                                                                                           |
+| -------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `FOIL_AI_REASONING_RECENT` | `FOIL_AI_REASONING` | reasoning 7, boundary 1                                                                                                    |
+| `FOIL_IT_DEV_STATUS`       | `FOIL_IT_DEV`       | current decisions 18 of 19, contracts 10, current architecture views 12 of 14                                              |
+| `FOIL_FRONT_STATUS`        | `FOIL_FRONT`        | apps 12, current decisions 9 of 10, current visual specs 5 of 10, current visual versions 14 of 21                         |
+| `FOIL_DATABRICKS_STATUS`   | `FOIL_DATABRICKS`   | work items 8, campaigns 2, studies 1, model profiles 1, machine contracts 2 (fact and unknown counts only), lab metadata 7 |
+| `FOIL_FABRIC_STATUS`       | `FOIL_FABRIC`       | lab metadata 3                                                                                                             |
+
+Semantic guarantees:
+
+- **AI Reasoning is non-authoritative.** The report shows only records that declare `NON_AUTHORITATIVE_AI_REASONING`, and is labelled non-authoritative in its title, description and section authority. It never reads `FOIL_CORE` and is never merged with Core Truth.
+- **Databricks** rows are lab control metadata, not measured evidence. Runtime, Gold tables and MLflow remain Databricks runtime authorities.
+- **Fabric** is at setup stage. The report surfaces that the workspace and code repository are not registered, and claims no live deployment.
+
+Qualification: every section of the five reports resolves `OK`, and `SOURCE_INVENTORY` is still 10/10. All 23 catalog reports (54 sections) resolve with no error state, and the five new report pages return 200. No response contains a URI, host or credential; three existing reports mention the name `mongoku_readonly` only inside source text such as events. CI passed; locally `vitest` passed (131), with `svelte-check` 0 errors, ESLint and Prettier clean, and the build passing.
+
+Power Ops was notified of the report IDs and display rules. It consumes and displays the reports; FOIL business logic stays in Mongoku.
 
 Still open:
 
 - **AI Reasoning registry shape.** Its `resource_registry` record is a `MONGODB_ATLAS_REASONING_AUTHORITY` with no linked database resource. Mongoku therefore falls back to the catalog database `foil_ai_reasoning`, which matches the binding, so nothing breaks. The fix belongs in FOIL PM data: add a database resource `FOIL AI Reasoning → ClusterFOILAI → foil_ai_reasoning` linked to its project and cluster. `SOURCE_INVENTORY` works before and after that change.
 - **Cosmetic:** six keys are still defined twice in the local `.env` with identical values.
+- **Planned, not started:** a cross-authority `FOIL_TECH_OVERVIEW` that composes signals from the per-authority reports. It is deliberately deferred until each source has its own clean semantics, which PR #9 provides.
