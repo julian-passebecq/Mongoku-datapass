@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
+	import { isFoilRootProject } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	const project = $derived(page.url.searchParams.get("project"));
-	const foilMode = $derived(page.url.pathname.startsWith("/foil") || project === "foil");
+	const foilMode = $derived(page.url.pathname.startsWith("/foil") || isFoilRootProject(project));
 
 	const globalTools = $derived([
 		{ label: "Dashboard", href: "/" },

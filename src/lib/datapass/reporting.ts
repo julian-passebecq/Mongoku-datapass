@@ -1043,7 +1043,7 @@ export const reportCatalog: ReportDefinition[] = [
 				authority: "DATAPASSCONTROL",
 				collection: "work_items",
 				operation: "find",
-				filter: { project_id: "foil" },
+				filter: { project_id: { $in: ["foil", "foil_project"] } },
 				sort: { observed_at: -1 },
 				limit: 100,
 				label: "Global portfolio references",

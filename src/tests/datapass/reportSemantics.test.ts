@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyReportSemantics, normalizeReportLimit, normalizeWorkStatus } from "$lib/datapass/reportSemantics";
+import { isFoilRootProject } from "$lib/datapass/controlPlane";
 import { reportCatalog } from "$lib/datapass/reporting";
 
 describe("FOIL report semantics", () => {
@@ -49,6 +50,52 @@ describe("FOIL report semantics", () => {
 		expect(normalizeWorkStatus("QUALIFIED_COMPLETE")).toBe("DONE");
 		expect(normalizeWorkStatus("WAITING_FRANCIS")).toBe("WAITING_EXTERNAL");
 		expect(normalizeWorkStatus("OPEN_VALIDATION")).toBe("VERIFY");
+	});
+
+	it("matches whole words so negated or partial states are not read as done", () => {
+		expect(normalizeWorkStatus("partial_complete")).toBe("VERIFY");
+		expect(normalizeWorkStatus("partial_green")).toBe("VERIFY");
+		expect(normalizeWorkStatus("not_live_proven")).toBe("VERIFY");
+		expect(normalizeWorkStatus("unresolved")).not.toBe("DONE");
+		expect(normalizeWorkStatus("incomplete")).not.toBe("DONE");
+		expect(normalizeWorkStatus("unblocked")).not.toBe("BLOCKED");
+		expect(normalizeWorkStatus("proposed_not_deployed")).toBe("BACKLOG");
+	});
+
+	it("maps the raw statuses seen in DATAPASSCONTROL to a known display state", () => {
+		const expected: Record<string, string> = {
+			stopped: "DEFERRED",
+			ongoing: "ACTIVE",
+			green: "DONE",
+			mitigated: "DONE",
+			merged_main_ci_green: "DONE",
+			reference_completed: "DONE",
+			candidate: "BACKLOG",
+			prototype: "ACTIVE",
+			active_donor: "ACTIVE",
+			donor_reference: "DEFERRED",
+			legacy_reference: "DEFERRED",
+			needs_content_audit: "VERIFY",
+			main_v23_fixes_merged_followup_qualification: "VERIFY",
+			qualified_main_refocus_active: "VERIFY",
+			ready_for_manual_ui_test: "READY",
+			todo: "READY",
+			planned: "BACKLOG",
+		};
+		for (const [raw, display] of Object.entries(expected)) {
+			expect([raw, normalizeWorkStatus(raw)]).toEqual([raw, display]);
+		}
+	});
+
+	it("treats both FOIL root ids as the FOIL cockpit", () => {
+		expect(isFoilRootProject("foil")).toBe(true);
+		expect(isFoilRootProject("foil_project")).toBe(true);
+		expect(isFoilRootProject("foil_it_dev")).toBe(false);
+		expect(isFoilRootProject(null)).toBe(false);
+
+		const report = reportCatalog.find((candidate) => candidate.steps.some((step) => step.id === "global-work"));
+		const step = report?.steps.find((candidate) => candidate.id === "global-work");
+		expect(step?.filter).toEqual({ project_id: { $in: ["foil", "foil_project"] } });
 	});
 
 	it("rejects zero and negative requested limits", () => {

@@ -9,6 +9,7 @@
 		type PortfolioContext,
 	} from "$lib/datapass/aiContext";
 	import { buildCockpit, isDoneStatus, type CockpitProject, type WorkCard } from "$lib/datapass/cockpit";
+	import { isFoilRootProject } from "$lib/datapass/controlPlane";
 	import type { ReportResult } from "$lib/datapass/reporting";
 	import { notificationStore } from "$lib/stores/notifications.svelte";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -748,7 +749,7 @@
 					</div>
 				{/if}
 
-				{#if id === "foil" || id === "foil_project"}
+				{#if isFoilRootProject(id)}
 					<div class="mt-4 rounded-lg border border-[var(--border-color)] p-3">
 						<p class="text-xs font-semibold">FOIL PM summary</p>
 						{#if foilSourceAvailable}

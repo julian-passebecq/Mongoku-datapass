@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from "$app/paths";
-	import type { Project } from "$lib/datapass/controlPlane";
+	import { isFoilRootProject, type Project } from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let { projects, sourceMode } = $props<{ projects: Project[]; sourceMode?: string }>();
@@ -13,9 +13,9 @@
 		projects.filter((project: Project) => project.parentProjectId === projectId);
 	// Raw app paths; the template resolves each exactly once (resolving twice throws during SSR).
 	const architectureHref = (projectId: string) =>
-		projectId === "foil" ? "/foil/architecture" : "/architecture?project=" + encodeURIComponent(projectId);
+		isFoilRootProject(projectId) ? "/foil/architecture" : "/architecture?project=" + encodeURIComponent(projectId);
 	const workHref = (projectId: string) =>
-		projectId === "foil" ? "/foil/kanban" : "/projects?project=" + encodeURIComponent(projectId);
+		isFoilRootProject(projectId) ? "/foil/kanban" : "/projects?project=" + encodeURIComponent(projectId);
 </script>
 
 <aside
@@ -111,9 +111,9 @@
 							<a
 								href={resolve(workHref(project.id))}
 								class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
-								>{project.id === "foil" ? "Authoritative backlog" : "Tasks"}</a
+								>{isFoilRootProject(project.id) ? "Authoritative backlog" : "Tasks"}</a
 							>
-							{#if project.id === "foil"}
+							{#if isFoilRootProject(project.id)}
 								<a
 									href={resolve("/foil/resources")}
 									class="block rounded px-2 py-1 text-[11px] no-underline hover:bg-[var(--hover-background)]"
@@ -131,7 +131,7 @@
 							{#each childrenOf(project.id) as child, __eachIndex1 (__eachIndex1)}
 								<a
 									href={resolve(
-										project.id === "foil" ? "/foil/report/FOIL_PROJECTS" : "/architecture?project=" + child.id,
+										isFoilRootProject(project.id) ? "/foil/report/FOIL_PROJECTS" : "/architecture?project=" + child.id,
 									)}
 									class="mt-1 block rounded bg-[var(--hover-background)] px-2 py-1.5 text-[11px] no-underline"
 								>

@@ -2,7 +2,12 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
-	import type { Project, SavedMongoQuery, WorkspacePreset } from "$lib/datapass/controlPlane";
+	import {
+		isFoilRootProject,
+		type Project,
+		type SavedMongoQuery,
+		type WorkspacePreset,
+	} from "$lib/datapass/controlPlane";
 	import { workspaceUi } from "$lib/stores/workspaceUi.svelte";
 
 	let { projects, queries, presets } = $props<{
@@ -29,7 +34,7 @@
 	);
 
 	function projectRoute(kind: "board" | "architecture" | "calendar" | "notes", projectId: string) {
-		if (projectId === "foil") {
+		if (isFoilRootProject(projectId)) {
 			if (kind === "board") {
 				return "/foil/kanban";
 			}
@@ -114,13 +119,13 @@
 								type="button"
 								onclick={() => goto(resolve(projectRoute("board", selectedProject.id)))}
 								class="block hover:underline"
-								>{selectedProject.id === "foil" ? "Authoritative backlog" : "Project board"}</button
+								>{isFoilRootProject(selectedProject.id) ? "Authoritative backlog" : "Project board"}</button
 							>
 							<button
 								type="button"
 								onclick={() => goto(resolve(projectRoute("architecture", selectedProject.id)))}
 								class="block hover:underline"
-								>{selectedProject.id === "foil" ? "Authority architecture" : "AI graph"}</button
+								>{isFoilRootProject(selectedProject.id) ? "Authority architecture" : "AI graph"}</button
 							>
 							<button
 								type="button"
@@ -131,7 +136,7 @@
 								type="button"
 								onclick={() => goto(resolve(projectRoute("notes", selectedProject.id)))}
 								class="block hover:underline"
-								>{selectedProject.id === "foil" ? "Recent authority changes" : "Notes"}</button
+								>{isFoilRootProject(selectedProject.id) ? "Recent authority changes" : "Notes"}</button
 							>
 							{#if selectedProject.githubRepo}
 								<a

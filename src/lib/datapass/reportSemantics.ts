@@ -28,33 +28,109 @@ function valueText(value: unknown): string {
 	return value == null ? "" : String(value);
 }
 
+/**
+ * Splits a raw status such as `partial_green` or `WAITING_FRANCIS` into lowercase tokens so
+ * normalization matches whole words instead of substrings (`incomplete` must not read as `complete`,
+ * `unblocked` must not read as `blocked`).
+ */
+function statusTokens(raw: string): string[] {
+	return raw
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter(Boolean);
+}
+
+/** Qualifiers that mean a positive-looking status is not actually reached (`not_deployed`, `partial_green`). */
+const UNFINISHED_TOKENS = ["not", "partial", "partially", "unverified", "incomplete", "unresolved"];
+const DONE_TOKENS = [
+	"done",
+	"complete",
+	"completed",
+	"closed",
+	"resolved",
+	"verified",
+	"reconciled",
+	"green",
+	"mitigated",
+];
+const BLOCKED_TOKENS = ["blocked", "blocker", "blocking"];
+const WAITING_TOKENS = ["waiting", "awaiting", "wait", "external", "business", "user", "francis"];
+const VERIFY_TOKENS = [
+	"verify",
+	"validation",
+	"validate",
+	"validating",
+	"review",
+	"qualified",
+	"qualification",
+	"pretest",
+	"audit",
+	"classify",
+	"proven",
+];
+/** Deliberately parked or stopped: not failed, not active (FOIL Hydro is `stopped`). */
+const DEFERRED_TOKENS = [
+	"defer",
+	"deferred",
+	"frozen",
+	"hold",
+	"paused",
+	"stopped",
+	"retired",
+	"archived",
+	"cancelled",
+	"canceled",
+];
+/** Kept only as reference material; an explicit active qualifier (`active_donor`) wins. */
+const REFERENCE_TOKENS = ["donor", "reference", "legacy"];
+const ACTIVE_TOKENS = [
+	"active",
+	"progress",
+	"doing",
+	"implement",
+	"implemented",
+	"current",
+	"ongoing",
+	"deployed",
+	"prototype",
+];
+const READY_TOKENS = ["ready", "open", "todo", "next", "pending"];
+const BACKLOG_TOKENS = ["backlog", "draft", "planned", "candidate", "proposed"];
+
 export function normalizeWorkStatus(value: unknown): DisplayStatus {
-	const raw = valueText(value).trim().toUpperCase();
-	if (!raw) {
+	const tokens = statusTokens(valueText(value));
+	if (tokens.length === 0) {
 		return "UNKNOWN";
 	}
-	if (/QUALIFIED_COMPLETE|COMPLETE|COMPLETED|DONE|CLOSED|RESOLVED|VERIFIED|RECONCILED/.test(raw)) {
-		return "DONE";
+	const has = (candidates: readonly string[]) => tokens.some((token) => candidates.includes(token));
+	const unfinished = has(UNFINISHED_TOKENS);
+
+	if (has(DONE_TOKENS)) {
+		// `partial_green`, `not_verified`: the positive state is claimed but not reached yet.
+		return unfinished ? "VERIFY" : "DONE";
 	}
-	if (/BLOCK/.test(raw)) {
+	if (has(BLOCKED_TOKENS)) {
 		return "BLOCKED";
 	}
-	if (/WAIT|EXTERNAL|BUSINESS|USER|FRANCIS/.test(raw)) {
+	if (has(WAITING_TOKENS)) {
 		return "WAITING_EXTERNAL";
 	}
-	if (/VERIFY|VALIDAT|REVIEW|QUALIFIED|PRETEST/.test(raw)) {
+	if (has(VERIFY_TOKENS)) {
 		return "VERIFY";
 	}
-	if (/DEFER|FROZEN|HOLD/.test(raw)) {
+	if (has(DEFERRED_TOKENS)) {
 		return "DEFERRED";
 	}
-	if (/ACTIVE|PROGRESS|DOING|IMPLEMENT|CURRENT/.test(raw)) {
+	if (!unfinished && has(ACTIVE_TOKENS)) {
 		return "ACTIVE";
 	}
-	if (/READY|OPEN|TODO|NEXT|PENDING/.test(raw)) {
+	if (has(REFERENCE_TOKENS)) {
+		return "DEFERRED";
+	}
+	if (has(READY_TOKENS)) {
 		return "READY";
 	}
-	if (/BACKLOG|DRAFT|PLANNED/.test(raw)) {
+	if (has(BACKLOG_TOKENS)) {
 		return "BACKLOG";
 	}
 	return "UNKNOWN";

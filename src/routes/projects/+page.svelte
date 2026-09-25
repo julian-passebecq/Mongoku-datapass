@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { resolve } from "$app/paths";
-	import { workStatuses } from "$lib/datapass/controlPlane";
+	import { isFoilRootProject, workStatuses } from "$lib/datapass/controlPlane";
 
 	let { data } = $props();
 
@@ -143,11 +143,11 @@
 									<div class="mt-2 flex gap-3 text-[11px]">
 										<a
 											href={resolve(
-												project.id === "foil" ? "/foil/architecture" : "/architecture?project=" + project.id,
+												isFoilRootProject(project.id) ? "/foil/architecture" : "/architecture?project=" + project.id,
 											)}
 											class="no-underline hover:underline">Graph</a
 										>
-										{#if project.id === "foil"}
+										{#if isFoilRootProject(project.id)}
 											<a href={resolve("/foil/kanban")} class="no-underline hover:underline">Authoritative backlog</a>
 										{:else}
 											<button
@@ -176,7 +176,7 @@
 			</div>
 		</div>
 	{:else}
-		{#if selectedProject === "foil"}
+		{#if isFoilRootProject(selectedProject)}
 			<div class="rounded-xl border border-[var(--border-color)] p-4 text-xs text-[var(--text-muted)]">
 				Detailed FOIL tasks are not authoritative here. This view may contain global portfolio work or explicit FOIL
 				references only.
