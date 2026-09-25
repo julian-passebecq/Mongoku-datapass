@@ -249,6 +249,28 @@ describe("global cockpit read model", () => {
 		expect(entities.find((entity) => entity.entity_id === "acme_wind")?.parent_entity_id).toBe("acme_legacy");
 	});
 
+	it("stops flagging a duplicate root once the legacy node is retired and childless", () => {
+		const reparented = entities.map((entity) =>
+			entity.parent_entity_id === "acme_legacy" ? { ...entity, parent_entity_id: "acme_project" } : entity,
+		);
+		const retired = reparented.map((entity) =>
+			entity.entity_id === "acme_legacy" ? { ...entity, status: "retired_alias" } : entity,
+		);
+		const findingIds = (rows: typeof entities) =>
+			buildCockpit({ organizations, entities: rows, repositories, work, events, now }).reconciliation.map(
+				(finding) => finding.id,
+			);
+
+		// Re-parented but still active: two live roots with one name remain a finding.
+		expect(findingIds(reparented)).toContain("duplicate-root:acme:acme_legacy+acme_project");
+		expect(findingIds(retired).some((id) => id.startsWith("duplicate-root:acme"))).toBe(false);
+		// Retired while children still point to it: still a finding.
+		const retiredWithChildren = entities.map((entity) =>
+			entity.entity_id === "acme_legacy" ? { ...entity, status: "retired_alias" } : entity,
+		);
+		expect(findingIds(retiredWithChildren)).toContain("duplicate-root:acme:acme_legacy+acme_project");
+	});
+
 	it("classifies freshness from the latest timestamp", () => {
 		expect(freshnessOf([undefined], now)).toBe("unknown");
 		expect(freshnessOf(["2026-09-20"], now)).toBe("aging");

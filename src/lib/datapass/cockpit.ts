@@ -348,8 +348,14 @@ function reconciliationFindings(organizations: Row[], entities: Row[], work: Row
 	for (const organization of organizations) {
 		const organizationId = text(organization, "organization_id");
 		const defaultProjectId = text(organization, "default_project_id");
+		// A retired root that nothing points to any more (`foil` as `retired_alias`) is resolved,
+		// not a duplicate; one that still has children stays a finding.
+		const hasChildren = (id: string) => entities.some((entity) => text(entity, "parent_entity_id") === id);
 		const roots = entities.filter(
-			(entity) => text(entity, "organization_id") === organizationId && !text(entity, "parent_entity_id"),
+			(entity) =>
+				text(entity, "organization_id") === organizationId &&
+				!text(entity, "parent_entity_id") &&
+				!(hasAny(text(entity, "status"), INACTIVE_TOKENS) && !hasChildren(text(entity, "entity_id"))),
 		);
 
 		// Two root nodes with the same display name inside one organization: usually a legacy
