@@ -8,7 +8,13 @@
 		type ContextPurpose,
 		type PortfolioContext,
 	} from "$lib/datapass/aiContext";
-	import { buildCockpit, isDoneStatus, type CockpitProject, type WorkCard } from "$lib/datapass/cockpit";
+	import {
+		buildCockpit,
+		isDoneStatus,
+		isSupersededRelationship,
+		type CockpitProject,
+		type WorkCard,
+	} from "$lib/datapass/cockpit";
 	import { isFoilRootProject } from "$lib/datapass/controlPlane";
 	import type { ReportResult } from "$lib/datapass/reporting";
 	import { notificationStore } from "$lib/stores/notifications.svelte";
@@ -120,12 +126,17 @@
 	/** Work attached to a project id with no entity (for example `portfolio`) is shown only without filters. */
 	const inScope = (projectId: string) => unfiltered || visibleEntityIds.has(projectId);
 
-	const visibleRelationships = $derived(
+	const inScopeRelationships = $derived(
 		relationships.filter(
 			(relationship) =>
 				visibleEntityIds.has(text(relationship, "from_id")) && visibleEntityIds.has(text(relationship, "to_id")),
 		),
 	);
+	/** Superseded links stay in the source for provenance but are not active cross-links. */
+	const visibleRelationships = $derived(
+		inScopeRelationships.filter((relationship) => !isSupersededRelationship(relationship)),
+	);
+	const supersededRelationshipCount = $derived(inScopeRelationships.length - visibleRelationships.length);
 	const visibleGlobalWork = $derived(globalWork.filter((item) => inScope(text(item, "project_id"))));
 	/** The report only excludes literal done/closed; green/mitigated rows are finished too. */
 	const openGlobalWork = $derived(visibleGlobalWork.filter((item) => !isDoneStatus(text(item, "status"))));
@@ -778,7 +789,11 @@
 					Configurable typed navigation tree. Cross-links stay separate from parent/child navigation.
 				</p>
 			</div>
-			<span class="text-[10px] text-[var(--text-muted)]">{visibleRelationships.length} visible relationship(s)</span>
+			<span class="text-[10px] text-[var(--text-muted)]">
+				{visibleRelationships.length} visible relationship(s){#if supersededRelationshipCount > 0}{" · " +
+						supersededRelationshipCount +
+						" superseded hidden"}{/if}
+			</span>
 		</div>
 		<div class="divide-y divide-[var(--border-color)]">
 			{#each visibleHierarchy as item (entityId(item.row))}

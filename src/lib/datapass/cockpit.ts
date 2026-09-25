@@ -168,6 +168,15 @@ export function isBlockedStatus(raw: string): boolean {
 	return hasAny(raw, BLOCKED_TOKENS);
 }
 
+/**
+ * A relationship kept only as history: marked superseded (FOIL-NAV-001 -> FOIL-NAV-005) or
+ * retired. It stays in the source for provenance but is not an active cross-link.
+ */
+export function isSupersededRelationship(relationship: Record<string, unknown>): boolean {
+	const status = relationship.status == null ? "" : String(relationship.status);
+	return !!relationship.superseded_by || hasAny(status, ["superseded", "retired", "archived", "inactive"]);
+}
+
 function priorityRank(priority: string | undefined): number {
 	const match = /^P(\d)/i.exec(priority ?? "");
 	return match ? Number(match[1]) : 9;

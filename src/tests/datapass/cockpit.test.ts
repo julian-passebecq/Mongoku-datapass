@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildProjectContext, contextToMarkdown, scrubSecrets } from "$lib/datapass/aiContext";
-import { buildCockpit, freshnessOf } from "$lib/datapass/cockpit";
+import { buildCockpit, freshnessOf, isSupersededRelationship } from "$lib/datapass/cockpit";
 
 const now = new Date("2026-09-24T21:00:00Z");
 
@@ -269,6 +269,14 @@ describe("global cockpit read model", () => {
 			entity.entity_id === "acme_legacy" ? { ...entity, status: "retired_alias" } : entity,
 		);
 		expect(findingIds(retiredWithChildren)).toContain("duplicate-root:acme:acme_legacy+acme_project");
+	});
+
+	it("treats superseded or retired relationships as history, not active cross-links", () => {
+		expect(isSupersededRelationship({ status: "superseded", superseded_by: "FOIL-NAV-005" })).toBe(true);
+		expect(isSupersededRelationship({ superseded_by: "R-FOIL-ITDEV-WIND" })).toBe(true);
+		expect(isSupersededRelationship({ status: "retired" })).toBe(true);
+		expect(isSupersededRelationship({ type: "contains_domain" })).toBe(false);
+		expect(isSupersededRelationship({ status: "active" })).toBe(false);
 	});
 
 	it("classifies freshness from the latest timestamp", () => {
