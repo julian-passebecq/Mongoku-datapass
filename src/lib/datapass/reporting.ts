@@ -20,12 +20,18 @@ export type ReportParameter = {
 	required?: boolean;
 };
 
+/**
+ * `inventory` resolves the source like any step, then lists its collections with estimated
+ * counts (listCollections + count, both granted by the `read` role). `collection` is ignored.
+ */
+export type ReportOperation = "find" | "aggregate" | "inventory";
+
 export type ReportQueryStep = {
 	id: string;
 	sourceId: string;
 	authority: string;
 	collection: string;
-	operation: "find" | "aggregate";
+	operation: ReportOperation;
 	filter?: Record<string, unknown>;
 	projection?: Record<string, unknown>;
 	pipeline?: Record<string, unknown>[];
@@ -97,7 +103,7 @@ export type ReportSourceTrace = {
 	provider: SourceProvider;
 	database?: string;
 	collection: string;
-	operation: "find" | "aggregate";
+	operation: ReportOperation;
 	readOnly: true;
 	resolved: boolean;
 	resourceRegistry?: ResourceRegistryTrace;
@@ -1052,6 +1058,29 @@ export const reportCatalog: ReportDefinition[] = [
 			},
 		],
 		tags: ["foil", "global", "references"],
+	},
+	{
+		id: "SOURCE_INVENTORY",
+		title: "Source inventory",
+		description:
+			"One section per catalog source: whether it resolves (binding and FOIL PM registry) and its collections with estimated counts. Metadata only; no documents are read.",
+		scope: "GLOBAL",
+		routeId: "source-inventory",
+		readOnly: true,
+		presentation: "resources",
+		refreshPolicy: { mode: "ttl", ttlSeconds: 300 },
+		// Generated from the catalog so every source added later is exercised through the report engine.
+		steps: sourceCatalog.map((source) => ({
+			id: source.id.toLowerCase(),
+			sourceId: source.id,
+			authority: source.authority,
+			collection: "*",
+			operation: "inventory" as const,
+			limit: 100,
+			optional: true,
+			label: source.authority + " (" + (source.database ?? source.id) + ")",
+		})),
+		tags: ["global", "sources", "inventory", "federation"],
 	},
 ];
 

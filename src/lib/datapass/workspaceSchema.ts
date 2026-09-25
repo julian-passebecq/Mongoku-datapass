@@ -155,7 +155,7 @@ const reportStepSchema = z.object({
 	sourceId: z.string().min(1),
 	authority: z.string().min(1),
 	collection: z.string().min(1),
-	operation: z.enum(["find", "aggregate"]),
+	operation: z.enum(["find", "aggregate", "inventory"]),
 	filter: jsonRecord.optional(),
 	projection: jsonRecord.optional(),
 	pipeline: z.array(jsonRecord).optional(),
