@@ -1,6 +1,6 @@
 # Claude entry point — Mongoku Datapass
 
-Read **[docs/CLAUDE_FULL_HANDOFF_2026-09-24.md](docs/CLAUDE_FULL_HANDOFF_2026-09-24.md)** first, then **[docs/CODEX_SUPPORT_2026-09-24.md](docs/CODEX_SUPPORT_2026-09-24.md)**, then the latest status in **[docs/CLAUDE_QUALIFICATION_2026-09-25.md](docs/CLAUDE_QUALIFICATION_2026-09-25.md)** (current head, evidence, remaining merge gate).
+Read **[docs/CLAUDE_FULL_HANDOFF_2026-09-24.md](docs/CLAUDE_FULL_HANDOFF_2026-09-24.md)** first, then **[docs/CODEX_SUPPORT_2026-09-24.md](docs/CODEX_SUPPORT_2026-09-24.md)**, then the latest status in **[docs/CLAUDE_QUALIFICATION_2026-09-25.md](docs/CLAUDE_QUALIFICATION_2026-09-25.md)** (current head, evidence, remaining merge gate). For Datapass Galaxy projections (AtlasNote / DiagramCloud / DataPass snapshots consumed read-only), see **[docs/GALAXY_PROJECTION_CONTRACT_2026-09-25.md](docs/GALAXY_PROJECTION_CONTRACT_2026-09-25.md)**.
 
 Key constraints:
 
