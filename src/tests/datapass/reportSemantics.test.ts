@@ -95,7 +95,13 @@ describe("FOIL report semantics", () => {
 
 		const report = reportCatalog.find((candidate) => candidate.steps.some((step) => step.id === "global-work"));
 		const step = report?.steps.find((candidate) => candidate.id === "global-work");
-		expect(step?.filter).toEqual({ project_id: { $in: ["foil", "foil_project"] } });
+		const pattern = new RegExp((step?.filter as { project_id: { $regex: string } }).project_id.$regex);
+		for (const id of ["foil", "foil_project", "foil_it_dev", "foil_wind"]) {
+			expect(pattern.test(id)).toBe(true);
+		}
+		for (const id of ["foilage", "datapass", "portfolio"]) {
+			expect(pattern.test(id)).toBe(false);
+		}
 	});
 
 	it("rejects zero and negative requested limits", () => {

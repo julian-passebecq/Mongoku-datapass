@@ -1043,7 +1043,9 @@ export const reportCatalog: ReportDefinition[] = [
 				authority: "DATAPASSCONTROL",
 				collection: "work_items",
 				operation: "find",
-				filter: { project_id: { $in: ["foil", "foil_project"] } },
+				// Every FOIL-organization entity id starts with `foil` (foil_project, foil_it_dev,
+				// foil_wind, the retired `foil` alias), so re-pointing work between them keeps it here.
+				filter: { project_id: { $regex: "^foil(_|$)" } },
 				sort: { observed_at: -1 },
 				limit: 100,
 				label: "Global portfolio references",
