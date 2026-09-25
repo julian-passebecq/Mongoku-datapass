@@ -112,4 +112,18 @@ This batch was approved by the user and applied through the MongoDB MCP, then ve
 
 Follow-up, applied on user request: `organizations.datapass.default_project_id` switched from `datapass` to `datapass_portfolio`. Consumer check: in Mongoku only the Home reconciliation reads it, and GitHub code search over the owner's default branches found no other reader. The rollback is logged on the same event.
 
-Still open: retiring or aliasing the legacy `foil` node, and optionally re-parenting Datapass products under `datapass_portfolio`.
+Still open: optionally re-parenting Datapass products under `datapass_portfolio`.
+
+## Legacy `foil` node retirement — applied 2026-09-25
+
+This batch was approved by the user and applied through the MongoDB MCP after Mongoku PR #3 was merged (`e838967`), then verified by reading every record back. It is recorded as event `FOIL-LEGACY-NODE-RETIREMENT-2026-09-25`, whose `details.rollback` holds the before-state of every changed field. Nothing was deleted, and FOIL Core Truth was not touched.
+
+1. `FOIL-NAV-001` and `FOIL-NAV-004` pointed at `foil` but described Wind, duplicating `FOIL-NAV-005` and `R-FOIL-ITDEV-WIND`. Both are now `status: superseded` with `superseded_by`.
+2. `R-FOIL-ITDEV-FOILPROJECT` now targets `foil_project` (`previous_to_id: foil`).
+3. Work items `T004`/`B010` and repositories `foil_databrick_dab`, `databricks-vscode-foil`, `foil-ai-extension` and `foil-control-v1` now belong to `foil_it_dev`, the user's choice (`previous_project_id` / `previous_entity_id: foil`).
+4. Entity `foil` is `status: retired_alias` with `alias_of: foil_project`. Its `canonical_repo` and `workspace_preset_id` stay as history, since Mongoku does not read them.
+5. Unchanged: the two `foil` events and the `audit_runs` coverage lists, which are provenance.
+
+Code support: `isFoilRootProject()` makes `foil` and `foil_project` open the same FOIL cockpit. A retired root with no children is no longer reported as a duplicate root. FOIL global references match every `foil*` project id, so work moved between FOIL entities stays visible.
+
+Status normalization for report `displayStatus` now matches whole words, like the legacy adapter and cockpit. No live raw status maps to `UNKNOWN` any more.
