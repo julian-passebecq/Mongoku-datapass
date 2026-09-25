@@ -78,6 +78,75 @@ describe("FOIL report catalog", () => {
 		}
 	});
 
+	describe("federated FOIL authority reports", () => {
+		const authorityReports: Record<string, string> = {
+			FOIL_AI_REASONING_RECENT: "FOIL_AI_REASONING",
+			FOIL_IT_DEV_STATUS: "FOIL_IT_DEV",
+			FOIL_FRONT_STATUS: "FOIL_FRONT",
+			FOIL_DATABRICKS_STATUS: "FOIL_DATABRICKS",
+			FOIL_FABRIC_STATUS: "FOIL_FABRIC",
+		};
+		// Mirrors the report engine allowlist.
+		const allowedStages = new Set([
+			"$match",
+			"$group",
+			"$sort",
+			"$project",
+			"$limit",
+			"$skip",
+			"$unwind",
+			"$count",
+			"$addFields",
+			"$set",
+			"$unset",
+			"$replaceWith",
+			"$replaceRoot",
+		]);
+
+		it("gives each authority its own report that reads only that authority", () => {
+			for (const [reportId, sourceId] of Object.entries(authorityReports)) {
+				const report = reportCatalog.find((candidate) => candidate.id === reportId);
+				expect(report, reportId).toBeDefined();
+				expect(report?.readOnly).toBe(true);
+				expect(new Set(report?.steps.map((step) => step.sourceId))).toEqual(new Set([sourceId]));
+			}
+		});
+
+		it("bounds every step with an explicit projection, a limit and allowed stages only", () => {
+			for (const reportId of Object.keys(authorityReports)) {
+				const report = reportCatalog.find((candidate) => candidate.id === reportId)!;
+				for (const step of report.steps) {
+					const label = reportId + "/" + step.id;
+					expect(step.operation, label).toBe("aggregate");
+					expect(step.limit, label).toBeGreaterThan(0);
+					expect(step.limit, label).toBeLessThanOrEqual(100);
+					const stages = (step.pipeline ?? []).map((stage) => Object.keys(stage)[0]);
+					expect(
+						stages.every((stage) => allowedStages.has(stage)),
+						label,
+					).toBe(true);
+					// Explicit field list: large nested documents (prompts, CAD, lineage) never leave the source.
+					expect(stages, label).toContain("$project");
+				}
+			}
+		});
+
+		it("keeps AI Reasoning non-authoritative and separate from Core Truth", () => {
+			const report = reportCatalog.find((candidate) => candidate.id === "FOIL_AI_REASONING_RECENT")!;
+			expect(report.description).toMatch(/non-authoritative/i);
+			expect(report.description).toMatch(/never FOIL Core Truth/i);
+			expect(report.steps.every((step) => step.sourceId !== "FOIL_CORE")).toBe(true);
+			expect(report.steps.every((step) => /non-authoritative/i.test(step.authority))).toBe(true);
+			const reasoning = report.steps.find((step) => step.id === "reasoning")!;
+			expect(reasoning.pipeline?.[0]).toEqual({ $match: { authorityBoundary: "NON_AUTHORITATIVE_AI_REASONING" } });
+		});
+
+		it("does not invent Fabric sections beyond lab_meta", () => {
+			const report = reportCatalog.find((candidate) => candidate.id === "FOIL_FABRIC_STATUS")!;
+			expect(report.steps.map((step) => step.collection)).toEqual(["lab_meta"]);
+		});
+	});
+
 	it("keeps the global portfolio source on dataprojects_control", () => {
 		const source = sourceCatalog.find((candidate) => candidate.id === "DATAPROJECTS_GLOBAL");
 		expect(source?.database).toBe("dataprojects_control");

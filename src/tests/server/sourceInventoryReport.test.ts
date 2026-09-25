@@ -78,6 +78,12 @@ function fakeDb(database: string, collections: Record<string, number>, registry:
 					state.calls.push(database + "." + name + ".find " + JSON.stringify(query));
 					return cursor(database + "." + name, name === "resource_registry" ? registryMatches(registry, query) : []);
 				},
+				aggregate: (pipeline: Record<string, unknown>[]) => {
+					state.calls.push(
+						database + "." + name + ".aggregate " + pipeline.map((stage) => Object.keys(stage)[0]).join(","),
+					);
+					return cursor(database + "." + name, []);
+				},
 				findOne: async (query: Record<string, unknown>) => registryMatches(registry, query)[0] ?? null,
 			}),
 	});
@@ -207,5 +213,46 @@ describe("SOURCE_INVENTORY through the report engine", () => {
 			"dataprojects_control.work_items.find " + JSON.stringify({ project_id: { $regex: "^foil(_|$)" } }),
 		);
 		expect(state.calls.some((call) => call.includes("listCollections"))).toBe(false);
+	});
+});
+
+describe("federated FOIL authority reports through the report engine", () => {
+	beforeEach(() => setup());
+
+	const authorityReports: Record<string, string> = {
+		FOIL_AI_REASONING_RECENT: "FOIL_AI_REASONING",
+		FOIL_IT_DEV_STATUS: "FOIL_IT_DEV",
+		FOIL_FRONT_STATUS: "FOIL_FRONT",
+		FOIL_DATABRICKS_STATUS: "FOIL_DATABRICKS",
+		FOIL_FABRIC_STATUS: "FOIL_FABRIC",
+	};
+
+	it("resolves each authority through the PM registry and its own binding, read-only", async () => {
+		for (const [reportId, sourceId] of Object.entries(authorityReports)) {
+			state.calls.length = 0;
+			const report = await executeReport(reportId);
+			const source = sourceCatalog.find((candidate) => candidate.id === sourceId)!;
+
+			expect(state.calls, reportId).toContain(
+				PM.database + ".resource_registry.find " + JSON.stringify({ _id: source.resourceRef }),
+			);
+			for (const candidate of report.sections) {
+				expect(candidate.trace.resolved, reportId + "/" + candidate.id).toBe(true);
+				expect(candidate.trace.database, reportId + "/" + candidate.id).toBe(source.database);
+				expect(candidate.meta?.state, reportId + "/" + candidate.id).toBe("EMPTY");
+			}
+			// Only the authority's own database is queried, besides the PM registry lookup.
+			const queried = new Set(
+				state.calls.filter((call) => call.includes(".aggregate ")).map((call) => call.split(".")[0]),
+			);
+			expect([...queried], reportId).toEqual([source.database]);
+		}
+		expect(state.forbidden).toEqual([]);
+	});
+
+	it("isolates an unbound authority into its own state", async () => {
+		setup({ unbound: ["FOIL_FABRIC"] });
+		const report = await executeReport("FOIL_FABRIC_STATUS");
+		expect(report.sections.map((candidate) => candidate.meta?.state)).toEqual(["REGISTERED_UNBOUND"]);
 	});
 });
