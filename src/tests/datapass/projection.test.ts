@@ -83,6 +83,24 @@ describe("secret boundary", () => {
 		expect(findings.join(" ")).not.toContain("hunter2");
 	});
 
+	it("refuses secret wording in titles, including spaced key names", () => {
+		for (const title of [
+			"api key: rotate",
+			"API Key = later",
+			"client secret: rotate",
+			"api_key: rotate",
+			"token: rotate",
+		]) {
+			const parsed = parseProjection(overview({ items: [{ id: "t", title }] }));
+			expect(parsed, title).toMatchObject({
+				ok: false,
+				reason: "secret_like",
+				issues: ["items[0].title: credential-like value"],
+			});
+		}
+		expect(parseProjection(overview({ items: [{ id: "t", title: "Rotate the API key" }] })).ok).toBe(true);
+	});
+
 	it("allows references and non-secret facts about secrets", () => {
 		expect(
 			findSecretLikeFields({
