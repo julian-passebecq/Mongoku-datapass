@@ -256,3 +256,48 @@ describe("federated FOIL authority reports through the report engine", () => {
 		expect(report.sections.map((candidate) => candidate.meta?.state)).toEqual(["REGISTERED_UNBOUND"]);
 	});
 });
+
+describe("MAINTENANCE through the report engine", () => {
+	beforeEach(() => setup());
+
+	it("probes every catalog source read-only and publishes only derived sections", async () => {
+		const report = await executeReport("MAINTENANCE");
+		const body = JSON.stringify(report);
+
+		expect(report.sections.map((candidate) => candidate.id)).toEqual([
+			"summary",
+			"sources",
+			"reconciliation",
+			"projects",
+			"heads",
+			"projections",
+			"audits",
+		]);
+		const sources = report.sections.find((candidate) => candidate.id === "sources")!.rows;
+		expect(sources.map((row) => row.sourceId)).toEqual(sourceCatalog.map((source) => source.id));
+		expect(sources.every((row) => row.availability === "reachable")).toBe(true);
+		expect(report.sections[0].rows[0]).toMatchObject({
+			sourcesReachable: sourceCatalog.length + "/" + sourceCatalog.length,
+			backups: "NOT_RECORDED",
+		});
+
+		expect(state.forbidden).toEqual([]);
+		expect(
+			state.calls.every((call) => /\.(listCollections|estimatedDocumentCount|find|aggregate) ?/.test(call + " ")),
+		).toBe(true);
+		expect(body).not.toContain(SECRET);
+		expect(body).not.toContain("mongodb+srv://");
+		expect(body).not.toContain("mongoku_readonly");
+	});
+
+	it("isolates an unavailable optional source from every other section", async () => {
+		setup({ unbound: ["FOIL_FABRIC"], unregistered: ["FOIL_FRONT"] });
+		const report = await executeReport("MAINTENANCE");
+		const sources = report.sections.find((candidate) => candidate.id === "sources")!.rows;
+
+		expect(sources.find((row) => row.sourceId === "FOIL_FABRIC")).toMatchObject({ actionKind: "bind_source" });
+		expect(sources.find((row) => row.sourceId === "FOIL_FRONT")).toMatchObject({ actionKind: "fix_registry" });
+		expect(sources.filter((row) => row.availability === "reachable")).toHaveLength(sourceCatalog.length - 2);
+		expect(report.sections.find((candidate) => candidate.id === "projects")?.trace.resolved).toBe(true);
+	});
+});

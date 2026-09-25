@@ -11,6 +11,7 @@ import {
 	type ResourceRegistryTrace,
 	type SourceDescriptor,
 } from "$lib/datapass/reporting";
+import { deriveMaintenance } from "$lib/datapass/maintenance";
 import { applyReportSemantics, normalizeReportLimit } from "$lib/datapass/reportSemantics";
 import { toSerializableRow } from "$lib/datapass/serializable";
 import type { WorkspaceExport } from "$lib/datapass/workspaceSchema";
@@ -44,6 +45,14 @@ type ExecutionContext = {
 	resourceBindings: Record<string, SourceBinding>;
 	registryCache: Map<string, Promise<RegistryResolution | undefined>>;
 	sourceCache: Map<string, Promise<ResolvedMongoSource | null>>;
+};
+
+/**
+ * Reports whose published sections are derived server-side from their raw read-only steps.
+ * The raw rows stay on the server; only the derived, bounded rows are returned.
+ */
+const derivedReports: Record<string, (sections: ReportSection[], now: Date) => ReportSection[]> = {
+	MAINTENANCE: deriveMaintenance,
 };
 
 const DEFAULT_QUERY_LIMIT = 500;
@@ -648,9 +657,13 @@ async function executeReportWithContext(
 		throw new Error("Unknown report: " + reportId);
 	}
 
-	const sections: ReportSection[] = [];
+	let sections: ReportSection[] = [];
 	for (const step of report.steps) {
 		sections.push(await executeStep(context, report.id, step, runtimeParameters));
+	}
+	const derive = derivedReports[report.id];
+	if (derive) {
+		sections = derive(sections, current);
 	}
 
 	return {

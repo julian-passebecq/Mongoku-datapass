@@ -164,6 +164,11 @@ export function isDoneStatus(raw: string): boolean {
 	return hasAny(raw, DONE_TOKENS) && !hasAny(raw, UNFINISHED_TOKENS);
 }
 
+/** Stopped, retired, archived, closed or done: kept as history, never expected to refresh. */
+export function isInactiveStatus(raw: string): boolean {
+	return hasAny(raw, INACTIVE_TOKENS);
+}
+
 export function isBlockedStatus(raw: string): boolean {
 	return hasAny(raw, BLOCKED_TOKENS);
 }
@@ -350,7 +355,7 @@ function byPriorityThenRecent(a: WorkCard, b: WorkCard): number {
 	);
 }
 
-function reconciliationFindings(organizations: Row[], entities: Row[], work: Row[]): ReconciliationFinding[] {
+export function reconciliationFindings(organizations: Row[], entities: Row[], work: Row[]): ReconciliationFinding[] {
 	const findings: ReconciliationFinding[] = [];
 	const entityById = new Map(entities.map((entity) => [text(entity, "entity_id"), entity]));
 
